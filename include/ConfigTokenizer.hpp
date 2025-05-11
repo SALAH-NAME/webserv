@@ -62,10 +62,8 @@ private:
 	size_t									 _currentPos;
 
 	void tokenize(const std::string &content);
-	void addToken(const std::string &token,
-								ConfigTokenType		 type,
-								size_t						 line,
-								size_t						 column);
+	void addToken(const std::string &token, ConfigTokenType type, size_t line,
+								size_t column);
 
 	bool isSpecialChar(char c) const;
 	bool isDirectiveName(const std::string &token) const;
@@ -73,23 +71,15 @@ private:
 	bool isSize(const std::string &identifier) const;
 	bool isNumber(const std::string &identifier) const;
 
-	void processIdentifier(const std::string &content,
-												 size_t						 &pos,
-												 size_t						 &line,
-												 size_t						 &col);
-	void processComment(const std::string &content,
-											size_t						&pos,
-											size_t						&line,
-											size_t						&col);
-	void processSymbol(const std::string &content,
-										 size_t						 &pos,
-										 size_t						 &line,
-										 size_t						 &col);
+	void processIdentifier(const std::string &content, size_t &pos, size_t &line,
+												 size_t &col);
+	void processComment(const std::string &content, size_t &pos, size_t &line,
+											size_t &col);
+	void processSymbol(const std::string &content, size_t &pos, size_t &line,
+										 size_t &col);
 
-	void skipWhitespace(const std::string &content,
-											size_t						&pos,
-											size_t						&line,
-											size_t						&col);
+	void skipWhitespace(const std::string &content, size_t &pos, size_t &line,
+											size_t &col);
 
 	std::set<std::string> _directiveNames;
 	void									initializeDirectiveNames();
