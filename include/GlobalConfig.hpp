@@ -15,13 +15,13 @@ public:
 	GlobalConfig();
 	void setConnectionTimeout(unsigned int timeout);
 	void setCgiTimeout(unsigned int timeout);
-	void setErrorLog(const std::string &path);
-	void setAccessLog(const std::string &path);
+	void setErrorLog(const std::string& path);
+	void setAccessLog(const std::string& path);
 
 	unsigned int			 getConnectionTimeout() const;
 	unsigned int			 getCgiTimeout() const;
-	const std::string &getErrorLog() const;
-	const std::string &getAccessLog() const;
+	const std::string& getErrorLog() const;
+	const std::string& getAccessLog() const;
 };
 
 #endif

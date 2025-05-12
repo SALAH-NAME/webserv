@@ -2,7 +2,7 @@
 
 RedirectInfo::RedirectInfo() : status_code(0) {}
 
-RedirectInfo::RedirectInfo(int code, const std::string &target)
+RedirectInfo::RedirectInfo(int code, const std::string& target)
 		: status_code(code), url(target)
 {
 }
@@ -11,9 +11,9 @@ bool RedirectInfo::isValid() const { return status_code != 0; }
 
 SizeValue::SizeValue() : _bytes(0) {}
 
-SizeValue::SizeValue(const std::string &sizeStr) { parseSize(sizeStr); }
+SizeValue::SizeValue(const std::string& sizeStr) { parseSize(sizeStr); }
 
-void SizeValue::parseSize(const std::string &sizeStr)
+void SizeValue::parseSize(const std::string& sizeStr)
 {
 	if (sizeStr.empty())
 	{
@@ -56,15 +56,15 @@ void SizeValue::parseSize(const std::string &sizeStr)
 
 size_t SizeValue::getBytes() const { return _bytes; }
 
-bool SizeValue::operator<(const SizeValue &other) const
+bool SizeValue::operator<(const SizeValue& other) const
 {
 	return _bytes < other._bytes;
 }
-bool SizeValue::operator>(const SizeValue &other) const
+bool SizeValue::operator>(const SizeValue& other) const
 {
 	return _bytes > other._bytes;
 }
-bool SizeValue::operator==(const SizeValue &other) const
+bool SizeValue::operator==(const SizeValue& other) const
 {
 	return _bytes == other._bytes;
 }

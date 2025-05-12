@@ -16,31 +16,31 @@ BaseConfig::BaseConfig()
 
 BaseConfig::~BaseConfig() {}
 
-void BaseConfig::setErrorPage(int status_code, const std::string &path)
+void BaseConfig::setErrorPage(int status_code, const std::string& path)
 {
 	_error_pages[status_code] = path;
 }
 
-void BaseConfig::setErrorPages(const std::map<int, std::string> &error_pages)
+void BaseConfig::setErrorPages(const std::map<int, std::string>& error_pages)
 {
 	_error_pages = error_pages;
 }
 
-void BaseConfig::setClientMaxBodySize(const std::string &size)
+void BaseConfig::setClientMaxBodySize(const std::string& size)
 {
 	_client_max_body_size = SizeValue(size);
 }
 
-void BaseConfig::setRoot(const std::string &root) { _root = root; }
+void BaseConfig::setRoot(const std::string& root) { _root = root; }
 
-void BaseConfig::setIndex(const std::vector<std::string> &index)
+void BaseConfig::setIndex(const std::vector<std::string>& index)
 {
 	_index = index;
 }
 
-void BaseConfig::addIndex(const std::string &index) { _index.push_back(index); }
+void BaseConfig::addIndex(const std::string& index) { _index.push_back(index); }
 
-void BaseConfig::setAllowedMethods(const std::set<HttpMethod> &methods)
+void BaseConfig::setAllowedMethods(const std::set<HttpMethod>& methods)
 {
 	_allowed_methods = methods;
 }
@@ -52,12 +52,12 @@ void BaseConfig::addAllowedMethod(HttpMethod method)
 
 void BaseConfig::setAutoindex(bool autoindex) { _autoindex = autoindex; }
 
-void BaseConfig::setUploadStore(const std::string &path)
+void BaseConfig::setUploadStore(const std::string& path)
 {
 	_upload_store = path;
 }
 
-const std::map<int, std::string> &BaseConfig::getErrorPages() const
+const std::map<int, std::string>& BaseConfig::getErrorPages() const
 {
 	return _error_pages;
 }
@@ -76,11 +76,11 @@ size_t BaseConfig::getClientMaxBodySize() const
 	return _client_max_body_size.getBytes();
 }
 
-const std::string &BaseConfig::getRoot() const { return _root; }
+const std::string& BaseConfig::getRoot() const { return _root; }
 
-const std::vector<std::string> &BaseConfig::getIndex() const { return _index; }
+const std::vector<std::string>& BaseConfig::getIndex() const { return _index; }
 
-const std::set<HttpMethod> &BaseConfig::getAllowedMethods() const
+const std::set<HttpMethod>& BaseConfig::getAllowedMethods() const
 {
 	return _allowed_methods;
 }
@@ -92,9 +92,9 @@ bool BaseConfig::isMethodAllowed(HttpMethod method) const
 
 bool BaseConfig::getAutoindex() const { return _autoindex; }
 
-const std::string &BaseConfig::getUploadStore() const { return _upload_store; }
+const std::string& BaseConfig::getUploadStore() const { return _upload_store; }
 
-void BaseConfig::inheritFrom(const BaseConfig &parent)
+void BaseConfig::inheritFrom(const BaseConfig& parent)
 {
 	if (_error_pages.empty())
 		_error_pages = _error_pages = parent.getErrorPages();

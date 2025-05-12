@@ -14,7 +14,7 @@ ConfigTokenizer::~ConfigTokenizer() {}
 
 void ConfigTokenizer::initializeDirectiveNames()
 {
-	static const char *directives[] = { "listen",
+	static const char* directives[] = { "listen",
 																			"host",
 																			"server_name",
 																			"error_page",
@@ -40,7 +40,7 @@ void ConfigTokenizer::initializeDirectiveNames()
 			std::set<std::string>(directives, directives + numDirectives);
 }
 
-bool ConfigTokenizer::loadFromFile(const std::string &fileName)
+bool ConfigTokenizer::loadFromFile(const std::string& fileName)
 {
 	std::ifstream file(fileName.c_str());
 	if (!file.is_open())
@@ -66,7 +66,7 @@ bool ConfigTokenizer::empty() const
 	return _tokens.empty() || _currentPos >= _tokens.size();
 }
 
-const ConfigTokenizer::TokenRecord &ConfigTokenizer::front() const
+const ConfigTokenizer::TokenRecord& ConfigTokenizer::front() const
 {
 	if (_currentPos < _tokens.size())
 		return _tokens[_currentPos];
@@ -90,7 +90,7 @@ size_t ConfigTokenizer::getCurrentPosition() const { return _currentPos; }
 
 void ConfigTokenizer::resetPosition() { _currentPos = 0; }
 
-const ConfigTokenizer::TokenRecord &ConfigTokenizer::peek(size_t n) const
+const ConfigTokenizer::TokenRecord& ConfigTokenizer::peek(size_t n) const
 {
 	size_t peekPos = _currentPos + n - 1;
 	if (peekPos < _tokens.size())
@@ -115,7 +115,7 @@ void ConfigTokenizer::printTokens() const
 	std::cout << "Tokens: \n";
 	for (size_t i = 0; i < _tokens.size(); ++i)
 	{
-		const TokenRecord &record = _tokens[i];
+		const TokenRecord& record = _tokens[i];
 		std::cout << "Token: '" << record.token << "', Type: " << record.type
 							<< ", Line: " << record.line << ", Column: " << record.column;
 		if (i == _currentPos)
@@ -124,7 +124,7 @@ void ConfigTokenizer::printTokens() const
 	}
 }
 
-void ConfigTokenizer::tokenize(const std::string &content)
+void ConfigTokenizer::tokenize(const std::string& content)
 {
 	size_t pos	= 0;
 	size_t col	= 1;
@@ -164,7 +164,7 @@ void ConfigTokenizer::tokenize(const std::string &content)
 	addToken("EOF", CTT_END_OF_FILE, line, col);
 }
 
-void ConfigTokenizer::addToken(const std::string &token, ConfigTokenType type,
+void ConfigTokenizer::addToken(const std::string& token, ConfigTokenType type,
 															 size_t line, size_t column)
 {
 	_tokens.push_back(TokenRecord(token, type, line, column));
@@ -180,13 +180,13 @@ bool ConfigTokenizer::isSizeSuffix(char c) const
 	return c == 'K' || c == 'k' || c == 'M' || c == 'm' || c == 'G' || c == 'g';
 }
 
-bool ConfigTokenizer::isDirectiveName(const std::string &token) const
+bool ConfigTokenizer::isDirectiveName(const std::string& token) const
 {
 	return _directiveNames.find(token) != _directiveNames.end();
 }
 
-void ConfigTokenizer::skipWhitespace(const std::string &content, size_t &pos,
-																		 size_t &line, size_t &col)
+void ConfigTokenizer::skipWhitespace(const std::string& content, size_t& pos,
+																		 size_t& line, size_t& col)
 {
 	while (pos < content.length() && isspace(content[pos]))
 	{
@@ -201,8 +201,8 @@ void ConfigTokenizer::skipWhitespace(const std::string &content, size_t &pos,
 	}
 }
 
-void ConfigTokenizer::processComment(const std::string &content, size_t &pos,
-																		 size_t &line, size_t &col)
+void ConfigTokenizer::processComment(const std::string& content, size_t& pos,
+																		 size_t& line, size_t& col)
 {
 	std::string comment = "#";
 	pos++;
@@ -222,8 +222,8 @@ void ConfigTokenizer::processComment(const std::string &content, size_t &pos,
 	}
 }
 
-void ConfigTokenizer::processSymbol(const std::string &content, size_t &pos,
-																		size_t &line, size_t &col)
+void ConfigTokenizer::processSymbol(const std::string& content, size_t& pos,
+																		size_t& line, size_t& col)
 {
 	size_t startCol = col;
 	char	 symbol		= content[pos];
@@ -255,8 +255,8 @@ void ConfigTokenizer::processSymbol(const std::string &content, size_t &pos,
 	col++;
 }
 
-void ConfigTokenizer::processIdentifier(const std::string &content, size_t &pos,
-																				size_t &line, size_t &col)
+void ConfigTokenizer::processIdentifier(const std::string& content, size_t& pos,
+																				size_t& line, size_t& col)
 {
 	size_t startCol = col;
 
@@ -284,7 +284,7 @@ void ConfigTokenizer::processIdentifier(const std::string &content, size_t &pos,
 	addToken(identifier, type, line, startCol);
 }
 
-bool ConfigTokenizer::isSize(const std::string &identifier) const
+bool ConfigTokenizer::isSize(const std::string& identifier) const
 {
 	if (identifier.size() >= 2)
 	{
@@ -297,7 +297,7 @@ bool ConfigTokenizer::isSize(const std::string &identifier) const
 	return false;
 }
 
-bool ConfigTokenizer::isNumber(const std::string &identifier) const
+bool ConfigTokenizer::isNumber(const std::string& identifier) const
 {
 	if (identifier.size() > 0)
 	{

@@ -1,6 +1,7 @@
 BasedOnStyle: LLVM
 UseTab: Always
 TabWidth: 2
+IndentWidth: 2
 ColumnLimit: 80
 BreakBeforeBraces: Allman
 SpaceBeforeParens: ControlStatements
@@ -15,4 +16,4 @@ AlignTrailingComments: true
 BinPackParameters: true
 BinPackArguments: true
 BreakBeforeTernaryOperators: true
-IndentWidth: 2
+PointerAlignment: Left

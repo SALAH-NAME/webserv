@@ -13,14 +13,14 @@ private:
 	bool											parseConfigFile();
 
 public:
-	ConfigManager(const std::string &config_file = "webserv.conf");
+	ConfigManager(const std::string& config_file = "webserv.conf");
 	bool														 load();
-	const GlobalConfig							&getGlobalConfig() const;
-	const std::vector<ServerConfig> &getServers() const;
-	const ServerConfig							*findServer(const std::string &host,
+	const GlobalConfig&							 getGlobalConfig() const;
+	const std::vector<ServerConfig>& getServers() const;
+	const ServerConfig*							 findServer(const std::string& host,
 																							unsigned int			 port) const;
-	const ServerConfig *findServer(const std::string &host, unsigned int port,
-																 const std::string &server_name) const;
+	const ServerConfig* findServer(const std::string& host, unsigned int port,
+																 const std::string& server_name) const;
 };
 
 #endif

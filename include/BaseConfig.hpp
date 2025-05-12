@@ -22,26 +22,26 @@ protected:
 
 public:
 	virtual ~BaseConfig();
-	void setErrorPage(int status_code, const std::string &path);
-	void setErrorPages(const std::map<int, std::string> &error_pages);
-	void setClientMaxBodySize(const std::string &size);
-	void setRoot(const std::string &root);
-	void setIndex(const std::vector<std::string> &index);
-	void addIndex(const std::string &index);
-	void setAllowedMethods(const std::set<HttpMethod> &methods);
+	void setErrorPage(int status_code, const std::string& path);
+	void setErrorPages(const std::map<int, std::string>& error_pages);
+	void setClientMaxBodySize(const std::string& size);
+	void setRoot(const std::string& root);
+	void setIndex(const std::vector<std::string>& index);
+	void addIndex(const std::string& index);
+	void setAllowedMethods(const std::set<HttpMethod>& methods);
 	void addAllowedMethod(HttpMethod method);
 	void setAutoindex(bool autoindex);
-	void setUploadStore(const std::string &path);
-	const std::map<int, std::string> &getErrorPages() const;
+	void setUploadStore(const std::string& path);
+	const std::map<int, std::string>& getErrorPages() const;
 	std::string												getErrorPage(int status_code) const;
 	size_t														getClientMaxBodySize() const;
-	const std::string								 &getRoot() const;
-	const std::vector<std::string>	 &getIndex() const;
-	const std::set<HttpMethod>			 &getAllowedMethods() const;
+	const std::string&								getRoot() const;
+	const std::vector<std::string>&		getIndex() const;
+	const std::set<HttpMethod>&				getAllowedMethods() const;
 	bool															isMethodAllowed(HttpMethod method) const;
 	bool															getAutoindex() const;
-	const std::string								 &getUploadStore() const;
-	virtual void											inheritFrom(const BaseConfig &parent);
+	const std::string&								getUploadStore() const;
+	virtual void											inheritFrom(const BaseConfig& parent);
 };
 
 #endif

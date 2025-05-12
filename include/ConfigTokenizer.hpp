@@ -34,7 +34,7 @@ public:
 		size_t					line;
 		size_t					column;
 
-		TokenRecord(const std::string &tok, ConfigTokenType typ, size_t l, size_t c)
+		TokenRecord(const std::string& tok, ConfigTokenType typ, size_t l, size_t c)
 				: token(tok), type(typ), line(l), column(c)
 		{
 		}
@@ -44,14 +44,14 @@ public:
 	~ConfigTokenizer();
 
 	bool							 empty() const;
-	bool							 loadFromFile(const std::string &fileName);
-	const TokenRecord &front() const;
+	bool							 loadFromFile(const std::string& fileName);
+	const TokenRecord& front() const;
 	void							 pop();
 
 	std::vector<TokenRecord> getAllTokens() const;
 	size_t									 getCurrentPosition() const;
 	void										 resetPosition();
-	const TokenRecord				&peek(size_t n = 1) const;
+	const TokenRecord&			 peek(size_t n = 1) const;
 	bool										 isEnd() const;
 
 	// Debugging
@@ -61,25 +61,25 @@ private:
 	std::vector<TokenRecord> _tokens;
 	size_t									 _currentPos;
 
-	void tokenize(const std::string &content);
-	void addToken(const std::string &token, ConfigTokenType type, size_t line,
+	void tokenize(const std::string& content);
+	void addToken(const std::string& token, ConfigTokenType type, size_t line,
 								size_t column);
 
 	bool isSpecialChar(char c) const;
-	bool isDirectiveName(const std::string &token) const;
+	bool isDirectiveName(const std::string& token) const;
 	bool isSizeSuffix(char c) const;
-	bool isSize(const std::string &identifier) const;
-	bool isNumber(const std::string &identifier) const;
+	bool isSize(const std::string& identifier) const;
+	bool isNumber(const std::string& identifier) const;
 
-	void processIdentifier(const std::string &content, size_t &pos, size_t &line,
-												 size_t &col);
-	void processComment(const std::string &content, size_t &pos, size_t &line,
-											size_t &col);
-	void processSymbol(const std::string &content, size_t &pos, size_t &line,
-										 size_t &col);
+	void processIdentifier(const std::string& content, size_t& pos, size_t& line,
+												 size_t& col);
+	void processComment(const std::string& content, size_t& pos, size_t& line,
+											size_t& col);
+	void processSymbol(const std::string& content, size_t& pos, size_t& line,
+										 size_t& col);
 
-	void skipWhitespace(const std::string &content, size_t &pos, size_t &line,
-											size_t &col);
+	void skipWhitespace(const std::string& content, size_t& pos, size_t& line,
+											size_t& col);
 
 	std::set<std::string> _directiveNames;
 	void									initializeDirectiveNames();

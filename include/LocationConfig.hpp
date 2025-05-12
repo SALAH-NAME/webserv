@@ -15,19 +15,19 @@ private:
 
 public:
 	LocationConfig();
-	void setRedirect(int status_code, const std::string &url);
-	void setCgiPass(const std::string &path);
+	void setRedirect(int status_code, const std::string& url);
+	void setCgiPass(const std::string& path);
 	void setCgitTimeout(unsigned int timeout);
-	void setPath(const std::string &path, bool is_regex = false);
+	void setPath(const std::string& path, bool is_regex = false);
 
-	const RedirectInfo &getRedirect() const;
-	const std::string	 &getCgiPass() const;
+	const RedirectInfo& getRedirect() const;
+	const std::string&	getCgiPass() const;
 	unsigned int				getCgiTimeout() const;
-	const std::string	 &getPath() const;
+	const std::string&	getPath() const;
 	bool								isRegex() const;
 	bool								isCgi() const;
 	bool								hasRedirect() const;
-	void								inheritFrom(const BaseConfig &parent);
+	void								inheritFrom(const BaseConfig& parent);
 };
 
 #endif

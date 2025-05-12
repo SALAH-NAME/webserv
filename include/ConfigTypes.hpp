@@ -13,7 +13,7 @@ enum HttpMethod
 	HTTP_DELETE
 };
 
-inline HttpMethod stringToHttpMethod(const std::string &method)
+inline HttpMethod stringToHttpMethod(const std::string& method)
 {
 	if (method == "GET")
 		return HTTP_GET;
@@ -45,7 +45,7 @@ struct RedirectInfo
 	std::string url;
 
 	RedirectInfo();
-	RedirectInfo(int code, const std::string &target);
+	RedirectInfo(int code, const std::string& target);
 	bool isValid() const;
 };
 
@@ -56,14 +56,14 @@ private:
 
 public:
 	SizeValue();
-	SizeValue(const std::string &sizeStr);
+	SizeValue(const std::string& sizeStr);
 
 	size_t getBytes() const;
-	void	 parseSize(const std::string &sizeStr);
+	void	 parseSize(const std::string& sizeStr);
 
-	bool operator<(const SizeValue &other) const;
-	bool operator>(const SizeValue &other) const;
-	bool operator==(const SizeValue &other) const;
+	bool operator<(const SizeValue& other) const;
+	bool operator>(const SizeValue& other) const;
+	bool operator==(const SizeValue& other) const;
 };
 
 template <typename T> std::string to_string(T value)
