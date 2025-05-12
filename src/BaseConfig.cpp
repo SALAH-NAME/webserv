@@ -42,6 +42,7 @@ void BaseConfig::addIndex(const std::string& index) { _index.push_back(index); }
 
 void BaseConfig::setAllowedMethods(const std::set<HttpMethod>& methods)
 {
+	/*_allowed_methods.clear();*/
 	_allowed_methods = methods;
 }
 

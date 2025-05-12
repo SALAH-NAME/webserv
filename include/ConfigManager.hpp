@@ -4,6 +4,7 @@
 #include "GlobalConfig.hpp"
 #include "ServerConfig.hpp"
 #include <string>
+
 class ConfigManager
 {
 private:

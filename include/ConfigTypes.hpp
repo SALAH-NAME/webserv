@@ -24,7 +24,7 @@ inline HttpMethod stringToHttpMethod(const std::string& method)
 	throw std::invalid_argument("Invalid HTTP method: " + method);
 }
 
-inline std::string HttpMethodToString(HttpMethod method)
+inline std::string httpMethodToString(HttpMethod method)
 {
 	switch (method)
 	{

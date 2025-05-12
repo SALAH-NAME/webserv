@@ -42,7 +42,7 @@ public:
 	const std::string&													 getSessionName() const;
 	const std::string&													 getSessionPath() const;
 	unsigned int																 getSessionTimeout() const;
-	const std::map<std::string, LocationConfig>& getLocation() const;
+	const std::map<std::string, LocationConfig>& getLocations() const;
 	const std::map<std::string, LocationConfig>& getRegexLocation() const;
 
 	/*const LocationConfig* findLocation(const std::string& path) const;*/

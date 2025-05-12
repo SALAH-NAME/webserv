@@ -80,7 +80,7 @@ unsigned int ServerConfig::getSessionTimeout() const
 	return _session_timeout;
 }
 
-const std::map<std::string, LocationConfig>& ServerConfig::getLocation() const
+const std::map<std::string, LocationConfig>& ServerConfig::getLocations() const
 {
 	return _locations;
 }

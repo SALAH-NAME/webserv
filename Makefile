@@ -10,7 +10,8 @@ OBJ_DIR := obj
 
 SRCS := main.cpp \
 				ConfigTokenizer.cpp \
-				ConfigTypes.cpp BaseConfig.cpp GlobalConfig.cpp LocationConfig.cpp ServerConfig.cpp
+				ConfigTypes.cpp BaseConfig.cpp GlobalConfig.cpp LocationConfig.cpp ServerConfig.cpp \
+				ConfigManager.cpp ConfigPrinter.cpp
 
 OBJS := $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
 DEPS := $(OBJS:.o=.d)
@@ -22,6 +23,7 @@ TEST_DIR := test
 UNIT_SRCS := $(filter-out main.cpp, $(SRCS))
 
 TEST_SRCS := unit_test.cpp \
+						 testTokenizer.cpp testConfigPrint.cpp
 
 UNIT_OBJS := $(addprefix $(OBJ_DIR)/, $(UNIT_SRCS:.cpp=.o)) $(addprefix $(OBJ_DIR)/, $(TEST_SRCS:.cpp=.o))
 UNIT_DEPS := $(UNIT_OBJS:.o=.d)
