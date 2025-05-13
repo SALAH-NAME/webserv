@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   receive_Requests.cpp                               :+:      :+:    :+:   */
+/*   ReceiveRequests.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/05/12 20:35:31 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/13 09:29:25 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "server.hpp"
+#include "Server.hpp"
 
 void	Server::setEventStatus(int i, bool completed) {
 	// std::cout << "(socket fd: " << socket_fd << ") finished receiving request from fd : " << events[i].data.fd << "\n";

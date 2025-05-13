@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   event_handler.cpp                                  :+:      :+:    :+:   */
+/*   EventHandler.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/05/12 20:34:57 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/13 09:29:25 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "server.hpp"
+#include "Server.hpp"
 
 void	Server::merge_new_events(struct epoll_event* newEvent) {
 	for (size_t i = 0; i < events.size(); i++) {

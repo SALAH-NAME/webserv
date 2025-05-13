@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   server.hpp                                         :+:      :+:    :+:   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/05/12 19:22:31 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/13 09:30:15 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,9 @@
 #include <map>
 #include <sstream>
 
-#include "request.hpp"
-#include "response.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
+
 
 #define MAX_EVENTS 10
 
