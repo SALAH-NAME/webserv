@@ -20,20 +20,9 @@ void signal_handler(int sig) {
 	}
 }
 
-std::vector<std::map<std::string, int> >& getInfos(int serverNum) {
-
-	if (serverNum > 4) {
-		std::cout << "set more ports\n";
-		exit(0);
-	}
+std::vector<std::map<std::string, int> > getInfos(int serverNum) {
 	
-	std::vector<std::map<std::string, int> > &serverInfos = *(new std::vector<std::map<std::string, int> >);
-	std::vector<int> ports;
-	
-	ports.push_back(8080);
-	ports.push_back(5050);
-	ports.push_back(1010);
-	ports.push_back(4747);
+	std::vector<std::map<std::string, int> > serverInfos;
 	
 	for (int i = 0; i < serverNum; i++) {
 
@@ -42,29 +31,61 @@ std::vector<std::map<std::string, int> >& getInfos(int serverNum) {
 		newInfos["type"] = SOCK_STREAM | SOCK_NONBLOCK;
 		newInfos["protocol"] = 0;
 		newInfos["nMaxBacklog"] = 100;
-		newInfos["port"] = ports[i];
 		newInfos["domain"] = AF_INET;
+		newInfos["id"] = i + 1;
 		serverInfos.push_back(newInfos);
 	}
 	return serverInfos;
 }
 
+std::vector<std::vector<int> >	setUpPorts(void) {
+	std::vector<int> ports1;
+	std::vector<int> ports2;
+	std::vector<int> ports3;
+	std::vector<int> ports4;
+
+	
+	ports1.push_back(8080);
+	ports1.push_back(5050);
+	ports2.push_back(1010);
+	ports2.push_back(4747);
+	ports3.push_back(1212);
+	ports3.push_back(5757);
+	ports4.push_back(6699);
+	ports4.push_back(7070);
+
+	std::vector<std::vector<int> > Ports;
+	Ports.push_back(ports1);
+	Ports.push_back(ports2);
+	Ports.push_back(ports3);
+	Ports.push_back(ports4);
+
+	return (Ports);
+}
+
 void	setUpServers(std::vector<Server>& servers, int serversNum) {
-	std::vector<std::map<std::string, int> >& serverInfos = getInfos(serversNum);
+	if (serversNum > 4) {
+		std::cout << "set more ports\n";
+		exit(0);
+	}
+
+	std::vector<std::map<std::string, int> > serverInfos = getInfos(serversNum);
+	std::vector<std::vector<int> > Ports = setUpPorts();
 
 	std::cout << "starting....\n";
 	for (int i = 0; i < serversNum; i++) {
 		try {
-			servers.push_back(Server(serverInfos[i]));
+			servers.push_back(Server(serverInfos[i], Ports[i]));
 		}
 		catch (const char *errorMssg) {
 			perror(errorMssg);
 		}
 	}
-	delete &serverInfos;
+	setUpPorts();
 }
 
 int	setEpoll(std::vector<Server> &servers) {
+	std::cout << "----------------- Set Epoll ----------------------\n";
 	int epfd = epoll_create1(0);
 	if (epfd == -1)
 		throw ("epoll create1 failed");
@@ -72,15 +93,26 @@ int	setEpoll(std::vector<Server> &servers) {
 
 	for (size_t i = 0; i < servers.size(); i++) {
 
-		servers[i].set_epfd(epfd);
-		struct epoll_event	&targetInfos = servers[i].getTarget();
-		targetInfos.data.fd = servers[i].getSocket_fd();  // The file descriptor we are interested in (the server socket)
-		targetInfos.events = EPOLLIN;     // We are interested in read events (incoming connections)
-		targetInfos.events |= EPOLLET;    // Use Edge-Triggered mode for efficiency
+		std::vector<int>& sockets_fds = servers[i].getSockets_fds();
+		// std::cout << "server " << servers[i].get_id() << " size: " << servers[i].getSockets_fds().size() << "\n";
+		std::cout << "Server: " << servers[i].get_id() << " || sockets fds{"; //
+		for (size_t x = 0; x < sockets_fds.size(); x++) {
+			servers[i].set_epfd(epfd);
+			struct epoll_event	&targetInfos = servers[i].getTarget();
+			targetInfos.data.fd = sockets_fds[x];  // The file descriptor we are interested in (the server socket)
+			targetInfos.events = EPOLLIN;     // We are interested in read events (incoming connections)
+			targetInfos.events |= EPOLLET;    // Use Edge-Triggered mode for efficiency
+			
+			if (epoll_ctl(epfd, EPOLL_CTL_ADD, sockets_fds[x], &targetInfos) == -1) {
+				std::cout << "\nepoll ctl failed with server: " << servers[i].get_id() << " socket: " << sockets_fds[x] << "\n";
+				throw "epoll_ctl failed";
+			}
 
-		if (epoll_ctl(epfd, EPOLL_CTL_ADD, servers[i].getSocket_fd(), &targetInfos) == -1)
-			throw "epoll_ctl failed";
-		std::cout << "Server socket {" << servers[i].getSocket_fd() << "} added to epoll set." << std::endl;
+			std::cout << sockets_fds[x]; //
+			if ((x + 1) < sockets_fds.size()) //
+				std::cout << ", "; //
+		}
+		std::cout << "} added to epoll set\n"; //
 	}
 	return epfd;
 }
