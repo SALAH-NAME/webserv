@@ -2,17 +2,7 @@
 
 using namespace std;
 
-Environment::Environment(char **envp)
-{
-	string key, value;
-	for (int i=0;envp[i];i++)
-	{
-		stringstream ss(envp[i]);
-		getline(ss, key, '=');
-		getline(ss, value, '\n');
-		env[key] = value;
-	}
-}
+Environment::Environment(char **envp){}
 
 void Environment::display()
 {
