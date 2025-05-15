@@ -28,6 +28,16 @@ void LocationConfig::setPath(const std::string& path, bool is_regex)
 	_is_regex = is_regex;
 }
 
+void LocationConfig::setSessionTimeout(int timeout)
+{
+    _session_timeout = timeout;
+}
+
+int LocationConfig::getSessionTimeout() const
+{
+    return _session_timeout;
+}
+
 const RedirectInfo& LocationConfig::getRedirect() const { return _redirect; }
 
 const std::string& LocationConfig::getCgiPass() const { return _cgi_pass; }

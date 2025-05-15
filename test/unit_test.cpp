@@ -4,6 +4,8 @@
 
 void testAllTokenizer();
 void testConfigPrint();
+void testConfigPrinter();
+void testZeroValuesConfigPrinter();
 
 typedef void (*TestFunction)();
 
@@ -27,7 +29,7 @@ int displayMenu(const std::vector<Test>& tests)
 	for (size_t i = 0; i < tests.size(); ++i)
 		std::cout << i + 1 << ". " << tests[i].name << std::endl;
 
-	std::cout << (tests.size() + 1) << ".Run all tests" << std::endl;
+	std::cout << (tests.size() + 1) << ". Run all tests" << std::endl;
 	std::cout << "0. Exit" << std::endl;
 
 	int choice;
@@ -42,6 +44,8 @@ std::vector<Test> buildTests()
 
 	addTest(tests, "testAllTokenizer", testAllTokenizer);
 	addTest(tests, "testConfigPrint", testConfigPrint);
+	addTest(tests, "testConfigPrint_2", testConfigPrinter);
+	addTest(tests, "testConfigPrint_3_zero", testZeroValuesConfigPrinter);
 
 	return tests;
 }
