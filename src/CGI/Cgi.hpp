@@ -10,7 +10,7 @@ class CgiHandler{
 		Request req;
 	public:
 		CgiHandler(Request http_req, Environment my_env);
-		~CgiHandler();
+		// ~CgiHandler();
 };
 
 #endif

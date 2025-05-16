@@ -13,7 +13,7 @@ class Environment{
 	public:
 		Environment(char **envp);
 		void Add(const std::string key, const std::string value);
-		char **GetAllEnv();
+		char **GetRawEnv();
 		void display();
 };
 

@@ -15,7 +15,7 @@ void Environment::Add(const string key, const string value)
 	env[key] = value;
 }
 
-char **Environment::GetAllEnv()
+char **Environment::GetRawEnv()
 {
 	char **res = new char*[env.size() + 1];
 	int i=0;
