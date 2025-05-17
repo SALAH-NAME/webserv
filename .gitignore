@@ -1,4 +1,8 @@
 **.o
 **.d
 **.a
+.clangd
+compile_flags.txt
 webserv
+unit
+intra_test/
