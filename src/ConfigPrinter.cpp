@@ -199,7 +199,6 @@ void ConfigPrinter::printLocationConfig(std::ostream&					out,
 {
 	printBaseConfig(out, location, indent_level);
 
-
 	const RedirectInfo& redirect = location.getRedirect();
 	if (redirect.isValid())
 	{

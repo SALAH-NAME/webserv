@@ -22,7 +22,7 @@ public:
 	void setPath(const std::string& path, bool is_regex = false);
 	void setSessionTimeout(int timeout);
 
-	int getSessionTimeout() const;
+	int									getSessionTimeout() const;
 	const RedirectInfo& getRedirect() const;
 	const std::string&	getCgiPass() const;
 	unsigned int				getCgiTimeout() const;

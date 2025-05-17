@@ -6,7 +6,7 @@
 
 LocationConfig::LocationConfig()
 		: BaseConfig(), _cgi_timeout(DefaultConfig::CGI_TIMEOUT),
-			_is_regex(DefaultConfig::IS_REGEX)
+			_is_regex(DefaultConfig::IS_REGEX), _session_timeout(0)
 {
 }
 
@@ -30,13 +30,10 @@ void LocationConfig::setPath(const std::string& path, bool is_regex)
 
 void LocationConfig::setSessionTimeout(int timeout)
 {
-    _session_timeout = timeout;
+	_session_timeout = timeout;
 }
 
-int LocationConfig::getSessionTimeout() const
-{
-    return _session_timeout;
-}
+int LocationConfig::getSessionTimeout() const { return _session_timeout; }
 
 const RedirectInfo& LocationConfig::getRedirect() const { return _redirect; }
 
