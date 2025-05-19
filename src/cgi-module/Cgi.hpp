@@ -5,7 +5,8 @@
 #include <sys/wait.h>
 #include "Request.tmp.hpp"
 #include "Environment.hpp"
-class CgiHandler{
+
+class CgiHandler{// a class made to abstract working with the cgi
 	private:
 		Request req;
 	public:

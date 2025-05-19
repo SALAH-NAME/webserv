@@ -8,7 +8,7 @@ string num_to_string(int num){
 	return ss.str();
 }
 
-void	prepare_cgi_env(Request	&http_req, Environment &my_env)
+void	prepare_cgi_env(Request	&http_req, Environment &my_env)//adding data fetched from the request into the env object
 {
 	my_env.Add("GATEWAY_INTERFACE=", "CGI/1.1");
 	my_env.Add("REQUEST_METHOD=", http_req.method);
@@ -26,7 +26,7 @@ void	prepare_cgi_env(Request	&http_req, Environment &my_env)
 		my_env.Add("HTTP_" + it->first+"=", it->second);
 }
 
-CgiHandler::CgiHandler(Request http_req, Environment my_env)
+CgiHandler::CgiHandler(Request http_req, Environment my_env)//currently just running the cgi-script with the environment, should make the child write the output in pipe and add it epoll..
 {
 	int id;
 	char *tab[3];

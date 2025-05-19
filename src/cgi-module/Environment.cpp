@@ -2,7 +2,7 @@
 
 using namespace std;
 
-Environment::Environment(char **envp){}
+Environment::Environment(){}
 
 void Environment::display()
 {

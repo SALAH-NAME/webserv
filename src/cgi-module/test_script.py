@@ -1,5 +1,5 @@
 import os
-
+#this script is used to test the passed environment
 env = str(os.environ)
 flag = False
 PrevChar = 'c'

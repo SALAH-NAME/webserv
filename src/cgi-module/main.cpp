@@ -21,10 +21,10 @@ void test_req_init(Request &req)
 
 }
 
-int main(int ac, char **av, char **envp)
+int main(int ac, char **av)
 {
 	Request req;
-	Environment test(envp);
+	Environment test;
 	test_req_init(req);
 	CgiHandler tst(req, test);
 }
