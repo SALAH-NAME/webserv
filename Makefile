@@ -1,7 +1,7 @@
 NAME := webserv
 
 CXX	:= c++
-CXXFLAGS := -Wall -Wextra -Werror -std=c++98
+CXXFLAGS := #-Wall -Wextra -Werror -std=c++98
 INCFLAGS := -I./include/
 DEPFLAGS := -MMD -MP
 
@@ -10,8 +10,9 @@ OBJ_DIR := obj
 
 SRCS := main.cpp \
 		ConfigTokenizer.cpp ConfigTypes.cpp BaseConfig.cpp GlobalConfig.cpp \
-		LocationConfig.cpp ServerConfig.cpp ConfigManager.cpp ConfigPrinter.cpp \
-		Server.cpp EventHandler.cpp ReceiveRequests.cpp Response.cpp Request.cpp SendResponse.cpp
+		LocationConfig.cpp ServerConfig.cpp ConfigManager.cpp ConfigParser.cpp \
+		ConfigPrinter.cpp Server.cpp EventHandler.cpp ReceiveRequests.cpp \
+		Response.cpp Request.cpp SendResponse.cpp
 
 OBJS := $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
 DEPS := $(OBJS:.o=.d)

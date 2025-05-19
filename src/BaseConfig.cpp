@@ -5,13 +5,12 @@
 #include <string>
 
 BaseConfig::BaseConfig()
-		: _client_max_body_size(DefaultConfig::CLIENT_MAX_BODY_SIZE),
-			_root(DefaultConfig::ROOT), _autoindex(DefaultConfig::AUTOINDEX)
+		: _client_max_body_size("0"), _root(""), _autoindex(false)
 {
-	_index.push_back(DefaultConfig::INDEX[0]);
-	_allowed_methods.insert(HTTP_GET);
-	_allowed_methods.insert(HTTP_POST);
-	_allowed_methods.insert(HTTP_DELETE);
+	/*_index.push_back(DefaultConfig::INDEX[0]);*/
+	/*_allowed_methods.insert(HTTP_GET);*/
+	/*_allowed_methods.insert(HTTP_POST);*/
+	/*_allowed_methods.insert(HTTP_DELETE);*/
 }
 
 BaseConfig::~BaseConfig() {}

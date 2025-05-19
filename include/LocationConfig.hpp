@@ -12,6 +12,7 @@ private:
 	unsigned int _cgi_timeout;
 	std::string	 _path;
 	bool				 _is_regex;
+	unsigned int _session_timeout;
 
 public:
 	LocationConfig();
@@ -19,7 +20,9 @@ public:
 	void setCgiPass(const std::string& path);
 	void setCgitTimeout(unsigned int timeout);
 	void setPath(const std::string& path, bool is_regex = false);
+	void setSessionTimeout(int timeout);
 
+	int									getSessionTimeout() const;
 	const RedirectInfo& getRedirect() const;
 	const std::string&	getCgiPass() const;
 	unsigned int				getCgiTimeout() const;

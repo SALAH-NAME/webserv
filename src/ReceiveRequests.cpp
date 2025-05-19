@@ -6,14 +6,13 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/05/13 09:29:25 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/18 11:19:44 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
 void	Server::setEventStatus(int i, bool completed) {
-	// std::cout << "(socket fd: " << socket_fd << ") finished receiving request from fd : " << events[i].data.fd << "\n";
 	epoll_ctl(epfd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
 
 	requests.erase(events[i].data.fd);
@@ -35,6 +34,7 @@ void    Server::receiveRequests() {
 		bytes_read = recv(events[i].data.fd, (void *)buffer, 1, 0);
 		if (bytes_read > 0) {
 			requests[events[i].data.fd].setRequest(buffer);
+			requests[events[i].data.fd].setReadBytes(bytes_read);
 			clientsSockets[events[i].data.fd] = std::time(NULL);
 		}
 		if (bytes_read == 0 || requests[events[i].data.fd].getRequest().find("\r\n\r\n") != std::string::npos) {
@@ -43,7 +43,7 @@ void    Server::receiveRequests() {
 			i--;
 			continue ; 
 		}
-		if (std::time(NULL) - clientsSockets[events[i].data.fd] > 20) {
+		if (std::time(NULL) - clientsSockets[events[i].data.fd] > getTimeout()) {
 			std::cout << "(socket: " << requests[events[i].data.fd].get_serverSocketFD() << ")Time out, close connection";
 			std::cout << " with client fd : " << events[i].data.fd << "\n";
 			setEventStatus(i, false);

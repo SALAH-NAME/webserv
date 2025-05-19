@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/05/13 09:29:53 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/17 16:27:28 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,13 +16,17 @@
 
 Request::Request(void) {}
 
-Request::Request(int fd, int socket_fd) : socket_fd(fd), serverSocket_fd(socket_fd) {}
+Request::Request(int fd, int socket_fd) : socket_fd(fd), serverSocket_fd(socket_fd),
+											readBytes(0) {}
 
-// Request::Request(const Request& other) {
-// 	std::memcpy(this, &other, sizeof(Request));
-// }
+void	Request::setReadBytes(size_t bytes) {
+	readBytes += bytes;
+}
 
-
+size_t	Request::getReadBytes(void) {
+	return readBytes;
+}
+											
 int			Request::getFD() {
 	return socket_fd;
 }

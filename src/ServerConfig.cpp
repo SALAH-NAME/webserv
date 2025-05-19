@@ -4,6 +4,7 @@
 #include <ctime>
 #include <vector>
 
+
 ServerConfig::ServerConfig()
 		: BaseConfig(), _listen(DefaultConfig::LISTEN), _host(DefaultConfig::HOST),
 			_session_enable(DefaultConfig::SESION_ENABLE),

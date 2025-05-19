@@ -1,9 +1,13 @@
+
 #include "ConfigPrinter.hpp"
 #include "ConfigManager.hpp"
 #include "GlobalConfig.hpp"
 #include "LocationConfig.hpp"
 #include "ServerConfig.hpp"
 #include <ostream>
+#include <sstream>
+
+#include "ConfigPrinter.hpp"
 #include <sstream>
 
 ConfigPrinter::ConfigPrinter(const ConfigManager& config_manager)
@@ -15,95 +19,149 @@ ConfigPrinter::~ConfigPrinter() {}
 
 void ConfigPrinter::print(std::ostream& out) const
 {
-	const std::vector<ServerConfig>& servers = _config_manager.getServers();
-
 	printGlobalConfig(out);
 
-	out << std::endl;
-
+	const std::vector<ServerConfig>& servers = _config_manager.getServers();
 	for (size_t i = 0; i < servers.size(); ++i)
 	{
+		if (i > 0)
+		{
+			out << "\n";
+		}
 		printServerConfig(out, servers[i]);
-		if (i < servers.size() - 1)
-			out << std::endl;
 	}
 }
 
 std::string ConfigPrinter::toString() const
 {
-	std::ostringstream ss;
-	print(ss);
-	return ss.str();
+	std::ostringstream oss;
+	print(oss);
+	return oss.str();
 }
 
 void ConfigPrinter::printGlobalConfig(std::ostream& out) const
 {
 	const GlobalConfig& global = _config_manager.getGlobalConfig();
 
-	out << "# Global Configuration" << std::endl;
-	out << "connection_timeout " << global.getConnectionTimeout() << ";"
-			<< std::endl;
-	out << "cgi_timeout " << global.getCgiTimeout() << ";" << std::endl;
+	out << "# Global Configuration\n";
+
+	out << "connection_timeout " << global.getConnectionTimeout() << ";\n";
+	out << "cgi_timeout " << global.getCgiTimeout() << ";\n";
+
 	if (!global.getErrorLog().empty())
-		out << "error_log " << global.getErrorLog() << ";" << std::endl;
+	{
+		out << "error_log " << global.getErrorLog() << ";\n";
+	}
+
 	if (!global.getAccessLog().empty())
-		out << "access_log " << global.getAccessLog() << ";" << std::endl;
+	{
+		out << "access_log " << global.getAccessLog() << ";\n";
+	}
+
 	printBaseConfig(out, global);
+
+	out << "\n";
 }
 
 void ConfigPrinter::printServerConfig(std::ostream&				out,
 																			const ServerConfig& server) const
 {
-	out << "server {" << std::endl;
-	out << "    listen " << server.getListen() << ";" << std::endl;
-	out << "    host " << server.getHost() << ";" << std::endl;
+	out << "# Server Configuration\n";
+	out << "server {\n";
+
+	printIndent(out, 1);
+	out << "listen " << server.getListen() << ";\n";
+	printIndent(out, 1);
+	out << "host " << server.getHost() << ";\n";
 
 	const std::vector<std::string>& server_names = server.getServerNames();
 	if (!server_names.empty())
 	{
-		out << "    server_name";
-		for (size_t i = 0; i < server_names.size(); ++i)
-			out << " " << server_names[i];
-		out << ";" << std::endl;
+		printIndent(out, 1);
+		out << "server_name";
+		for (std::vector<std::string>::const_iterator it = server_names.begin();
+				 it != server_names.end(); ++it)
+		{
+			out << " " << *it;
+		}
+		out << ";\n";
+	}
+
+	if (server.getSessionEnable())
+	{
+		printIndent(out, 1);
+		out << "session_enable on;\n";
+
+		if (!server.getSessionName().empty())
+		{
+			printIndent(out, 1);
+			out << "session_name " << server.getSessionName() << ";\n";
+		}
+
+		if (!server.getSessionPath().empty())
+		{
+			printIndent(out, 1);
+			out << "session_path " << server.getSessionPath() << ";\n";
+		}
+
+		printIndent(out, 1);
+		out << "session_timeout " << server.getSessionTimeout() << ";\n";
 	}
 
 	printBaseConfig(out, server, 1);
 
-	std::map<std::string, LocationConfig>::const_iterator it;
-
 	const std::map<std::string, LocationConfig>& locations =
 			server.getLocations();
-	for (it = locations.begin(); it != locations.end(); ++it)
+	for (std::map<std::string, LocationConfig>::const_iterator it =
+					 locations.begin();
+			 it != locations.end(); ++it)
 	{
-		out << std::endl;
-		out << "    location " << it->first << " {" << std::endl;
+		out << "\n";
+		printIndent(out, 1);
+		out << "location " << it->first << " {\n";
 		printLocationConfig(out, it->second, 2);
-		out << "    }" << std::endl;
+		printIndent(out, 1);
+		out << "}\n";
 	}
 
 	const std::map<std::string, LocationConfig>& regex_locations =
 			server.getRegexLocation();
-	for (it = regex_locations.begin(); it != regex_locations.end(); ++it)
+	for (std::map<std::string, LocationConfig>::const_iterator it =
+					 regex_locations.begin();
+			 it != regex_locations.end(); ++it)
 	{
-		out << std::endl;
-		out << "    location ~ " << it->first << " {" << std::endl;
+		out << "\n";
+		printIndent(out, 1);
+		out << "location ~ " << it->first << " {\n";
 		printLocationConfig(out, it->second, 2);
-		out << "    }" << std::endl;
+		printIndent(out, 1);
+		out << "}\n";
 	}
-	out << "}" << std::endl;
+
+	out << "}\n";
 }
 
 void ConfigPrinter::printBaseConfig(std::ostream& out, const BaseConfig& config,
 																		int indent_level) const
 {
-	printIndent(out, indent_level);
-	out << "client_max_body_size " << config.getClientMaxBodySize() << ";"
-			<< std::endl;
+	const std::map<int, std::string>& error_pages = config.getErrorPages();
+	for (std::map<int, std::string>::const_iterator it = error_pages.begin();
+			 it != error_pages.end(); ++it)
+	{
+		printIndent(out, indent_level);
+		out << "error_page " << it->first << " " << it->second << ";\n";
+	}
+
+	if (config.getClientMaxBodySize() > 0)
+	{
+		printIndent(out, indent_level);
+		out << "client_max_body_size " << config.getClientMaxBodySize() << ";\n";
+	}
 
 	if (!config.getRoot().empty())
 	{
 		printIndent(out, indent_level);
-		out << "root " << config.getRoot() << ";" << std::endl;
+		out << "root " << config.getRoot() << ";\n";
 	}
 
 	const std::vector<std::string>& index_files = config.getIndex();
@@ -111,33 +169,28 @@ void ConfigPrinter::printBaseConfig(std::ostream& out, const BaseConfig& config,
 	{
 		printIndent(out, indent_level);
 		out << "index";
-		for (size_t i = 0; i < index_files.size(); ++i)
+		for (std::vector<std::string>::const_iterator it = index_files.begin();
+				 it != index_files.end(); ++it)
 		{
-			out << " " << index_files[i];
+			out << " " << *it;
 		}
-		out << ";" << std::endl;
+		out << ";\n";
+	}
+
+	const std::set<HttpMethod>& allowed_methods = config.getAllowedMethods();
+	if (!allowed_methods.empty())
+	{
+		printIndent(out, indent_level);
+		out << "allowed_methods " << methodSetToString(allowed_methods) << ";\n";
 	}
 
 	printIndent(out, indent_level);
-	out << "allow_methods " << methodSetToString(config.getAllowedMethods())
-			<< ";" << std::endl;
-
-	printIndent(out, indent_level);
-	out << "autoindex " << (config.getAutoindex() ? "on" : "off") << ";"
-			<< std::endl;
+	out << "autoindex " << (config.getAutoindex() ? "on" : "off") << ";\n";
 
 	if (!config.getUploadStore().empty())
 	{
 		printIndent(out, indent_level);
-		out << "upload_store " << config.getUploadStore() << ";" << std::endl;
-	}
-
-	const std::map<int, std::string>& error_pages = config.getErrorPages();
-	std::map<int, std::string>::const_iterator it;
-	for (it = error_pages.begin(); it != error_pages.end(); ++it)
-	{
-		printIndent(out, indent_level);
-		out << "error_page " << it->first << " " << it->second << ";" << std::endl;
+		out << "upload_store " << config.getUploadStore() << ";\n";
 	}
 }
 
@@ -145,47 +198,54 @@ void ConfigPrinter::printLocationConfig(std::ostream&					out,
 																				const LocationConfig& location,
 																				int indent_level) const
 {
+	printBaseConfig(out, location, indent_level);
+
 	const RedirectInfo& redirect = location.getRedirect();
-	if (location.hasRedirect())
+	if (redirect.isValid())
 	{
 		printIndent(out, indent_level);
-		out << "redirect " << redirect.status_code << " " << redirect.url << ";"
-				<< std::endl;
+		out << "return " << redirect.status_code << " " << redirect.url << ";\n";
 	}
 
-	if (location.isCgi())
+	if (!location.getCgiPass().empty())
 	{
 		printIndent(out, indent_level);
-		out << "cgi_pass " << location.getCgiPass() << ";" << std::endl;
+		out << "cgi_pass " << location.getCgiPass() << ";\n";
 
 		if (location.getCgiTimeout() > 0)
 		{
 			printIndent(out, indent_level);
-			out << "cgi_timeout " << location.getCgiTimeout() << ";" << std::endl;
+			out << "cgi_timeout " << location.getCgiTimeout() << ";\n";
 		}
 	}
 
-	printBaseConfig(out, location, indent_level);
+	if (location.getSessionTimeout() > 0)
+	{
+		printIndent(out, indent_level);
+		out << "session_timeout " << location.getSessionTimeout() << ";\n";
+	}
 }
 
 void ConfigPrinter::printIndent(std::ostream& out, int level) const
 {
 	for (int i = 0; i < level; ++i)
+	{
 		out << "    ";
+	}
 }
 
 std::string
 ConfigPrinter::methodSetToString(const std::set<HttpMethod>& methods) const
 {
-	std::string													 result;
-	std::set<HttpMethod>::const_iterator it;
-
-	for (it = methods.begin(); it != methods.end(); ++it)
+	std::string result;
+	for (std::set<HttpMethod>::const_iterator it = methods.begin();
+			 it != methods.end(); ++it)
 	{
 		if (it != methods.begin())
+		{
 			result += " ";
+		}
 		result += httpMethodToString(*it);
 	}
-
 	return result;
 }

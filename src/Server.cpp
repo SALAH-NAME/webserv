@@ -6,74 +6,81 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/05/13 12:13:03 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/18 18:23:25 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-Server::Server(std::map<std::string, int>& infos, std::vector<int>& _ports) {
-	int socket_fd;
-	_domin = infos["domain"];
-	_type = infos["type"];
-	_protocol = infos["protocol"];
-	server_id = infos["id"];
+int	Server::_id = 1;
 
-	ssize_t x = 0;
-	for (size_t i = 0; i < _ports.size(); i++, x++) {
+void	Server::__init_attributes(const ServerConfig& _serverInfo) {
+	_domin = AF_INET;
+	_type = SOCK_STREAM | SOCK_NONBLOCK;
+	_protocol = 0;
+	_host = _serverInfo.getHost();
+	_timeout = _serverInfo.getSessionTimeout();
+
+	ports.push_back(_serverInfo.getListen());
+}
+
+Server::Server(const ServerConfig& _serverInfo) {
+
+	int socket_fd;
+	__init_attributes(_serverInfo);
+
+	for (size_t i = 0; i < ports.size(); i++) {
 		
 		try {
-			if ((socket_fd = socket(_domin, _type, _protocol)) < 0)
+			if ((socket_fd = socket(_domin, _type, _protocol)) < 0) {
 				throw "socket failed: ";
-
-			sockets_fds.push_back(socket_fd);
-			
-			// if (server_id == 2) {
-			// 	std::cout << "\n=========>> here  <=============\n";
-			// 	std::cout << "x : " << x << " || sockets_fds size: " << sockets_fds.size() << "\n";
-			// 	std::cout << "      socket fd = " << socket_fd << " || push fd: " << sockets_fds[x] << "\n\n";
+			}	
+				int reuse = 1;
+				setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 				
-			// }
+				memset(&_Address, 0, sizeof(_Address));
+				_Address.sin_family = _domin;
+				_Address.sin_port = htons(ports[i]);
+				/*htons():  These functions shall convert 16-bit and 32-bit quantities between
+				network byte order and host byte order.*/
 				
-
-			int reuse = 1;
-			setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+				if (inet_pton(AF_INET, _host.c_str(), &_Address.sin_addr) <= 0)
+					throw "Invalid IP address";
 			
-			_Address.sin_family = _domin;
-			_Address.sin_addr.s_addr = _protocol;
-			_Address.sin_port = htons(_ports[i]);
-			/*htons():  These functions shall convert 16-bit and 32-bit quantities between
-						network byte order and host byte order.*/
-			
-			bufferSize = sizeof(buffer);
-			memset(buffer, 0, bufferSize);
-			
-			if (bind(sockets_fds[x], (sockaddr*)&_Address, sizeof(_Address)) < 0) {
-				close(sockets_fds[x]);
-				// sockets_fds.erase(sockets_fds.begin() + i);
-				sockets_fds.pop_back();
-				// std::cout << "size after pop: " << sockets_fds.size() << "\n";
-				x--;
-				throw "bind failed";
-			}
-		
-			/* _nMaxBacklog: the maximum length to which the queue
+				bufferSize = sizeof(buffer);
+				memset(buffer, 0, bufferSize);
+				
+				if (bind(socket_fd, (sockaddr*)&_Address, sizeof(_Address)) < 0) {
+					throw "bind failed";
+				}
+				
+				/* _nMaxBacklog: the maximum length to which the queue
 				of pending connections for sockfd may grow*/
-			if (listen(sockets_fds[x], _nMaxBacklog) < 0)
-				throw "listen failed";
-		
-			std::cout << "Server:" << server_id << " {socket: " << sockets_fds[x] << "} is listening on port " << _ports[i] << "...\n";
+				if (listen(socket_fd, _nMaxBacklog) < 0)
+					throw "listen failed";
+				
+			sockets_fds.push_back(socket_fd);
+			server_id = _id++;
+
+			
+			std::cout << "Server(" << server_id << ") {socket: " << socket_fd << "} is listening on => ";
+			std::cout << _host << ":" << ports[i] << "\n";
 		}
 		catch (const char* errorMssg) {
 			perror(errorMssg);
+			if (!(socket_fd < 0))
+				close(socket_fd);
 		}
 		
 	}
-
 }
 
 Server::~Server(void) {
 	// std::cout << "destructor called\n";
+}
+
+unsigned int	Server::getTimeout(void) {
+	return _timeout;
 }
 
 int		Server::get_id(void) {

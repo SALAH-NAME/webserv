@@ -1,5 +1,6 @@
 #include "ConfigTypes.hpp"
 
+
 RedirectInfo::RedirectInfo() : status_code(0) {}
 
 RedirectInfo::RedirectInfo(int code, const std::string& target)

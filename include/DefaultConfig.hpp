@@ -27,8 +27,8 @@ const std::string	 ERROR_LOG;
 const std::string	 ACCESS_LOG;
 
 // SERVER
-const unsigned int						 LISTEN(8080);
-const std::string							 HOST("127.0.0.1");
+const unsigned int						 LISTEN(0);
+const std::string							 HOST("");
 const std::vector<std::string> SERVER_NAMES(1, "");
 const int											 SESION_ENABLE(false);
 const std::string							 SESSION_NAME;
