@@ -1,8 +1,9 @@
-#include "Environment.hpp"
+#include "../../include/Environment.hpp"
 #include <string.h>
 #include <stdio.h>
-#include "Request.tmp.hpp"
-#include "Cgi.hpp"
+#include "../../include/Request.hpp"
+#include "../../include/CgiHandler.hpp"
+
 using namespace std;
 	
 void test_req_init(Request &req)
@@ -21,10 +22,17 @@ void test_req_init(Request &req)
 
 }
 
-int main(int ac, char **av)
+int main()
 {
 	Request req;
 	Environment test;
 	test_req_init(req);
-	CgiHandler tst(req, test);
+	CgiHandler tst(req);
+	tst.RunCgi();
+	char c;
+	while(read(tst.GetPipe()[0], &c, 1))
+	{
+		write(1, &c, 1);
+	}
 }
+ 

@@ -17,6 +17,6 @@ class Environment{// a class to deal with the environment
 		void display();
 };
 
-void delete_env(char **env);
+void delete_strings(char **env);
 
 #endif

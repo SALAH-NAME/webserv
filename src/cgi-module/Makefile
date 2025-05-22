@@ -1,8 +1,8 @@
 NAME=cgi
-SRC=$(shell ls | grep .cpp)
+SRC=$(shell ls | grep .cpp) ../server-module/Request.cpp
 
 all:
-	c++ -std=c++98 $(SRC) -o $(NAME)
+	c++ -std=c++98 -Wall -Wextra -Werror $(SRC) -o $(NAME)
 
 clean:
 	rm cgi

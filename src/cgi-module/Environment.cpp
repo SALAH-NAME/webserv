@@ -1,4 +1,4 @@
-#include "Environment.hpp"
+#include "../../include/Environment.hpp"
 
 using namespace std;
 
@@ -29,7 +29,7 @@ char **Environment::GetRawEnv()
 	return res;
 }
 
-void delete_env(char **env)
+void delete_strings(char **env)
 {
 	for (int i=0;env[i];i++)
 		delete[] env[i];
