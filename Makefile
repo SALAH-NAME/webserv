@@ -9,9 +9,9 @@ SRC_DIR := src
 OBJ_DIR := obj
 
 SRCS := main.cpp \
-				ConfigTokenizer.cpp \
-				ConfigTypes.cpp BaseConfig.cpp GlobalConfig.cpp LocationConfig.cpp ServerConfig.cpp \
-				ConfigManager.cpp ConfigPrinter.cpp
+		ConfigTokenizer.cpp ConfigTypes.cpp BaseConfig.cpp GlobalConfig.cpp \
+		LocationConfig.cpp ServerConfig.cpp ConfigManager.cpp ConfigPrinter.cpp \
+		Server.cpp EventHandler.cpp ReceiveRequests.cpp Response.cpp Request.cpp SendResponse.cpp
 
 OBJS := $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
 DEPS := $(OBJS:.o=.d)
