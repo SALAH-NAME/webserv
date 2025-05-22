@@ -1,6 +1,7 @@
 **.o
 **.d
 **.a
+.vscode
 .clangd
 compile_flags.txt
 webserv
