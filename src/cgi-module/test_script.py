@@ -1,6 +1,6 @@
-import os
+from os import environ
 #this script is used to test the passed environment
-env = str(os.environ)
+env = str(environ)
 flag = False
 PrevChar = 'c'
 for c in str(env):
