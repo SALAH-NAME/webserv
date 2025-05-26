@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/05/18 17:26:11 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/23 16:18:43 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,5 +100,7 @@ class Server {
 };
 
 void    waitingForEvents(std::vector<Server> &servers, int epfd);
+
+void    printResponse(std::string response);
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/05/18 18:23:25 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/26 13:57:02 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,10 @@ Server::Server(const ServerConfig& _serverInfo) {
 				throw "socket failed: ";
 			}	
 				int reuse = 1;
-				setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+				if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
+					throw "setsockopt(SO_REUSEADDR) failed";
+				// fixed this problem ==>  the OS keeps the port in a "cool-down" period (TIME_WAIT)
+				// ==> It’s mainly for quick restart development or for binding during graceful restarts.
 				
 				memset(&_Address, 0, sizeof(_Address));
 				_Address.sin_family = _domin;

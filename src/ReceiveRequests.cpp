@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/05/18 11:19:44 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/26 13:58:27 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ void    Server::receiveRequests() {
 			clientsSockets[events[i].data.fd] = std::time(NULL);
 		}
 		if (bytes_read == 0 || requests[events[i].data.fd].getRequest().find("\r\n\r\n") != std::string::npos) {
-			// std::cout << "request[" << i << "]: {" << requests[events[i].data.fd].getRequest() << "}\n";
+			printResponse(requests[events[i].data.fd].getRequest());exit(0);
 			setEventStatus(i, true);
 			i--;
 			continue ; 

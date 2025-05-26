@@ -39,7 +39,7 @@ int	setEpoll(std::vector<Server> &servers) {
 	int epfd = epoll_create1(0);
 	if (epfd == -1)
 		throw ("epoll create1 failed");
-	std::cout << "an epoll instance for the servers sockets created\n";
+	std::cout << "an epoll instance for the servers sockets created(" << epfd << ")\n";
 
 	for (size_t i = 0; i < servers.size(); i++) {
 
@@ -65,6 +65,17 @@ int	setEpoll(std::vector<Server> &servers) {
 	}
 	std::cout << "---------------------------------------------------------\n";
 	return epfd;
+}
+
+void    printResponse(std::string response) {
+	for (int i = 0; i < response.size(); i++) {
+		if (response[i] == '\r')
+			std::cout << "\\r";
+		else if (response[i] == '\n')
+			std::cout << "\\n\n";
+		else
+			std::cout << response[i];
+	}
 }
 
 int main(int argc, char** argv)
