@@ -1,6 +1,7 @@
 #include "ConfigManager.hpp"
 #include "ConfigParser.hpp"
 #include "ConfigTokenizer.hpp"
+#include <iostream>
 
 bool ConfigManager::parseConfigFile()
 {

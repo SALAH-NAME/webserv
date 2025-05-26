@@ -1,4 +1,3 @@
-
 #include "ConfigPrinter.hpp"
 #include "ConfigManager.hpp"
 #include "GlobalConfig.hpp"

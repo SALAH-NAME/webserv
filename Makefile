@@ -8,11 +8,12 @@ DEPFLAGS := -MMD -MP
 SRC_DIR := src
 OBJ_DIR := obj
 
-SRCS := main.cpp \
-		ConfigTokenizer.cpp ConfigTypes.cpp BaseConfig.cpp GlobalConfig.cpp \
-		LocationConfig.cpp ServerConfig.cpp ConfigManager.cpp ConfigParser.cpp \
-		ConfigPrinter.cpp Server.cpp EventHandler.cpp ReceiveRequests.cpp \
-		Response.cpp Request.cpp SendResponse.cpp
+SRCS := server-module/main.cpp \
+		config-module/ConfigTokenizer.cpp config-module/ConfigTypes.cpp config-module/BaseConfig.cpp \
+		config-module/GlobalConfig.cpp config-module/LocationConfig.cpp config-module/ServerConfig.cpp \
+		config-module/ConfigManager.cpp config-module/ConfigParser.cpp config-module/ConfigPrinter.cpp \
+		server-module/Server.cpp server-module/EventHandler.cpp server-module/ReceiveRequests.cpp \
+		server-module/Response.cpp server-module/Request.cpp server-module/SendResponse.cpp
 
 OBJS := $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
 DEPS := $(OBJS:.o=.d)
