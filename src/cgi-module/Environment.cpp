@@ -29,6 +29,10 @@ char **Environment::GetRawEnv()
 	return res;
 }
 
+void Environment::clear(){
+	this->env.clear();
+}
+
 void delete_strings(char **env)
 {
 	for (int i=0;env[i];i++)

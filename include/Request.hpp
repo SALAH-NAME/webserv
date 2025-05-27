@@ -15,7 +15,7 @@
 
 #include <string>
 #include <cstring>
-
+#include <vector>
 
 class Request {
 	private:
@@ -24,6 +24,19 @@ class Request {
 		std::string	requestHolder;
 		size_t		readBytes;
 	public:
+		std::string	method;
+		std::string	script;
+		std::string	interpiter;
+		std::string path_info;
+		std::string query_string;
+		std::string content_type;
+		std::string content_length;
+		std::string server_name;
+		int			server_port;
+		std::string client_addrs;
+		int 		client_port;
+		std::vector<std::pair<std::string, std::string> > headers;//exclude content-type and content-length
+
 		Request(void);
 		Request(int fd, int socket_fd);
 

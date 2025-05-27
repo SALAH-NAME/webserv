@@ -6,3 +6,4 @@ compile_flags.txt
 webserv
 unit
 intra_test/
+.vscode
