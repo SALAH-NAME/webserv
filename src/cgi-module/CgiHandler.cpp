@@ -1,5 +1,4 @@
 #include "../../include/CgiHandler.hpp"
-// CgiHandler
 
 std::string num_to_string(int num){
 	std::stringstream ss;
@@ -44,9 +43,8 @@ void	setArgv(char **Argv, std::string &interpiter, std::string &script_path)
 	std::strcpy(Argv[1], script_path.c_str());
 }
 
-CgiHandler::CgiHandler(Request &http_req) : req(http_req)
+CgiHandler::CgiHandler()
 {
-	is_POST = http_req.method == "POST" ? true : false;
 	output_pipe = new int[2];
 	input_pipe = new int[2];
 	child_pid = 0;
@@ -59,33 +57,38 @@ int	*CgiHandler::GetOutPipe(){return output_pipe;}
 
 int	*CgiHandler::GetInPipe(){return input_pipe;}
 
-void CgiHandler::RunCgi()
+void CgiHandler::RunCgi(Request &current_req)
 {
 	int 	id;
 	char	**argv = new char*[3];
 	
-	setArgv(argv, req.interpiter, req.script);
+	is_POST = current_req.method == "POST" ? true : false;
+	setArgv(argv, current_req.interpiter, current_req.script);
 	if (pipe(output_pipe) == -1)
-		throw "pipe syscall failed";
+	throw "pipe syscall failed";
 	if (this->is_POST && pipe(input_pipe) == -1)
-		throw "pipe syscall failed";
+	throw "pipe syscall failed";
 	id = fork();
 	if (id == 0)//child
 	{
 		set_fds(this->is_POST, input_pipe, output_pipe);
-		prepare_cgi_env(this->req, this->env);
-		execve(this->req.interpiter.c_str(), argv, this->env.GetRawEnv());
+		prepare_cgi_env(current_req, this->env);
+		execve(current_req.interpiter.c_str(), argv, this->env.GetRawEnv());
 		throw "failed to spawn child";
 	}
+	this->exec_t0 = time(NULL);
+	this->child_pid = id;
 	close(output_pipe[1]);
 	close(input_pipe[0]);
 	delete_strings(argv);
-	this->exec_t0 = time(NULL);
-	this->child_pid = id;
+	env.clear();
 }
 
 CgiHandler::~CgiHandler()
 {
+	close(output_pipe[0]);
+	close(input_pipe[1]);
 	delete[] output_pipe;
 	delete[] input_pipe;
+	env.clear();
 }
