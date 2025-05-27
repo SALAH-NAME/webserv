@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/05/26 13:57:02 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/27 15:52:45 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,9 @@ void	Server::__init_attributes(const ServerConfig& _serverInfo) {
 	_protocol = 0;
 	_host = _serverInfo.getHost();
 	_timeout = _serverInfo.getSessionTimeout();
+	_2CRLF = "\r\n\r\n";
+	_isKeepAlive = true;
+	debug = 0;
 
 	ports.push_back(_serverInfo.getListen());
 }

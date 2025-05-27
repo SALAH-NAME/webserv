@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/05/23 16:18:43 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/27 18:24:26 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@
 
 
 #define MAX_EVENTS 10
+#define BYTES_TO_READ 1000
 
 class Server {
 	private:
@@ -53,11 +54,13 @@ class Server {
 		int									_domin;
 		int									_type;
 		int									_protocol;
-		std::string						_host;
+		std::string							_host;
 		int									_nMaxBacklog; // this parameter is for listen()
 		int 								epfd; // epoll fd
 		int									nfds; // number of fds in which the event occurred
 		unsigned int 						_timeout;
+		std::string							_2CRLF;
+		bool								_isKeepAlive;
 
 		struct epoll_event					targetInfos; // Structure to define the event we are interested in
 		std::vector<struct epoll_event>		events;
@@ -74,6 +77,7 @@ class Server {
 		void	__init_attributes(const ServerConfig& _serverInfo);
 
 	public:
+		int debug;
 		Server(const ServerConfig& _serverInfo);
 		~Server(void);
 
@@ -93,7 +97,7 @@ class Server {
 		void						merge_new_events(struct epoll_event* event);
 		
 		void    					receiveRequests();
-		void						setEventStatus(int i, bool completed);
+		void						setEventStatus(size_t &i, bool completed);
 					
 		void    					sendResponses(void);
 		

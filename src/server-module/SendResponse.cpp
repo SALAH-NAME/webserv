@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/05/17 16:28:31 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/27 18:27:19 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,20 +45,32 @@ void    Server::sendResponses(void) {
 		responses[responseWaitQueue[i]].setResponse(response);
 	}
 
-	
+	int client_socket;
 	for (size_t i = 0; i < responseWaitQueue.size(); i++) {
 		// std::cout << "sending response to fd: " << responseWaitQueue[i] << "\n";
-		response = responses[responseWaitQueue[i]].getResponse();
-		ssize_t bytes_sent = send(responseWaitQueue[i],
+		
+		client_socket = responseWaitQueue[i];
+		response = responses[client_socket].getResponse();
+		ssize_t bytes_sent = send(client_socket,
 			response.c_str(), response.length(), 0);
 
 		if (bytes_sent < 0) {
 			// ...
 		}
 		
-		responses.erase(responseWaitQueue[i]);
-		close(responseWaitQueue[i]);
+		events[i].events = EPOLLIN;  // enable write temporarily
+		epoll_ctl(epfd, EPOLL_CTL_MOD, events[i].data.fd, &events[i]);
+
+		responses.erase(client_socket);
 		responseWaitQueue.erase(responseWaitQueue.begin() + i);
+		if (!_isKeepAlive) {
+			epoll_ctl(epfd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
+			clientsSockets.erase(client_socket);
+			events.erase(events.begin() + i);
+			close(client_socket);
+		}
 		i--;
 	}
+
+	// std::cout << "send Response\n";
 }

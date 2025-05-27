@@ -14,12 +14,6 @@ void	close_fds(std::vector<Server>& servers) {
 	}
 }
 
-void signal_handler(int sig) {
-	if (sig == SIGINT) {
-		throw "\nSingal called";
-	}
-}
-
 void	setUpServers(std::vector<Server>& servers, const std::vector<ServerConfig> &serversInfo) {
 
 	for (size_t i = 0; i < serversInfo.size(); i++) {
@@ -102,8 +96,6 @@ int main(int argc, char** argv)
     try {
         setUpServers(servers, config_manager.getServers());
 		int epfd = setEpoll(servers);
-
-        signal(SIGINT, signal_handler);
 
 		waitingForEvents(servers, epfd);
     }

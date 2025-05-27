@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/05/19 10:35:13 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/27 18:28:31 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,20 +24,18 @@ void	Server::merge_new_events(struct epoll_event* newEvent) {
 }
 
 void	Server::incomingConnection(int NewEvent_fd) {
-
-	struct sockaddr_in	client_address;
-	socklen_t			addrLen = sizeof(client_address);
 	int					newClient_fd;
 	struct epoll_event	client_event;
 	ssize_t				clientEventLen = sizeof(client_event);
 		
-	memset(&client_address, 0, addrLen);
 	memset(&client_event, 0, clientEventLen);
-	client_event.events = EPOLLIN | EPOLLOUT;
+	client_event.events = EPOLLIN;
 
 	while (true) {
 		// used accept4() to set the client socket as a Non-Blocking
-		newClient_fd = accept4(NewEvent_fd, (struct sockaddr*)&client_address, &addrLen, SOCK_NONBLOCK);
+		newClient_fd = accept4(NewEvent_fd, NULL, NULL, SOCK_NONBLOCK);
+		std::cout << "accept the new connection ==> " << newClient_fd << "\n";
+		
 		try {
 			if (newClient_fd == -1) {
 				if (errno != EAGAIN && errno != EWOULDBLOCK)
@@ -71,10 +69,12 @@ void	Server::process_event(struct epoll_event(&tempEvents)[MAX_EVENTS]) {
 	for (int i = 0; i < nfds; i++) {
 		if (verifyServerSockets_fds(tempEvents[i].data.fd)) {
 			// std::cout << "########### got an event on the server socket ##############\n";
+			// std::cout << "new connection ==> " << tempEvents[i].data.fd << "\n\n";
 			incomingConnection(tempEvents[i].data.fd);
 		}
 		else if (verifyClientFD(tempEvents[i].data.fd)){
 			// std::cout << "############  got an event on an existing client socket #############\n";
+			// std::cout << "connection already exist ==> " << tempEvents[i].data.fd << "\n\n";
 			merge_new_events(&tempEvents[i]);
 		}
 	}
@@ -84,14 +84,19 @@ void    waitingForEvents(std::vector<Server> &servers, int epfd) {
 	int		nfds;
 	struct epoll_event	tempEvents[MAX_EVENTS];
 
+	int i = 0;
+
+	// sleep(10);
+
 	while (true) {
 
-		// std::cout << "Waiting for new events ...\n";
+		// std::cout << i++ <<  " Waiting for new events ...\n";
 		nfds = epoll_wait(epfd, tempEvents, MAX_EVENTS, -1);
+		std::cout << "nfds ==>  " << nfds << " || socket: " << tempEvents[0].data.fd << "\n";
 
 		if (nfds < 0)
 			throw "epoll_wait failed";
-
+			
 		for (size_t x = 0; x < servers.size(); x++) {
 			servers[x].set_nfds(nfds);
 			servers[x].process_event(tempEvents);
