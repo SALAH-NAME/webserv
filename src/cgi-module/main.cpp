@@ -26,8 +26,8 @@ int main()
 	Request req;
 	Environment test;
 	test_req_init(req);
-	CgiHandler tst(req);
-	tst.RunCgi();
+	CgiHandler tst;
+	tst.RunCgi(req);
 	char c;
 	if (req.method == "POST"){//simulation of the content of a post body, originally this data should be sent in the multiplexing part (the fd should be added to epoll)
 		for (int i =0;i<5;i++)

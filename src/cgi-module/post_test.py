@@ -2,7 +2,7 @@
 
 from sys import stdin, stdout
 
-print("==GET request body==")
+print("==POST request body==")
 stdout.flush()
 for line in stdin:
     print(line, end='')
