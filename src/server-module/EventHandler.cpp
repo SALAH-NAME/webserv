@@ -6,11 +6,13 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/05/27 18:28:31 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/29 14:28:54 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
+
+int i = 0;
 
 void	Server::merge_new_events(struct epoll_event* newEvent) {
 	for (size_t i = 0; i < events.size(); i++) {
@@ -24,44 +26,45 @@ void	Server::merge_new_events(struct epoll_event* newEvent) {
 }
 
 void	Server::incomingConnection(int NewEvent_fd) {
-	int					newClient_fd;
+	int					newClient_socket;
 	struct epoll_event	client_event;
 	ssize_t				clientEventLen = sizeof(client_event);
 		
 	memset(&client_event, 0, clientEventLen);
 	client_event.events = EPOLLIN;
 
+
 	while (true) {
 		// used accept4() to set the client socket as a Non-Blocking
-		newClient_fd = accept4(NewEvent_fd, NULL, NULL, SOCK_NONBLOCK);
-		std::cout << "accept the new connection ==> " << newClient_fd << "\n";
+		newClient_socket = accept4(NewEvent_fd, NULL, NULL, SOCK_NONBLOCK);
 		
 		try {
-			if (newClient_fd == -1) {
+			if (newClient_socket == -1) {
 				if (errno != EAGAIN && errno != EWOULDBLOCK)
 					throw "accept failed";
 				else
 					break; // No more pending connections for now
 			}
-			else {				
-				client_event.data.fd = newClient_fd;
+			else {
+				client_event.data.fd = newClient_socket;
 				
 				// Add the new client socket to the epoll set to monitor for incoming data (EPOLLIN)
-				if (epoll_ctl(epfd, EPOLL_CTL_ADD, newClient_fd, &client_event) == -1) {
-					close(newClient_fd);
+				if (epoll_ctl(epfd, EPOLL_CTL_ADD, newClient_socket, &client_event) == -1) {
+					close(newClient_socket);
 					throw "epoll_ctl: client_socket failed";
 				}
 				else {
-					requests[newClient_fd] = Request(newClient_fd, NewEvent_fd); // create a new object where to store the request
-					clientsSockets[newClient_fd] = std::time(NULL);
+					clients[newClient_socket] = Client(newClient_socket, NewEvent_fd); // create a new object where to store the request
+					clientsSockets.push_back(newClient_socket);
 				}
 			}
 		}
 		catch (const char *errorMssg) {
-			if (newClient_fd != -1)
-				close(newClient_fd);
+			if (newClient_socket != -1)
+				close(newClient_socket);
 			perror(errorMssg);
 		}
+		i++;
 	}
 }
 
@@ -69,12 +72,10 @@ void	Server::process_event(struct epoll_event(&tempEvents)[MAX_EVENTS]) {
 	for (int i = 0; i < nfds; i++) {
 		if (verifyServerSockets_fds(tempEvents[i].data.fd)) {
 			// std::cout << "########### got an event on the server socket ##############\n";
-			// std::cout << "new connection ==> " << tempEvents[i].data.fd << "\n\n";
 			incomingConnection(tempEvents[i].data.fd);
 		}
 		else if (verifyClientFD(tempEvents[i].data.fd)){
 			// std::cout << "############  got an event on an existing client socket #############\n";
-			// std::cout << "connection already exist ==> " << tempEvents[i].data.fd << "\n\n";
 			merge_new_events(&tempEvents[i]);
 		}
 	}
@@ -84,16 +85,12 @@ void    waitingForEvents(std::vector<Server> &servers, int epfd) {
 	int		nfds;
 	struct epoll_event	tempEvents[MAX_EVENTS];
 
-	int i = 0;
 
-	// sleep(10);
+	int i;
 
 	while (true) {
-
-		// std::cout << i++ <<  " Waiting for new events ...\n";
 		nfds = epoll_wait(epfd, tempEvents, MAX_EVENTS, -1);
-		std::cout << "nfds ==>  " << nfds << " || socket: " << tempEvents[0].data.fd << "\n";
-
+		
 		if (nfds < 0)
 			throw "epoll_wait failed";
 			

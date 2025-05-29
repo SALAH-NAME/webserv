@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/05/27 18:24:26 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/28 16:41:13 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@
 #include <algorithm>
 #include <arpa/inet.h> // for inet_addr()
 
-#include "Request.hpp"
+#include "Client.hpp"
 #include "Response.hpp"
 
 #include "ConfigManager.hpp"
@@ -68,11 +68,11 @@ class Server {
 		char								buffer[1024];
 		size_t								bufferSize;
 
-		std::map<int, Request>				requests;
-		std::map<int, std::time_t>			clientsSockets;
+		std::map<int, Client>				clients;
+		std::vector<int>					clientsSockets;
 		
-		std::map<int, Response>				responses;
-		std::vector<int>					responseWaitQueue;
+		// std::map<int, Response>				responses;
+		// std::vector<int>					responseWaitQueue;
 
 		void	__init_attributes(const ServerConfig& _serverInfo);
 
@@ -88,8 +88,8 @@ class Server {
 		struct epoll_event& 		getTarget();
 		std::vector<int>&			getSockets_fds();
 		void						set_nfds(int value);
-		std::map<int, std::time_t>&	get_clientsSockets(void);
-		std::vector<int>&			get_responseWaitQueue(void);
+		std::vector<int>&			get_clientsSockets(void);
+		// std::vector<int>&			get_responseWaitQueue(void);
 		void						process_event(struct epoll_event(&tempEvents)[MAX_EVENTS]);
 		bool						verifyServerSockets_fds(int NewEvent_fd);
 		bool						verifyClientFD(int client_fd);

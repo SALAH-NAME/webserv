@@ -6,11 +6,17 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/05/27 18:27:19 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/29 14:30:20 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
+
+std::vector<int>::iterator	get_it(int	client_socket, std::vector<int>& sockets) {
+	std::vector<int>::iterator it = std::find(sockets.begin(), sockets.end(), client_socket);
+
+	return it;
+}
 
 void    Server::sendResponses(void) {
 	std::string htmlContent =
@@ -39,38 +45,37 @@ void    Server::sendResponses(void) {
 		"\r\n"
 		+ htmlContent;
 
-	// std::cout << "response size: " << responseWaitQueue.size() << "\n";
-
-	for (size_t i = 0; i < responseWaitQueue.size(); i++) {
-		responses[responseWaitQueue[i]].setResponse(response);
-	}
-
 	int client_socket;
-	for (size_t i = 0; i < responseWaitQueue.size(); i++) {
-		// std::cout << "sending response to fd: " << responseWaitQueue[i] << "\n";
+	ssize_t bytes_sent;
+
+	for (size_t i = 0; i < events.size(); i++) {
+		client_socket = events[i].data.fd;
 		
-		client_socket = responseWaitQueue[i];
-		response = responses[client_socket].getResponse();
-		ssize_t bytes_sent = send(client_socket,
-			response.c_str(), response.length(), 0);
+		if (clients[client_socket].getOutStatus() == false) {
+			continue ;
+		}
+
+		if ((bytes_sent = send(client_socket,
+			response.c_str(), response.length(), 0)) == -1) {
+				perror("send failed");
+			}
+		
 
 		if (bytes_sent < 0) {
 			// ...
 		}
 		
+		clients[client_socket].setOutStatus(false);
 		events[i].events = EPOLLIN;  // enable write temporarily
 		epoll_ctl(epfd, EPOLL_CTL_MOD, events[i].data.fd, &events[i]);
 
-		responses.erase(client_socket);
-		responseWaitQueue.erase(responseWaitQueue.begin() + i);
 		if (!_isKeepAlive) {
-			epoll_ctl(epfd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
-			clientsSockets.erase(client_socket);
+			epoll_ctl(epfd, EPOLL_CTL_DEL, client_socket, NULL);
+			clientsSockets.erase(get_it(client_socket, clientsSockets));
 			events.erase(events.begin() + i);
+			clients.erase(client_socket);
 			close(client_socket);
+			i--;
 		}
-		i--;
 	}
-
-	// std::cout << "send Response\n";
 }

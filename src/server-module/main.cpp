@@ -1,18 +1,18 @@
 #include "Server.hpp"
 
-void	close_fds(std::vector<Server>& servers) {
+// void	close_fds(std::vector<Server>& servers) {
 
-	for (size_t i = 0; i < servers.size(); i++) {
+// 	for (size_t i = 0; i < servers.size(); i++) {
 		
-		std::map<int, std::time_t> &clientsSockets = servers[i].get_clientsSockets();
-		for (size_t x = 0; x < clientsSockets.size(); x++)
-			close(clientsSockets[x]);
+// 		std::map<int, std::time_t> &clientsSockets = servers[i].get_clientsSockets();
+// 		for (size_t x = 0; x < clientsSockets.size(); x++)
+// 			close(clientsSockets[x]);
 
-		std::vector<int>	&responseWaitQueue = servers[i].get_responseWaitQueue();
-		for (size_t x = 0; x < responseWaitQueue.size(); x++)
-			close(responseWaitQueue[x]);
-	}
-}
+// 		std::vector<int>	&responseWaitQueue = servers[i].get_responseWaitQueue();
+// 		for (size_t x = 0; x < responseWaitQueue.size(); x++)
+// 			close(responseWaitQueue[x]);
+// 	}
+// }
 
 void	setUpServers(std::vector<Server>& servers, const std::vector<ServerConfig> &serversInfo) {
 
@@ -74,6 +74,7 @@ void    printResponse(std::string response) {
 
 int main(int argc, char** argv)
 {
+	// std::cout << "EPOLLIN: " << EPOLLIN << "\n";exit(0);
 
 	std::string config_file = "conf/webserv.conf";
 	if (argc > 1)
@@ -90,7 +91,7 @@ int main(int argc, char** argv)
 	ConfigPrinter printer(config_manager);
 	printer.print();
 
-	std::cout << "==============================\n";
+	// std::cout << "==============================\n";
 
     std::vector<Server> servers;
     try {
@@ -101,7 +102,7 @@ int main(int argc, char** argv)
     }
     catch (const char* errorMssg) {
 		if (!std::strcmp(errorMssg, "\nSingal called")) {
-			close_fds(servers);
+			// close_fds(servers);
 			std::cout << errorMssg;
 		}
 		else

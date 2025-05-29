@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/05/27 15:52:45 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/28 17:00:16 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,17 +109,23 @@ void	Server::set_nfds(int value) {
 	nfds = value;	
 }
 
-std::map<int, std::time_t>&	Server::get_clientsSockets(void) {
+std::vector<int>&	Server::get_clientsSockets(void) {
 	return clientsSockets;
 }
 
-std::vector<int>&	Server::get_responseWaitQueue(void) {
-	return responseWaitQueue;
-}
+// std::vector<int>&	Server::get_responseWaitQueue(void) {
+// 	return responseWaitQueue;
+// }
 
 bool	Server::verifyClientFD(int client_fd) {
-	std::map<int, std::time_t>::iterator it = clientsSockets.find(client_fd);
-	return (it != clientsSockets.end());
+	// std::map<int, std::time_t>::iterator it = clientsSockets.find(client_fd);
+	// return (it != clientsSockets.end());
+
+	for (size_t i = 0; i < clientsSockets.size(); i++) {
+		if (client_fd == clientsSockets[i])
+			return true;
+	}
+	return false;
 }
 
 bool	Server::verifyServerSockets_fds(int NewEvent_fd) {
