@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/05/28 16:54:35 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/29 21:25:26 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,10 +24,10 @@ class Client {
 		int								socket_fd;
 		int								serverSocket_fd;
 		size_t							readBytes;
-		// std::vector<struct epoll_event>	events;
 		std::string						requestHolder;
 		std::string						responseHolder;
-		bool								outStatus;
+		int								outStatus;
+		time_t								timeOut;
 
 	public:
 		Client(void);
@@ -47,8 +47,11 @@ class Client {
 		// void		addNewEvent(struct epoll_event);
 		// std::vector<struct epoll_event>&	getEvents(void);
 
-		void	setOutStatus(bool status);
-		bool	getOutStatus(void);
+		void	setOutStatus(int status);
+		int	getOutStatus(void);
+		void						clearRequestHolder(void);
+		void		resetLastConnectionTime(void);
+		time_t		getLastConnectionTime(void);
 };
 
 #endif

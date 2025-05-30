@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/05/28 17:00:16 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/30 16:44:43 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,9 +22,9 @@ void	Server::__init_attributes(const ServerConfig& _serverInfo) {
 	_timeout = _serverInfo.getSessionTimeout();
 	_2CRLF = "\r\n\r\n";
 	_isKeepAlive = true;
-	debug = 0;
-
 	ports.push_back(_serverInfo.getListen());
+	
+	// _timeout = 10;
 }
 
 Server::Server(const ServerConfig& _serverInfo) {
@@ -79,6 +79,8 @@ Server::Server(const ServerConfig& _serverInfo) {
 		}
 		
 	}
+	if (!sockets_fds.size())
+		throw "server failed";
 }
 
 Server::~Server(void) {
@@ -113,14 +115,7 @@ std::vector<int>&	Server::get_clientsSockets(void) {
 	return clientsSockets;
 }
 
-// std::vector<int>&	Server::get_responseWaitQueue(void) {
-// 	return responseWaitQueue;
-// }
-
 bool	Server::verifyClientFD(int client_fd) {
-	// std::map<int, std::time_t>::iterator it = clientsSockets.find(client_fd);
-	// return (it != clientsSockets.end());
-
 	for (size_t i = 0; i < clientsSockets.size(); i++) {
 		if (client_fd == clientsSockets[i])
 			return true;
@@ -131,4 +126,14 @@ bool	Server::verifyClientFD(int client_fd) {
 bool	Server::verifyServerSockets_fds(int NewEvent_fd) {
 	std::vector<int>::iterator it = std::find(sockets_fds.begin(), sockets_fds.end(), NewEvent_fd);
 	return (it != sockets_fds.end());
+}
+
+
+void	Server::closeConnection(int clientSocket) {
+	// std::cout << "(socket: " << clients[clientSocket].get_serverSocketFD() << ")Time out, close connection";
+	// std::cout << " with client fd : " << clientSocket << "\n";
+	epoll_ctl(epfd, EPOLL_CTL_DEL, clientSocket, NULL);
+	clientsSockets.erase(get_iterator(clientSocket, clientsSockets));
+	clients.erase(clientSocket);
+	close(clientSocket);
 }

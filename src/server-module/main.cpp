@@ -1,18 +1,13 @@
 #include "Server.hpp"
 
-// void	close_fds(std::vector<Server>& servers) {
+void	close_fds(std::vector<Server>& servers) {
 
-// 	for (size_t i = 0; i < servers.size(); i++) {
-		
-// 		std::map<int, std::time_t> &clientsSockets = servers[i].get_clientsSockets();
-// 		for (size_t x = 0; x < clientsSockets.size(); x++)
-// 			close(clientsSockets[x]);
-
-// 		std::vector<int>	&responseWaitQueue = servers[i].get_responseWaitQueue();
-// 		for (size_t x = 0; x < responseWaitQueue.size(); x++)
-// 			close(responseWaitQueue[x]);
-// 	}
-// }
+	for (size_t i = 0; i < servers.size(); i++) {
+		int size = servers[i].get_clientsSockets().size();
+		for (int x = 0; x < size; x++ )
+			close(servers[i].get_clientsSockets()[x]);
+	}
+}
 
 void	setUpServers(std::vector<Server>& servers, const std::vector<ServerConfig> &serversInfo) {
 
@@ -26,6 +21,8 @@ void	setUpServers(std::vector<Server>& servers, const std::vector<ServerConfig> 
 			perror(errorMssg);
 		}
 	}
+	if (!servers.size())
+		throw "No server is available";
 }
 
 int	setEpoll(std::vector<Server> &servers) {
@@ -61,20 +58,19 @@ int	setEpoll(std::vector<Server> &servers) {
 	return epfd;
 }
 
-void    printResponse(std::string response) {
-	for (int i = 0; i < response.size(); i++) {
-		if (response[i] == '\r')
+void    printRequet(std::string requet) {
+	for (int i = 0; i < requet.size(); i++) {
+		if (requet[i] == '\r')
 			std::cout << "\\r";
-		else if (response[i] == '\n')
+		else if (requet[i] == '\n')
 			std::cout << "\\n\n";
 		else
-			std::cout << response[i];
+			std::cout << requet[i];
 	}
 }
 
 int main(int argc, char** argv)
 {
-	// std::cout << "EPOLLIN: " << EPOLLIN << "\n";exit(0);
 
 	std::string config_file = "conf/webserv.conf";
 	if (argc > 1)
@@ -91,8 +87,6 @@ int main(int argc, char** argv)
 	ConfigPrinter printer(config_manager);
 	printer.print();
 
-	// std::cout << "==============================\n";
-
     std::vector<Server> servers;
     try {
         setUpServers(servers, config_manager.getServers());
@@ -101,12 +95,9 @@ int main(int argc, char** argv)
 		waitingForEvents(servers, epfd);
     }
     catch (const char* errorMssg) {
-		if (!std::strcmp(errorMssg, "\nSingal called")) {
-			// close_fds(servers);
-			std::cout << errorMssg;
-		}
-		else
-	        perror(errorMssg);
-    }
+		close_fds(servers);
+		perror(errorMssg);
+		return 1;
+	}
 	return 0;
 }

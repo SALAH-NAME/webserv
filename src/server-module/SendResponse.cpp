@@ -6,19 +6,14 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/05/29 14:30:20 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/30 15:13:42 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-std::vector<int>::iterator	get_it(int	client_socket, std::vector<int>& sockets) {
-	std::vector<int>::iterator it = std::find(sockets.begin(), sockets.end(), client_socket);
+void    Server::sendResponses(struct epoll_event& event) {
 
-	return it;
-}
-
-void    Server::sendResponses(void) {
 	std::string htmlContent =
 		"<!DOCTYPE html>\n"
 		"<html lang=\"en\">\n"
@@ -47,35 +42,26 @@ void    Server::sendResponses(void) {
 
 	int client_socket;
 	ssize_t bytes_sent;
+	
+		client_socket = event.data.fd;
 
-	for (size_t i = 0; i < events.size(); i++) {
-		client_socket = events[i].data.fd;
-		
-		if (clients[client_socket].getOutStatus() == false) {
-			continue ;
+		if (!clients[client_socket].getOutStatus())
+			return ;
+
+		bytes_sent = send(client_socket, response.c_str(), response.length(), 0);
+		if (bytes_sent == -1) {
+			// ...
 		}
-
-		if ((bytes_sent = send(client_socket,
-			response.c_str(), response.length(), 0)) == -1) {
-				perror("send failed");
-			}
-		
 
 		if (bytes_sent < 0) {
 			// ...
 		}
 		
 		clients[client_socket].setOutStatus(false);
-		events[i].events = EPOLLIN;  // enable write temporarily
-		epoll_ctl(epfd, EPOLL_CTL_MOD, events[i].data.fd, &events[i]);
+		event.events = EPOLLIN;  // enable write temporarily
+		epoll_ctl(epfd, EPOLL_CTL_MOD, client_socket, &event);
+		clients[client_socket].clearRequestHolder();
 
-		if (!_isKeepAlive) {
-			epoll_ctl(epfd, EPOLL_CTL_DEL, client_socket, NULL);
-			clientsSockets.erase(get_it(client_socket, clientsSockets));
-			events.erase(events.begin() + i);
-			clients.erase(client_socket);
-			close(client_socket);
-			i--;
-		}
-	}
+		if (!_isKeepAlive)
+			closeConnection(client_socket);
 }
