@@ -13,7 +13,7 @@ SRCS := server-module/main.cpp \
 		config-module/GlobalConfig.cpp config-module/LocationConfig.cpp config-module/ServerConfig.cpp \
 		config-module/ConfigManager.cpp config-module/ConfigParser.cpp config-module/ConfigPrinter.cpp \
 		server-module/Server.cpp server-module/EventHandler.cpp server-module/ReceiveRequests.cpp \
-		server-module/Response.cpp server-module/Request.cpp server-module/SendResponse.cpp
+		server-module/Response.cpp server-module/Client.cpp server-module/SendResponse.cpp
 
 OBJS := $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
 DEPS := $(OBJS:.o=.d)

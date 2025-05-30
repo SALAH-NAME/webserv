@@ -6,13 +6,14 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/05/17 16:28:31 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/30 15:13:42 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-void    Server::sendResponses(void) {
+void    Server::sendResponses(struct epoll_event& event) {
+
 	std::string htmlContent =
 		"<!DOCTYPE html>\n"
 		"<html lang=\"en\">\n"
@@ -39,26 +40,28 @@ void    Server::sendResponses(void) {
 		"\r\n"
 		+ htmlContent;
 
-	// std::cout << "response size: " << responseWaitQueue.size() << "\n";
-
-	for (size_t i = 0; i < responseWaitQueue.size(); i++) {
-		responses[responseWaitQueue[i]].setResponse(response);
-	}
-
+	int client_socket;
+	ssize_t bytes_sent;
 	
-	for (size_t i = 0; i < responseWaitQueue.size(); i++) {
-		// std::cout << "sending response to fd: " << responseWaitQueue[i] << "\n";
-		response = responses[responseWaitQueue[i]].getResponse();
-		ssize_t bytes_sent = send(responseWaitQueue[i],
-			response.c_str(), response.length(), 0);
+		client_socket = event.data.fd;
+
+		if (!clients[client_socket].getOutStatus())
+			return ;
+
+		bytes_sent = send(client_socket, response.c_str(), response.length(), 0);
+		if (bytes_sent == -1) {
+			// ...
+		}
 
 		if (bytes_sent < 0) {
 			// ...
 		}
 		
-		responses.erase(responseWaitQueue[i]);
-		close(responseWaitQueue[i]);
-		responseWaitQueue.erase(responseWaitQueue.begin() + i);
-		i--;
-	}
+		clients[client_socket].setOutStatus(false);
+		event.events = EPOLLIN;  // enable write temporarily
+		epoll_ctl(epfd, EPOLL_CTL_MOD, client_socket, &event);
+		clients[client_socket].clearRequestHolder();
+
+		if (!_isKeepAlive)
+			closeConnection(client_socket);
 }

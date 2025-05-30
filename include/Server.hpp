@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/05/23 16:18:43 by karim            ###   ########.fr       */
+/*   Updated: 2025/05/30 12:48:44 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@
 #include <algorithm>
 #include <arpa/inet.h> // for inet_addr()
 
-#include "Request.hpp"
+#include "Client.hpp"
 #include "Response.hpp"
 
 #include "ConfigManager.hpp"
@@ -41,7 +41,10 @@
 
 
 
-#define MAX_EVENTS 10
+#define MAX_EVENTS 100
+#define BYTES_TO_READ 1000
+#define IN 1
+#define OUT 2
 
 class Server {
 	private:
@@ -53,25 +56,33 @@ class Server {
 		int									_domin;
 		int									_type;
 		int									_protocol;
-		std::string						_host;
+		std::string							_host;
 		int									_nMaxBacklog; // this parameter is for listen()
 		int 								epfd; // epoll fd
 		int									nfds; // number of fds in which the event occurred
 		unsigned int 						_timeout;
+		std::string							_2CRLF;
+		bool								_isKeepAlive;
 
 		struct epoll_event					targetInfos; // Structure to define the event we are interested in
-		std::vector<struct epoll_event>		events;
+		// std::vector<struct epoll_event>		events;
 
 		char								buffer[1024];
 		size_t								bufferSize;
 
-		std::map<int, Request>				requests;
-		std::map<int, std::time_t>			clientsSockets;
+		std::map<int, Client>				clients;
+		std::vector<int>					clientsSockets;
+
+		// struct epoll_event	events[MAX_EVENTS];
 		
-		std::map<int, Response>				responses;
-		std::vector<int>					responseWaitQueue;
+		// std::map<int, Response>				responses;
+		// std::vector<int>					responseWaitQueue;
 
 		void	__init_attributes(const ServerConfig& _serverInfo);
+		void						setEventStatus(struct epoll_event& event, int completed);
+		void    					receiveRequests(struct epoll_event& event);
+		void						sendResponses(struct epoll_event& event);
+		void						closeConnection(int clientSocket);
 
 	public:
 		Server(const ServerConfig& _serverInfo);
@@ -84,23 +95,25 @@ class Server {
 		struct epoll_event& 		getTarget();
 		std::vector<int>&			getSockets_fds();
 		void						set_nfds(int value);
-		std::map<int, std::time_t>&	get_clientsSockets(void);
-		std::vector<int>&			get_responseWaitQueue(void);
+		std::vector<int>&			get_clientsSockets(void);
+		// std::vector<int>&			get_responseWaitQueue(void);
 		void						process_event(struct epoll_event(&tempEvents)[MAX_EVENTS]);
 		bool						verifyServerSockets_fds(int NewEvent_fd);
 		bool						verifyClientFD(int client_fd);
 		void						incomingConnection(int NewEvent_fd);
-		void						merge_new_events(struct epoll_event* event);
+		// void						merge_new_events(struct epoll_event* event);
 		
-		void    					receiveRequests();
-		void						setEventStatus(int i, bool completed);
+		// void    					receiveRequests(struct epoll_event(&tempEvents)[MAX_EVENTS]); //
+		// void						setEventStatus(size_t &i, bool completed, struct epoll_event& tempEvents);
 					
-		void    					sendResponses(void);
+		void    					sendResponses(struct epoll_event(&tempEvents)[MAX_EVENTS]);
+		void						checkTimeOut(void);
 		
 };
 
 void    waitingForEvents(std::vector<Server> &servers, int epfd);
+std::vector<int>::iterator	get_iterator(int	client_socket, std::vector<int>& sockets);
 
-void    printResponse(std::string response);
+void    printRequet(std::string Requet);
 
 #endif
