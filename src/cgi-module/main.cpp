@@ -9,7 +9,7 @@ using namespace std;
 void test_req_init(Request &req)
 {
 	req.method = "POST";
-	req.script = "./post_test.py";
+	req.path = "./post_test.py";
 	req.interpiter = "/usr/bin/python3";
 	req.path_info = "non";
 	req.query_string = "?key=val&key1=val2";

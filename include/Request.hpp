@@ -25,16 +25,17 @@ class Request {
 		size_t		readBytes;
 	public:
 		std::string	method;
-		std::string	script;
-		std::string	interpiter;
+		std::string	path;
+		std::string http_version;
+		std::string	interpiter;//usually in the configuration
 		std::string path_info;
 		std::string query_string;
 		std::string content_type;
 		std::string content_length;
-		std::string server_name;
-		int			server_port;
-		std::string client_addrs;
-		int 		client_port;
+		std::string server_name;//config
+		int			server_port;//config
+		std::string client_addrs;//config
+		int 		client_port;//config
 		std::vector<std::pair<std::string, std::string> > headers;//exclude content-type and content-length
 
 		Request(void);
