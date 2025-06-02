@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/05/30 15:13:42 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/02 17:48:42 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ void    Server::sendResponses(struct epoll_event& event) {
 	
 		client_socket = event.data.fd;
 
-		if (!clients[client_socket].getOutStatus())
+		if (!_clients[client_socket].getOutStatus())
 			return ;
 
 		bytes_sent = send(client_socket, response.c_str(), response.length(), 0);
@@ -57,10 +57,10 @@ void    Server::sendResponses(struct epoll_event& event) {
 			// ...
 		}
 		
-		clients[client_socket].setOutStatus(false);
+		_clients[client_socket].setOutStatus(false);
 		event.events = EPOLLIN;  // enable write temporarily
-		epoll_ctl(epfd, EPOLL_CTL_MOD, client_socket, &event);
-		clients[client_socket].clearRequestHolder();
+		epoll_ctl(_epfd, EPOLL_CTL_MOD, client_socket, &event);
+		_clients[client_socket].clearRequestHolder();
 
 		if (!_isKeepAlive)
 			closeConnection(client_socket);

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/06/02 12:20:21 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/02 17:50:08 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,22 +14,23 @@
 
 int	Server::_id = 1;
 
-void	Server::__init_attributes(const std::vector<ServerConfig> &serversInfo, int i) {
+void	Server::__init_attributes(void) {
 	_domin = AF_INET;
 	_type = SOCK_STREAM | SOCK_NONBLOCK;
 	_protocol = 0;
 	_2CRLF = "\r\n\r\n";
 	_isKeepAlive = true;
-	ports.push_back(serversInfo[i].getListen());
+	_ports.push_back(_serverConfig.getListen());
 	_isSocketOwner = false;
+	_timeOut = _serverConfig.getSessionTimeout();
 }
 
-Server::Server(const std::vector<ServerConfig> &serversInfo, int i) : serverConfig(serversInfo[i]) {
+Server::Server(const ServerConfig& serverConfig) : _serverConfig(serverConfig) {
 
 	int socket_fd;
-	__init_attributes(serversInfo, i);
+	__init_attributes();
 
-	for (size_t i = 0; i < ports.size(); i++) {
+	for (size_t i = 0; i < _ports.size(); i++) {
 		
 		try {
 			if ((socket_fd = socket(_domin, _type, _protocol)) < 0) {
@@ -43,20 +44,20 @@ Server::Server(const std::vector<ServerConfig> &serversInfo, int i) : serverConf
 			
 			memset(&_Address, 0, sizeof(_Address));
 			_Address.sin_family = _domin;
-			_Address.sin_port = htons(ports[i]);
+			_Address.sin_port = htons(_ports[i]);
 			/*htons():  These functions shall convert 16-bit and 32-bit quantities between
 			network byte order and host byte order.*/
 			
 			if (inet_pton(AF_INET, serverConfig.getHost().c_str(), &_Address.sin_addr) <= 0)
 				throw "Invalid IP address";
 		
-			bufferSize = sizeof(buffer);
-			memset(buffer, 0, bufferSize);
+			_bufferSize = sizeof(_buffer);
+			memset(_buffer, 0, _bufferSize);
 			
 			if (bind(socket_fd, (sockaddr*)&_Address, sizeof(_Address)) < 0) {
 				if (errno == EADDRINUSE) {
-					server_id = _id++;
-					std::cout << "Server(" << server_id << ") is listening on USED IP:PORT\n";
+					_server_id = _id++;
+					std::cout << "Server(" << _server_id << ") is listening on USED IP:PORT\n";
 					std::cout << "==> this server is using used SOCKET\n";
 					std::cout << "is socket owner => " << _isSocketOwner << "\n";
 					close(socket_fd);
@@ -70,11 +71,11 @@ Server::Server(const std::vector<ServerConfig> &serversInfo, int i) : serverConf
 				of pending connections for sockfd may grow*/
 				if (listen(socket_fd, _nMaxBacklog) < 0)
 					throw "listen failed";
-				sockets_fds.push_back(socket_fd);
+				_sockets_fds.push_back(socket_fd);
 				_isSocketOwner = true;
-				server_id = _id++;
-				std::cout << "Server(" << server_id << ") {socket: " << socket_fd << "} is listening on => ";
-				std::cout << serverConfig.getHost() << ":" << ports[i] << "\n";
+				_server_id = _id++;
+				std::cout << "Server(" << _server_id << ") {socket: " << socket_fd << "} is listening on => ";
+				std::cout << serverConfig.getHost() << ":" << _ports[i] << "\n";
 				std::cout << "is socket owner => " << _isSocketOwner << "\n";
 			}
 		}
@@ -87,7 +88,7 @@ Server::Server(const std::vector<ServerConfig> &serversInfo, int i) : serverConf
 			return ;
 		
 	}
-	if (!sockets_fds.size() || !sockets_fds.size())
+	if (!_sockets_fds.size() || !_sockets_fds.size())
 		throw "server failed";
 }
 
@@ -96,46 +97,50 @@ Server::~Server(void) {
 }
 
 int		Server::get_id(void) {
-	return server_id;
+	return _server_id;
 }
 
-void Server::set_epfd(int value) {
-	epfd = value;
+void Server::set__epfd(int value) {
+	_epfd = value;
 }
 
-std::vector<int>&		Server::getSockets_fds() {
-	return sockets_fds;
-}
-
-void	Server::set_nfds(int value) {
-	nfds = value;	
+std::vector<int>&		Server::get_sockets_fds() {
+	return _sockets_fds;
 }
 
 std::vector<int>&	Server::get_clientsSockets(void) {
-	return clientsSockets;
+	return _clientsSockets;
 }
 
 bool	Server::verifyClientFD(int client_fd) {
-	for (size_t i = 0; i < clientsSockets.size(); i++) {
-		if (client_fd == clientsSockets[i])
+	for (size_t i = 0; i < _clientsSockets.size(); i++) {
+		if (client_fd == _clientsSockets[i])
 			return true;
 	}
 	return false;
 }
 
-bool	Server::verifyServerSockets_fds(int NewEvent_fd) {
-	std::vector<int>::iterator it = std::find(sockets_fds.begin(), sockets_fds.end(), NewEvent_fd);
-	return (it != sockets_fds.end());
+bool	Server::verifyServer_sockets_fds(int NewEvent_fd) {
+	std::vector<int>::iterator it = std::find(_sockets_fds.begin(), _sockets_fds.end(), NewEvent_fd);
+	return (it != _sockets_fds.end());
 }
 
 
 void	Server::closeConnection(int clientSocket) {
-	epoll_ctl(epfd, EPOLL_CTL_DEL, clientSocket, NULL);
-	clientsSockets.erase(get_iterator(clientSocket, clientsSockets));
-	clients.erase(clientSocket);
+	epoll_ctl(_epfd, EPOLL_CTL_DEL, clientSocket, NULL);
+	_clientsSockets.erase(get_iterator(clientSocket, _clientsSockets));
+	_clients.erase(clientSocket);
 	close(clientSocket);
 }
 
 bool	Server::getIsSocketOwner(void) {
 	return _isSocketOwner;
+}
+
+std::map<int, Client>& Server::getClients() {
+	return _clients;
+}
+
+int	Server::getTimeOut(void) {
+	return _timeOut;
 }

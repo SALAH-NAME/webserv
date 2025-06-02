@@ -12,9 +12,9 @@ SRCS := server-module/main.cpp \
 		config-module/ConfigTokenizer.cpp config-module/ConfigTypes.cpp config-module/BaseConfig.cpp \
 		config-module/GlobalConfig.cpp config-module/LocationConfig.cpp config-module/ServerConfig.cpp \
 		config-module/ConfigManager.cpp config-module/ConfigParser.cpp config-module/ConfigPrinter.cpp \
-		server-module/Server.cpp server-module/EventHandler.cpp server-module/ReceiveRequests.cpp \
-		server-module/Response.cpp server-module/Client.cpp server-module/SendResponse.cpp \
-		server-module/HttpRequest.cpp
+		server-module/ServerManager.cpp server-module/Server.cpp server-module/EventHandler.cpp \
+		server-module/ReceiveRequests.cpp server-module/Response.cpp server-module/Client.cpp \
+		server-module/SendResponse.cpp server-module/HttpRequest.cpp
 
 OBJS := $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
 DEPS := $(OBJS:.o=.d)
