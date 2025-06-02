@@ -6,26 +6,26 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/05/30 15:11:53 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/02 12:25:07 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-void	Server::setEventStatus(struct epoll_event& event, int completed) {
+void	Server::setEventStatus(struct epoll_event& event, int completed, const std::vector<ServerConfig> &serversInfo) {
 	int clientSocket = event.data.fd;
 
 	if (completed) {
 		clients[clientSocket].setOutStatus(true);
 		event.events = EPOLLIN | EPOLLOUT;  // enable write temporarily
 		epoll_ctl(epfd, EPOLL_CTL_MOD, clientSocket, &event);
-
+		clients[clientSocket].routing(serversInfo);
 	}
 	else
 		closeConnection(clientSocket);
 }
 
-void    Server::receiveRequests(struct epoll_event& event) {
+void    Server::receiveRequests(struct epoll_event& event, const std::vector<ServerConfig> &serversInfo) {
 	ssize_t bytes_read;
 	int clientSocket = event.data.fd;
 		
@@ -39,6 +39,9 @@ void    Server::receiveRequests(struct epoll_event& event) {
 	}
 	if (bytes_read == 0 || clients[clientSocket].getRequest().find(_2CRLF) != std::string::npos) {
 		// printRequet(clients[clientSocket].getRequest());
-		setEventStatus(event, true);
+		if (!clients[clientSocket].parseRequest())
+			setEventStatus(event, false, serversInfo);
+		else
+			setEventStatus(event, true, serversInfo);
 	}
 }

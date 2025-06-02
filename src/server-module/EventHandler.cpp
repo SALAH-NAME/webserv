@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/05/30 16:35:58 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/02 12:23:02 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ std::vector<int>::iterator	get_iterator(int	client_socket, std::vector<int>& soc
 
 void	Server::checkTimeOut(void) {
 	for (int i = 0; i < clients.size(); i++) {
-		if (std::time(NULL) - clients[clientsSockets[i]].getLastConnectionTime() > getTimeout())
+		if (std::time(NULL) - clients[clientsSockets[i]].getLastConnectionTime() > serverConfig.getSessionTimeout())
 			closeConnection(clientsSockets[i]);
 	}
 }
@@ -64,7 +64,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 	}
 }
 
-void	Server::process_event(struct epoll_event(&events)[MAX_EVENTS]) {
+void	Server::process_event(struct epoll_event(&events)[MAX_EVENTS], const std::vector<ServerConfig> &serversInfo) {
 	int clientSocket;
 	
 	for (int i = 0; i < nfds; i++) {
@@ -76,27 +76,29 @@ void	Server::process_event(struct epoll_event(&events)[MAX_EVENTS]) {
 		else if (verifyClientFD(clientSocket)){
 			// std::cout << "############  got an event on an existing client socket " << clientSocket << " #############\n";
 			clients[clientSocket].setOutStatus(IN);
-			receiveRequests(events[i]);
+			receiveRequests(events[i], serversInfo);
 			sendResponses(events[i]);
 		}
 	}
 }
 
-void    waitingForEvents(std::vector<Server> &servers, int epfd) {
+void    waitingForEvents(std::vector<Server> &servers, int epfd, const std::vector<ServerConfig> &serversInfo) {
 	int					nfds;
 	struct epoll_event	events[MAX_EVENTS];
 
 	while (true) {
 		// std::cout << "wait ...\n";
-		nfds = epoll_wait(epfd, events, MAX_EVENTS, 100);
+		nfds = epoll_wait(epfd, events, MAX_EVENTS, TIMEOUT);
 		
 		if (nfds < 0)
 			throw "epoll_wait failed";
 		
 		for (size_t x = 0; x < servers.size(); x++) {
+			if (!servers[x].getIsSocketOwner())
+				continue ;
 			servers[x].checkTimeOut();
 			servers[x].set_nfds(nfds);
-			servers[x].process_event(events);
+			servers[x].process_event(events, serversInfo);
 		}
 		memset(events, 0, sizeof(events));
 	}

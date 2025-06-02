@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/05/30 16:44:43 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/02 12:20:21 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,23 +14,20 @@
 
 int	Server::_id = 1;
 
-void	Server::__init_attributes(const ServerConfig& _serverInfo) {
+void	Server::__init_attributes(const std::vector<ServerConfig> &serversInfo, int i) {
 	_domin = AF_INET;
 	_type = SOCK_STREAM | SOCK_NONBLOCK;
 	_protocol = 0;
-	_host = _serverInfo.getHost();
-	_timeout = _serverInfo.getSessionTimeout();
 	_2CRLF = "\r\n\r\n";
 	_isKeepAlive = true;
-	ports.push_back(_serverInfo.getListen());
-	
-	// _timeout = 10;
+	ports.push_back(serversInfo[i].getListen());
+	_isSocketOwner = false;
 }
 
-Server::Server(const ServerConfig& _serverInfo) {
+Server::Server(const std::vector<ServerConfig> &serversInfo, int i) : serverConfig(serversInfo[i]) {
 
 	int socket_fd;
-	__init_attributes(_serverInfo);
+	__init_attributes(serversInfo, i);
 
 	for (size_t i = 0; i < ports.size(); i++) {
 		
@@ -38,57 +35,64 @@ Server::Server(const ServerConfig& _serverInfo) {
 			if ((socket_fd = socket(_domin, _type, _protocol)) < 0) {
 				throw "socket failed: ";
 			}	
-				int reuse = 1;
-				if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
-					throw "setsockopt(SO_REUSEADDR) failed";
-				// fixed this problem ==>  the OS keeps the port in a "cool-down" period (TIME_WAIT)
-				// ==> It’s mainly for quick restart development or for binding during graceful restarts.
-				
-				memset(&_Address, 0, sizeof(_Address));
-				_Address.sin_family = _domin;
-				_Address.sin_port = htons(ports[i]);
-				/*htons():  These functions shall convert 16-bit and 32-bit quantities between
-				network byte order and host byte order.*/
-				
-				if (inet_pton(AF_INET, _host.c_str(), &_Address.sin_addr) <= 0)
-					throw "Invalid IP address";
+			int reuse = 1;
+			if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
+				throw "setsockopt(SO_REUSEADDR) failed";
+			// fixed this problem ==>  the OS keeps the port in a "cool-down" period (TIME_WAIT)
+			// ==> It’s mainly for quick restart development or for binding during graceful restarts.
 			
-				bufferSize = sizeof(buffer);
-				memset(buffer, 0, bufferSize);
-				
-				if (bind(socket_fd, (sockaddr*)&_Address, sizeof(_Address)) < 0) {
-					throw "bind failed";
+			memset(&_Address, 0, sizeof(_Address));
+			_Address.sin_family = _domin;
+			_Address.sin_port = htons(ports[i]);
+			/*htons():  These functions shall convert 16-bit and 32-bit quantities between
+			network byte order and host byte order.*/
+			
+			if (inet_pton(AF_INET, serverConfig.getHost().c_str(), &_Address.sin_addr) <= 0)
+				throw "Invalid IP address";
+		
+			bufferSize = sizeof(buffer);
+			memset(buffer, 0, bufferSize);
+			
+			if (bind(socket_fd, (sockaddr*)&_Address, sizeof(_Address)) < 0) {
+				if (errno == EADDRINUSE) {
+					server_id = _id++;
+					std::cout << "Server(" << server_id << ") is listening on USED IP:PORT\n";
+					std::cout << "==> this server is using used SOCKET\n";
+					std::cout << "is socket owner => " << _isSocketOwner << "\n";
+					close(socket_fd);
+					return ;
 				}
-				
+				else
+					throw "bind failed";
+			}
+			else {
 				/* _nMaxBacklog: the maximum length to which the queue
 				of pending connections for sockfd may grow*/
 				if (listen(socket_fd, _nMaxBacklog) < 0)
 					throw "listen failed";
-				
-			sockets_fds.push_back(socket_fd);
-			server_id = _id++;
-
-			
-			std::cout << "Server(" << server_id << ") {socket: " << socket_fd << "} is listening on => ";
-			std::cout << _host << ":" << ports[i] << "\n";
+				sockets_fds.push_back(socket_fd);
+				_isSocketOwner = true;
+				server_id = _id++;
+				std::cout << "Server(" << server_id << ") {socket: " << socket_fd << "} is listening on => ";
+				std::cout << serverConfig.getHost() << ":" << ports[i] << "\n";
+				std::cout << "is socket owner => " << _isSocketOwner << "\n";
+			}
 		}
 		catch (const char* errorMssg) {
 			perror(errorMssg);
 			if (!(socket_fd < 0))
 				close(socket_fd);
 		}
+		if (errno == EADDRINUSE)
+			return ;
 		
 	}
-	if (!sockets_fds.size())
+	if (!sockets_fds.size() || !sockets_fds.size())
 		throw "server failed";
 }
 
 Server::~Server(void) {
 	// std::cout << "destructor called\n";
-}
-
-unsigned int	Server::getTimeout(void) {
-	return _timeout;
 }
 
 int		Server::get_id(void) {
@@ -97,10 +101,6 @@ int		Server::get_id(void) {
 
 void Server::set_epfd(int value) {
 	epfd = value;
-}
-
-struct epoll_event & Server::getTarget() {
-	return targetInfos;
 }
 
 std::vector<int>&		Server::getSockets_fds() {
@@ -130,10 +130,12 @@ bool	Server::verifyServerSockets_fds(int NewEvent_fd) {
 
 
 void	Server::closeConnection(int clientSocket) {
-	// std::cout << "(socket: " << clients[clientSocket].get_serverSocketFD() << ")Time out, close connection";
-	// std::cout << " with client fd : " << clientSocket << "\n";
 	epoll_ctl(epfd, EPOLL_CTL_DEL, clientSocket, NULL);
 	clientsSockets.erase(get_iterator(clientSocket, clientsSockets));
 	clients.erase(clientSocket);
 	close(clientSocket);
+}
+
+bool	Server::getIsSocketOwner(void) {
+	return _isSocketOwner;
 }

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/05/29 21:25:26 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/01 10:34:23 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 #include <cstring>
 #include <vector>
 #include <sys/epoll.h>
+#include "HttpRequest.hpp"
+#include "ConfigManager.hpp"
 
 
 class Client {
@@ -27,7 +29,9 @@ class Client {
 		std::string						requestHolder;
 		std::string						responseHolder;
 		int								outStatus;
-		time_t								timeOut;
+		time_t							timeOut;
+		HttpRequest						requestInfos;
+		const ServerConfig				*serverInfo;
 
 	public:
 		Client(void);
@@ -44,14 +48,14 @@ class Client {
 		void		setResponse(std::string response);
 		std::string &		getResponse(void);
 
-		// void		addNewEvent(struct epoll_event);
-		// std::vector<struct epoll_event>&	getEvents(void);
-
 		void	setOutStatus(int status);
 		int	getOutStatus(void);
 		void						clearRequestHolder(void);
 		void		resetLastConnectionTime(void);
 		time_t		getLastConnectionTime(void);
+		bool		parseRequest();
+
+		void		routing(const std::vector<ServerConfig>& serversInfo);
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/05/30 12:43:48 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/02 12:26:19 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <ctime>
+#include "HttpRequest.hpp"
 
 Client::Client(void) {}
 
@@ -74,4 +75,16 @@ void	Client::resetLastConnectionTime(void){
 
 time_t		Client::getLastConnectionTime(void){
 	return timeOut;
+}
+
+bool		Client::parseRequest() {
+	return requestInfos.parse(requestHolder);
+}
+
+void	Client::routing(const std::vector<ServerConfig>& serversInfo) {
+	// for (int i = 0; i < serversInfo.size(); i++) {
+		// requestInfos.
+		// 	std::cout << "uri: " << requestInfos.getUri() << "\n";
+		// 	exit(0);
+	// }
 }

@@ -13,13 +13,13 @@ void	setUpServers(std::vector<Server>& servers, const std::vector<ServerConfig> 
 
 	for (size_t i = 0; i < serversInfo.size(); i++) {
 		try {
-			servers.push_back(Server(serversInfo[i]));
-			if (!servers.back().getSockets_fds().size())
-				servers.pop_back();
+			servers.push_back(Server(serversInfo, i));
 		}
 		catch (const char *errorMssg) {
 			perror(errorMssg);
 		}
+		// std::cout << "servers ==> " << servers.size() << "\n";
+		// std::cout << "==============================\n";
 	}
 	if (!servers.size())
 		throw "No server is available";
@@ -32,18 +32,24 @@ int	setEpoll(std::vector<Server> &servers) {
 		throw ("epoll create1 failed");
 	std::cout << "an epoll instance for the servers sockets created(" << epfd << ")\n";
 
+	struct epoll_event	event;
 	for (size_t i = 0; i < servers.size(); i++) {
-
+		if (!servers[i].getIsSocketOwner())
+			continue ;
+		
 		std::vector<int>& sockets_fds = servers[i].getSockets_fds();
 		std::cout << "Server(" << servers[i].get_id() << ") || sockets fds{"; //
 		for (size_t x = 0; x < sockets_fds.size(); x++) {
 			servers[i].set_epfd(epfd);
-			struct epoll_event	&targetInfos = servers[i].getTarget();
-			targetInfos.data.fd = sockets_fds[x];
-			targetInfos.events = EPOLLIN;
-			targetInfos.events |= EPOLLET;
+			// struct epoll_event	&targetInfos = servers[i].getTarget();
+			// targetInfos.data.fd = sockets_fds[x];
+			// targetInfos.events = EPOLLIN;
+			// targetInfos.events |= EPOLLET;
+			memset(&event, 0, sizeof(event));
+			event.data.fd = sockets_fds[x];
+			event.events = EPOLLIN | EPOLLOUT;
 			
-			if (epoll_ctl(epfd, EPOLL_CTL_ADD, sockets_fds[x], &targetInfos) == -1) {
+			if (epoll_ctl(epfd, EPOLL_CTL_ADD, sockets_fds[x], &event) == -1) {
 				std::cout << "\nepoll ctl failed with server: " << servers[i].get_id() << " socket: " << sockets_fds[x] << "\n";
 				throw "epoll_ctl failed";
 			}
@@ -91,8 +97,9 @@ int main(int argc, char** argv)
     try {
         setUpServers(servers, config_manager.getServers());
 		int epfd = setEpoll(servers);
+		std::cout << "Number of servers ==> " << servers.size() << "\n";
 
-		waitingForEvents(servers, epfd);
+		waitingForEvents(servers, epfd, config_manager.getServers());
     }
     catch (const char* errorMssg) {
 		close_fds(servers);
