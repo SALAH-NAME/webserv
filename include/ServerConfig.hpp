@@ -5,6 +5,7 @@
 #include "LocationConfig.hpp"
 #include <string>
 #include <vector>
+#include <unistd.h>
 
 class ServerConfig : public BaseConfig
 {

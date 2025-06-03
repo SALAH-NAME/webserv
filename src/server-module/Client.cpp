@@ -72,6 +72,8 @@ void	Client::resetLastConnectionTime(void){
 	timeOut = std::time(NULL);
 }
 
+
 time_t		Client::getLastConnectionTime(void){
 	return timeOut;
 }
+

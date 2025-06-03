@@ -17,10 +17,11 @@
 #include <cstring>
 #include <vector>
 #include <sys/epoll.h>
-
+#include "Request.hpp"
 
 class Client {
 	private:
+		Request							request;
 		int								socket_fd;
 		int								serverSocket_fd;
 		size_t							readBytes;
@@ -30,20 +31,6 @@ class Client {
 		time_t								timeOut;
 
 	public:
-		std::string	method;
-		std::string	path;
-		std::string http_version;
-		std::string	interpiter;//usually in the configuration
-		std::string path_info;
-		std::string query_string;
-		std::string content_type;
-		std::string content_length;
-		std::string server_name;//config
-		int			server_port;//config
-		std::string client_addrs;//config
-		int 		client_port;//config
-		std::vector<std::pair<std::string, std::string> > headers;//exclude content-type and content-length
-
 		Client(void);
 		Client(int fd, int socket_fd);
 

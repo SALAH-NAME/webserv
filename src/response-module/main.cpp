@@ -2,9 +2,9 @@
 
 void test_req_init(Request &req)
 {
-	req.method = "GET";
-	req.path = "/";
-	req.http_version = "HTTP/1.1";
+	req.set_method("GET");
+	req.set_http_version("HTTP/1.1");
+	req.set_path("/");
 }
 
 int main()

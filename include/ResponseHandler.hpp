@@ -13,19 +13,32 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
-#include <string>
 #include <iostream>
+#include <sstream>
+#include "Request.hpp"
+#include "GlobalConfig.hpp"
+#include "ServerConfig.hpp"
 
-class Response {
+class ResponseHandler {
 	private:
 		int			socket_fd;
-		std::string responseHolder;
+		std::string file_path;
+		LocationConfig const *loc_config;
+
 	public:
-		Response(void);
-		Response(int fd);
-		int			getFD();
-		void		setResponse(std::string responseData);
-		std::string	getResponse(void);
+		ResponseHandler(int sockfd);
+		void ProccessRequest(Request &req, ServerConfig &conf);
+		void RouteResolver(const std::string &path, ServerConfig &conf);
+		~ResponseHandler();
+
+		class RequestError : std::exception
+		{
+			private:
+				std::string error;
+			public:
+				RequestError(const std::string &Errmsg);
+				const char *what() noexcept;
+		};
 };
 
 #endif
