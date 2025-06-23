@@ -1,7 +1,7 @@
-#include "../../include/ResponseHandler.hpp"
-#include "../../include/Request.hpp"
-#include "../../include/GlobalConfig.hpp"
-#include "../../include/ServerConfig.hpp"
+#include "ResponseHandler.hpp"
+#include "Request.hpp"
+#include "GlobalConfig.hpp"
+#include "ServerConfig.hpp"
 
 typedef const std::map<std::string, LocationConfig> LOCATIONS;
 
@@ -10,51 +10,99 @@ ResponseHandler::ResponseHandler(int sockfd){
     loc_config = NULL;
 }
 
-bool locationMatched(const std::string &req_path, const LocationConfig &locationConf)
+bool locationMatched(const std::string &req_path, const LocationConfig &locationConf, std::string &current_path, const std::string &method)
 {
     std::stringstream   req_path_ss(req_path.c_str());
     std::stringstream   loc_path_ss(locationConf.getPath().c_str());
     std::string         req_part;
+    std::string         testing_path;
     std::string         loc_part;
 
-    while (std::getline(loc_path_ss, loc_part, '/'))
+    while (std::getline(loc_path_ss, loc_part, '/'))//  comapiring the location with the request path
     {
         std::getline(req_path_ss, req_part, '/');
         if (loc_part != req_part)
-            return false;
+            return false;//route didn't match with the request path
     }
     std::getline(req_path_ss, req_part);
-    if (access((locationConf.getRoot() + "/" + req_part).c_str(), F_OK))
+    testing_path = locationConf.getRoot() + "/" + (method != "POST" ? req_part : ""); // appending the req_part to the config root if not POST
+    if (access(testing_path.c_str(), F_OK)){// checks if the resulting path exists
+        current_path = locationConf.getRoot() + "/" + req_part;
         return true;
+    }
     return false;
 }
 
-void ResponseHandler::RouteResolver(const std::string &req_path, ServerConfig &conf)
+void ResponseHandler::RouteResolver(const std::string &req_path, ServerConfig &conf, const std::string &method)
 {
     LOCATIONS   &srv_locations = conf.getLocations();
-
+    std::string current_resource_path;//    will be setted by 'locationMatched' each time a route is validated and is longer than prev value
     if (srv_locations.find("/") != srv_locations.end() && access((srv_locations.at("/").getRoot() + "/" + req_path).c_str(), F_OK))
-        loc_config = &srv_locations.at("/");
+        loc_config = &srv_locations.at("/");//   if the path matches with the '/' location the full path will be used (it may be changed later in the code)
     for (LOCATIONS::const_iterator it = srv_locations.begin(); it != srv_locations.end();it++)
-        if (locationMatched(req_path, it->second) && (loc_config || loc_config->getPath().size() < it->second.getPath().size()))
-            loc_config = &it->second;
+    {
+        if (locationMatched(req_path, it->second, current_resource_path, method) &&
+            (loc_config || loc_config->getPath().size() < it->second.getPath().size())){
+            loc_config = &it->second;//     update if the new route is longer
+            resource_path = current_resource_path;
+        }
+    } 
     if (!loc_config)
-        throw ("HTTP/1.1 404 Not Found");//the request path is not found
+        throw (RequestError("HTTP/1.1 404 Not Found"));//the request path didn't match with any location
 }
 
-void ResponseHandler::ProccessRequest(Request &req, ServerConfig &conf)
+void ResponseHandler::PreProccessRequest(Request &req, ServerConfig &conf)
 {
-    HttpMethod  http_method;
-    if (req.getHttpVersion() != "HTTP/1.1")// using a deferent http version
-        throw ("HTTP/1.1 505 HTTP Version Not Supported");
+    if (req.getHttpVersion() != "HTTP/1.1")// using a different http version
+        throw (RequestError("HTTP/1.1 505 HTTP Version Not Supported"));
     if (req.getHeaders().find("HTTP/1.1 400 Bad Request") == req.getHeaders().end())// a request with no host header
-        throw ("HTTP/1.1 400 Bad Request");
+        throw (RequestError("HTTP/1.1 400 Bad Request"));
     try {stringToHttpMethod(req.getMethod());}
-    catch (std::invalid_argument){// using a method other than GET, POST and DELETE 
-        throw "HTTP/1.1 405 Not Allowed";}
-    RouteResolver(req.getPath(), conf);
-    // check for permissions auto index etc... 
+    catch (std::invalid_argument){//    using a method other than GET, POST and DELETE 
+        throw (RequestError("HTTP/1.1 405 Not Allowed"));}
+    RouteResolver(req.getPath(), conf, req.getMethod());//  set the resource_path and loc_config methods to the appropriate value (full route & location conf)
+    if (loc_config->getAllowedMethods().find(stringToHttpMethod(req.getMethod())) == loc_config->getAllowedMethods().end())
+        throw (RequestError("HTTP/1.1 405 Not Allowed"));//req method is not allowed on the route
+    switch (stringToHttpMethod(req.getMethod()))
+    {
+        case HTTP_GET:
+            ProccessHttpGET(req, conf);
+            break;
+        case HTTP_POST:
+            ProccessHttpPOST(req, conf);
+            break;    
+        case HTTP_DELETE:
+            ProccessHttpDELETE(req, conf);
+            break;
+    }
 }
+
+void ResponseHandler::ProccessHttpGET(Request &req, ServerConfig &conf)
+{
+    if (!access(resource_path.c_str(), R_OK) || is_dir(resource_path.c_str())
+        && loc_config->getIndex().empty() && !loc_config->getAutoindex())
+            throw (RequestError("HTTP/1.1 403 Forbidden"));
+    //if it's a file send it 
+    //if a directory and has an index file send it if not generate an html listing the files in the dir 
+
+}
+
+void ResponseHandler::ProccessHttpPOST(Request &req, ServerConfig &conf)
+{
+    if (access(resource_path.c_str(), F_OK))
+        throw ("HTTP/1.1 409 Conflict");
+    if (req.getPath()[req.getPath().size() - 1] == '/')
+        throw ("HTTP/1.1 403 Forbidden");
+    //create the file with the same name as the full path and use the body of the request as it's content
+}
+
+void ResponseHandler::ProccessHttpDELETE(Request &req, ServerConfig &conf)
+{
+    if (!access(resource_path.c_str(), R_OK) || is_dir(resource_path.c_str()))
+        throw("HTTP/1.1 403 Forbidden");
+    //just delete the file
+}
+
 
 ResponseHandler::~ResponseHandler(){}
 

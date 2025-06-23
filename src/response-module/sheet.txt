@@ -15,3 +15,6 @@ location /test {
 	autoindex on;
 }
 
+req path = "/test/resource.png"
+
+
