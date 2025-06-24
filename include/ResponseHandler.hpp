@@ -9,19 +9,24 @@
 #include "GlobalConfig.hpp"
 #include "ServerConfig.hpp"
 
+typedef const std::map<std::string, LocationConfig> LOCATIONS;
+
 class ResponseHandler {
 	private:
-		int			socket_fd;
-		std::string resource_path;
-		LocationConfig const *loc_config;
-
-	public:
-		ResponseHandler(int sockfd);
-		void PreProccessRequest(Request &req, ServerConfig &conf);
+		int						socket_fd;
+		std::string 			resource_path;
+		bool					require_cgi;
+		LocationConfig const	*loc_config;
+		
 		void RouteResolver(const std::string &path, ServerConfig &conf, const std::string &method);
+		bool CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations);
 		void ProccessHttpGET(Request &req, ServerConfig &conf);
 		void ProccessHttpPOST(Request &req, ServerConfig &conf);
 		void ProccessHttpDELETE(Request &req, ServerConfig &conf);
+
+	public:
+		ResponseHandler(int sockfd);
+		void	ProccessRequest(Request &req, ServerConfig &conf);
 		~ResponseHandler();
 
 		class RequestError : std::exception
@@ -37,5 +42,5 @@ class ResponseHandler {
 
 //util functions
 bool is_dir(const char  *path);
-
+std::string ExtractFileExtension(const std::string &path);
 #endif

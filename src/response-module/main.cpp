@@ -1,13 +1,17 @@
-#include "../../include/Request.hpp"
+#include <string>
+#include <iostream>
 
-void test_req_init(Request &req)
+std::string ExtractFileExtension(const std::string &path)
 {
-	req.set_method("GET");
-	req.set_http_version("HTTP/1.1");
-	req.set_path("/");
-}
+    std::string result;
 
-int main()
-{
-
+    for (int i=path.size()-1; i>=0;i--)
+    {
+        if (path[i] == '/')
+            return "";
+        result = path[i] + result;
+        if (path[i] == '.')
+            return (result);
+    }
+	return "";
 }

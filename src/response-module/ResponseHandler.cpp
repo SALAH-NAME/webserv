@@ -3,11 +3,11 @@
 #include "GlobalConfig.hpp"
 #include "ServerConfig.hpp"
 
-typedef const std::map<std::string, LocationConfig> LOCATIONS;
-
 ResponseHandler::ResponseHandler(int sockfd){
     socket_fd = sockfd;
     loc_config = NULL;
+    resource_path = "";
+    require_cgi = false;
 }
 
 bool locationMatched(const std::string &req_path, const LocationConfig &locationConf, std::string &current_path, const std::string &method)
@@ -33,9 +33,33 @@ bool locationMatched(const std::string &req_path, const LocationConfig &location
     return false;
 }
 
+bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations)
+{
+    std::string extension = ExtractFileExtension(req_path);
+    if (extension.empty())
+        return (false);
+    for (LOCATIONS::const_iterator it = srv_locations.begin(); it != srv_locations.end();it++)
+    {
+        if (it->second.isCgi() && it->second.getPath() == extension)
+        {
+            //the requested file extension matched with a cgi location
+            if (!access((it->second.getRoot() + req_path).c_str(), F_OK))
+                return (false);
+            if (is_dir((it->second.getRoot()+req_path).c_str()))//if the path exist but as a directory
+                throw(RequestError("HTTP/1.1 403 Forbidden"));
+            resource_path = it->second.getRoot() + req_path;
+            loc_config = &it->second;
+            require_cgi = true;
+            return (true);
+        }
+    }
+}
+
 void ResponseHandler::RouteResolver(const std::string &req_path, ServerConfig &conf, const std::string &method)
 {
     LOCATIONS   &srv_locations = conf.getLocations();
+    if (CheckForCgi(req_path, srv_locations))
+        return ;
     std::string current_resource_path;//    will be setted by 'locationMatched' each time a route is validated and is longer than prev value
     if (srv_locations.find("/") != srv_locations.end() && access((srv_locations.at("/").getRoot() + "/" + req_path).c_str(), F_OK))
         loc_config = &srv_locations.at("/");//   if the path matches with the '/' location the full path will be used (it may be changed later in the code)
@@ -46,16 +70,16 @@ void ResponseHandler::RouteResolver(const std::string &req_path, ServerConfig &c
             loc_config = &it->second;//     update if the new route is longer
             resource_path = current_resource_path;
         }
-    } 
+    }
     if (!loc_config)
         throw (RequestError("HTTP/1.1 404 Not Found"));//the request path didn't match with any location
 }
 
-void ResponseHandler::PreProccessRequest(Request &req, ServerConfig &conf)
+void ResponseHandler::ProccessRequest(Request &req, ServerConfig &conf)
 {
     if (req.getHttpVersion() != "HTTP/1.1")// using a different http version
         throw (RequestError("HTTP/1.1 505 HTTP Version Not Supported"));
-    if (req.getHeaders().find("HTTP/1.1 400 Bad Request") == req.getHeaders().end())// a request with no host header
+    if (req.getHeaders().find("Host") == req.getHeaders().end())// a request with no host header
         throw (RequestError("HTTP/1.1 400 Bad Request"));
     try {stringToHttpMethod(req.getMethod());}
     catch (std::invalid_argument){//    using a method other than GET, POST and DELETE 
@@ -108,4 +132,4 @@ ResponseHandler::~ResponseHandler(){}
 
 ResponseHandler::RequestError::RequestError(const std::string &Errmsg){ error = Errmsg; }
 
-const char *ResponseHandler::RequestError::what(){ return error.c_str(); }
+const char *ResponseHandler::RequestError::what(){return error.c_str();}
