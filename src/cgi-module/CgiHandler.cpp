@@ -1,4 +1,5 @@
-#include "../../include/CgiHandler.hpp"
+#include "CgiHandler.hpp"
+#include "Request.hpp"
 
 std::string num_to_string(int num){
 	std::stringstream ss;
@@ -16,25 +17,25 @@ void	set_fds(bool is_POST, int *in_pipe, int *out_pipe)
 	}
 }
 
-void	prepare_cgi_env(Request	&http_req, Environment &my_env)//adding data fetched from the request into the env object
+void	prepare_cgi_env(Request	&http_req, Environment &my_env, ServerConfig &conf)//adding data fetched from the request into the env object
 {
 	my_env.Add("GATEWAY_INTERFACE=", "CGI/1.1");
-	my_env.Add("REQUEST_METHOD=", http_req.method);
-	my_env.Add("SCRIPT_NAME=", http_req.path);
-	my_env.Add("SERVER_NAME=", http_req.server_name);
-	my_env.Add("SERVER_PORT=", num_to_string(http_req.server_port));
+	my_env.Add("REQUEST_METHOD=", http_req.getMethod());
+	my_env.Add("SCRIPT_NAME=", http_req.getPath());
+	my_env.Add("SERVER_NAME=", conf.getSessionName());
+	my_env.Add("SERVER_PORT=", num_to_string(conf.getListen()));
 	my_env.Add("SERVER_PROTOCOL=", "HTTP/1.1");
 	my_env.Add("SERVER_SOFTWARE=", "Ed Edd n Eddy/1.0");
 	my_env.Add("CONTENT_LENGTH=", "non");
 	my_env.Add("CONTENT_TYPE=", "non");
-	my_env.Add("QUERY_STRING=", http_req.query_string);
-	my_env.Add("PATH_INFO=", http_req.path_info);
-	my_env.Add("REMOTE_ADDR=", http_req.client_addrs);
-	for (std::vector<std::pair<std::string, std::string> >::iterator it = http_req.headers.begin(); it != http_req.headers.end();it++)
-	my_env.Add("HTTP_" + it->first+"=", it->second);
+	my_env.Add("QUERY_STRING=", http_req.getQueryString());
+	my_env.Add("PATH_INFO=", http_req.getPathInfo());
+	//my_env.Add("REMOTE_ADDR=", http_req.getClientAddrs()); still need to add client addrs to the environment
+	for (std::map<std::string, std::string>::iterator it = http_req.getHeaders().begin(); it != http_req.getHeaders().end(); it++)
+		my_env.Add("HTTP_" + it->first + "=", it->second);
 }
 
-void	setArgv(char **Argv, std::string &interpiter, std::string &script_path)
+void	setArgv(char **Argv, const std::string &interpiter, const std::string &script_path)
 {
 	Argv[0] = new char[interpiter.size()];
 	Argv[1] = new char[script_path.size()];
@@ -57,13 +58,13 @@ int	*CgiHandler::GetOutPipe(){return output_pipe;}
 
 int	*CgiHandler::GetInPipe(){return input_pipe;}
 
-void CgiHandler::RunCgi(Request &current_req)
+void CgiHandler::RunCgi(Request &current_req, ServerConfig &conf, LocationConfig &cgi_conf)
 {
 	int 	id;
 	char	**argv = new char*[3];
 	
-	is_POST = current_req.method == "POST" ? true : false;
-	setArgv(argv, current_req.interpiter, current_req.path);
+	is_POST = current_req.getMethod() == "POST" ? true : false;
+	setArgv(argv, cgi_conf.getCgiPass(), current_req.getPath());
 	if (pipe(output_pipe) == -1)
 	throw "pipe syscall failed";
 	if (this->is_POST && pipe(input_pipe) == -1)
@@ -72,8 +73,8 @@ void CgiHandler::RunCgi(Request &current_req)
 	if (id == 0)//child
 	{
 		set_fds(this->is_POST, input_pipe, output_pipe);
-		prepare_cgi_env(current_req, this->env);
-		execve(current_req.interpiter.c_str(), argv, this->env.GetRawEnv());
+		prepare_cgi_env(current_req, this->env, conf);
+		execve(cgi_conf.getCgiPass().c_str(), argv, this->env.GetRawEnv());
 		throw "failed to spawn child";
 	}
 	this->exec_t0 = time(NULL);
