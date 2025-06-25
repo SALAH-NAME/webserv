@@ -1,5 +1,6 @@
 #include "HttpRequest.hpp"
 
+
 bool HttpRequest::parse(const std::string& raw_request) {
     std::istringstream stream(raw_request);
     std::string line;

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/06/03 12:34:30 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/25 19:45:02 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,39 +23,33 @@
 
 class Client {
 	private:
-		int								socket_fd;
-		int								serverSocket_fd;
-		size_t							readBytes;
-		std::string						requestHolder;
-		std::string						responseHolder;
-		int								outStatus;
-		time_t							timeOut;
-		HttpRequest						requestInfos;
-		const ServerConfig				*serverInfo;
+		int					_socket_fd;
+		int					_serverSocket_fd;
+		size_t				_readBytes;
+		std::string			_requestHolder;
+		std::string			_responseHolder;
+		time_t				_timeOut;
+		HttpRequest			_requestInfos;
+		const ServerConfig*	_serverInfo;
 
 	public:
-		Client(void);
-		Client(int fd, int socket_fd);
+							Client(void);
+							Client(int fd, int socket_fd);
+		void				setReadBytes(size_t);
+		size_t				getReadBytes(void);
+		int					getFD();
+		void				setRequest(std::string);
+		std::string			getRequest(void);
+		void				set_serverSocketFD(int);
+		int					get_serverSocketFD(void);
+		void				setResponse(std::string );
+		std::string&		getResponse(void);
+		void				clearRequestHolder(void);
+		void				resetLastConnectionTime(void);
+		time_t				getLastConnectionTime(void);
+		bool				parseRequest();
 
-		void		setReadBytes(size_t bytes);
-		size_t		getReadBytes(void);
-		int			getFD();
-		void		setRequest(std::string requestData);
-		std::string	getRequest(void);
-		void		set_serverSocketFD(int s_fd);
-		int			get_serverSocketFD(void);
-
-		void		setResponse(std::string response);
-		std::string &		getResponse(void);
-
-		void	setEventStatus(int status);
-		int	getEventStatus(void);
-		void						clearRequestHolder(void);
-		void		resetLastConnectionTime(void);
-		time_t		getLastConnectionTime(void);
-		bool		parseRequest();
-
-		void		routing(const std::vector<ServerConfig>& serversInfo);
+		// void				routing(const std::vector<ServerConfig>& serversInfo);
 };
 
 #endif

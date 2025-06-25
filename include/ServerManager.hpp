@@ -1,12 +1,9 @@
 #ifndef SERVERMANAGER_HPP
 #define SERVERMANAGER_HPP
 
-#define EPOLLTIMEOUT 100
+#define EPOLLTIMEOUT -1
 #define MAX_EVENTS 100
-#define BYTES_TO_READ 1000
-#define IN 1
-#define OUT 2
-#define NOEVENT 0
+#define BYTES_TO_READ 1
 
 #include <netinet/in.h> // For sockaddr_in
 #include <unistd.h>     // For close()
@@ -26,15 +23,9 @@
 #include <sstream>
 #include <algorithm>
 #include <arpa/inet.h> // for inet_addr()
-
 #include "Client.hpp"
 #include "Response.hpp"
-
-// #include "ConfigManager.hpp"
-// #include "ConfigPrinter.hpp"
 #include "HttpRequest.hpp"
-
-// #include "Server.hpp"
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
 
@@ -57,7 +48,7 @@ class ServerManager {
 
 	public:
 
-											ServerManager(const std::vector<ServerConfig> &serversInfo);
+											ServerManager(const std::vector<ServerConfig> &);
 											~ServerManager(void);
 		void								waitingForEvents(void);
 

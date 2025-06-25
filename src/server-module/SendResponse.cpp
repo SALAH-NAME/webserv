@@ -6,13 +6,18 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/06/03 12:34:30 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/25 19:44:24 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
 void    Server::sendResponses(struct epoll_event& event) {
+
+	ssize_t bytes_sent;
+	int client_socket = event.data.fd;
+	if (event.events != (EPOLLIN | EPOLLOUT))
+		return ;
 
 	std::string htmlContent =
 		"<!DOCTYPE html>\n"
@@ -40,14 +45,6 @@ void    Server::sendResponses(struct epoll_event& event) {
 		"\r\n"
 		+ htmlContent;
 
-	int client_socket;
-	ssize_t bytes_sent;
-	
-		client_socket = event.data.fd;
-
-		if (!_clients[client_socket].getEventStatus())
-			return ;
-
 		bytes_sent = send(client_socket, response.c_str(), response.length(), 0);
 		if (bytes_sent == -1) {
 			// ...
@@ -56,12 +53,12 @@ void    Server::sendResponses(struct epoll_event& event) {
 		if (bytes_sent < 0) {
 			// ...
 		}
-		
-		_clients[client_socket].setEventStatus(NOEVENT);
-		event.events = EPOLLIN | EPOLLOUT;  // enable write temporarily
-		epoll_ctl(_epfd, EPOLL_CTL_MOD, client_socket, &event);
-		_clients[client_socket].clearRequestHolder();
 
+		event.events = EPOLLIN;
+		epoll_ctl(_epfd, EPOLL_CTL_MOD, client_socket, &event);
+		
+		_clients[client_socket].clearRequestHolder();
+		
 		if (!_isKeepAlive)
 			closeConnection(client_socket);
 }

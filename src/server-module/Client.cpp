@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/06/03 12:34:30 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/25 19:44:07 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,73 +18,57 @@
 
 Client::Client(void) {}
 
-Client::Client(int fd, int socket_fd) : socket_fd(fd), serverSocket_fd(socket_fd),
-											readBytes(0), outStatus(0), timeOut(std::time(NULL)) {}
+Client::Client(int fd, int socket_fd) : _socket_fd(fd), _serverSocket_fd(socket_fd),
+											_readBytes(0), _timeOut(std::time(NULL)) {}
 
 void	Client::setReadBytes(size_t bytes) {
-	readBytes += bytes;
+	_readBytes += bytes;
 }
 
 size_t	Client::getReadBytes(void) {
-	return readBytes;
+	return _readBytes;
 }
 											
 int			Client::getFD() {
-	return socket_fd;
+	return _socket_fd;
 }
 
 void		Client::setRequest(std::string requestData) {
-	requestHolder += requestData;
+	_requestHolder += requestData;
 }
 
 std::string	Client::getRequest(void) {
-	return requestHolder;
+	return _requestHolder;
 }
 
 void    Client::set_serverSocketFD(int s_fd) {
-	serverSocket_fd = s_fd;
+	_serverSocket_fd = s_fd;
 }
 
 int		Client::get_serverSocketFD(void) {
-	return serverSocket_fd;
-}
-
-void	Client::setEventStatus(int status) {
-	outStatus = status;
-}
-
-int	Client::getEventStatus(void) {
-	return outStatus;
+	return _serverSocket_fd;
 }
 
 void		 Client::setResponse(std::string response) {
-	responseHolder += response;	
+	_responseHolder += response;	
 }
 
 std::string &Client::getResponse(void) {
-	return responseHolder;
+	return _responseHolder;
 }
 
 void	Client::clearRequestHolder(void) {
-	requestHolder.clear();
+	_requestHolder.clear();
 }
 
 void	Client::resetLastConnectionTime(void){
-	timeOut = std::time(NULL);
+	_timeOut = std::time(NULL);
 }
 
 time_t		Client::getLastConnectionTime(void){
-	return timeOut;
+	return _timeOut;
 }
 
 bool		Client::parseRequest() {
-	return requestInfos.parse(requestHolder);
-}
-
-void	Client::routing(const std::vector<ServerConfig>& serversInfo) {
-	// for (int i = 0; i < serversInfo.size(); i++) {
-		// requestInfos.
-		// 	std::cout << "uri: " << requestInfos.getUri() << "\n";
-		// 	exit(0);
-	// }
+	return _requestInfos.parse(_requestHolder);
 }

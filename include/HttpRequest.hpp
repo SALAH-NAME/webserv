@@ -4,6 +4,8 @@
 #include <sstream>
 #include <algorithm>
 
+// ***********  temp file *****************************************
+
 class HttpRequest {
 	private:
 		std::string method;
@@ -18,3 +20,5 @@ class HttpRequest {
 		std::map<std::string, std::string>	getHeaders(void);
 		bool parse(const std::string& raw_request);
 };
+
+// ***************************************************************

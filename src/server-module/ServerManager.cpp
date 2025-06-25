@@ -1,4 +1,32 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ServerManager.cpp                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
+/*   Updated: 2025/06/25 19:44:35 by karim            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "ServerManager.hpp"
+
+void	ServerManager::checkTimeOut(void) {
+
+	for (int x = 0; x < _servers.size(); x++) {
+		
+		std::map<int, Client>&	clients = _servers[x].getClients();
+		std::vector<int>&		clientsSockets = _servers[x].get_clientsSockets();
+		
+		for (ssize_t i = 0; i < clients.size(); i++) {
+			if (std::time(NULL) - clients[clientsSockets[i]].getLastConnectionTime() > _servers[x].getTimeOut()) {
+				_servers[x].closeConnection(clientsSockets[i]);
+				i--;
+			}
+		}
+	}
+}
 
 void	ServerManager::setUpServers(void) {
 	for (size_t i = 0; i < _serversConfig.size(); i++) {

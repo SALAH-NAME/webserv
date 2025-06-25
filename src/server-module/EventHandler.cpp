@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/06/25 09:57:11 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/25 19:43:54 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,29 +17,13 @@ std::vector<int>::iterator	get_iterator(int	client_socket, std::vector<int>& soc
 	return std::find(sockets.begin(), sockets.end(), client_socket);
 }
 
-void	ServerManager::checkTimeOut(void) {
-
-	for (int x = 0; x < _servers.size(); x++) {
-		
-		std::map<int, Client>&	clients = _servers[x].getClients();
-		std::vector<int>&		clientsSockets = _servers[x].get_clientsSockets();
-		
-		for (ssize_t i = 0; i < clients.size(); i++) {
-			if (std::time(NULL) - clients[clientsSockets[i]].getLastConnectionTime() > _servers[x].getTimeOut()) {
-				_servers[x].closeConnection(clientsSockets[i]);
-				i--;
-			}
-		}
-	}
-}
-
 void	Server::incomingConnection(int NewEvent_fd) {
 	int					newClient_socket;
 	struct epoll_event	client_event;
 	ssize_t				clientEventLen = sizeof(client_event);
 		
 	memset(&client_event, 0, clientEventLen);
-	client_event.events = EPOLLIN | EPOLLOUT;
+	client_event.events = EPOLLIN;
 	
 	while (true) {
 		// used accept4() to set the client socket as a Non-Blocking
@@ -77,7 +61,6 @@ void	Server::incomingConnection(int NewEvent_fd) {
 void	ServerManager::process_event(Server& server) {
 	int clientSocket;
 	
-	// server.set_nfds(_nfds);
 	if (_nfds)
 		std::cout << "==========> Detected an event  <=========\n";
 	for (int i = 0; i < _nfds; i++) {
@@ -88,12 +71,7 @@ void	ServerManager::process_event(Server& server) {
 		}
 		else if (server.verifyClientFD(clientSocket)){
 			std::cout << "############  got an event on an existing client socket " << clientSocket << " #############\n";
-			std::cout << "event ==> " << _events[i].events << "\n";
 			
-			if (_events[i].events == EPOLLIN)
-				server.getClients()[clientSocket].setEventStatus(IN);
-			else if (_events[i].events == EPOLLOUT && server.getClients()[clientSocket].getEventStatus() != OUT)
-				continue ;
 			server.receiveRequests(_events[i]);
 			server.sendResponses(_events[i]);
 		}
@@ -102,9 +80,9 @@ void	ServerManager::process_event(Server& server) {
 
 void    ServerManager::waitingForEvents(void) {	
 	while (true) {
-		// std::cout << "wait ...\n";
+		std::cout << "[INFO] Waiting for events...\n";
 		_nfds = epoll_wait(_epfd, _events, MAX_EVENTS, EPOLLTIMEOUT);
-		
+
 		if (_nfds < 0)
 			throw "epoll_wait failed";
 		
@@ -115,6 +93,5 @@ void    ServerManager::waitingForEvents(void) {
 				continue ;
 			process_event(_servers[x]);
 		}
-		memset(_events, 0, sizeof(_events));
 	}
 }

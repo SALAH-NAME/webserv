@@ -6,38 +6,12 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/06/03 12:29:01 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/25 19:44:48 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
 #define SERVER_HPP
-
-// #include <netinet/in.h> // For sockaddr_in
-// #include <unistd.h>     // For close()
-// #include <iostream>
-// #include <string>
-// #include <vector>
-// #include <fcntl.h>
-// #include <sys/epoll.h>
-// #include <map>
-// #include <cstring>
-// #include <csignal>
-// #include <cstdlib>
-// #include <cstdio>
-// #include <ctime>
-// #include <cerrno> // should be removed
-// #include <map>
-// #include <sstream>
-// #include <algorithm>
-// #include <arpa/inet.h> // for inet_addr()
-
-// #include "Client.hpp"
-// #include "Response.hpp"
-
-// #include "ConfigManager.hpp"
-// #include "ConfigPrinter.hpp"
-// #include "HttpRequest.hpp"
 
 #include "ServerManager.hpp"
 
@@ -60,12 +34,11 @@ class Server {
 		char					_buffer[1024];
 		size_t					_bufferSize;
 		int						_timeOut;
-
 		std::map<int, Client>	_clients;
 		std::vector<int>		_clientsSockets;
 
 		void					__init_attributes(void);
-		void					setEventStatus(struct epoll_event& event, int completed);
+		void					setEventStatus(struct epoll_event&, int);
 
 
 	public:
@@ -73,26 +46,23 @@ class Server {
 								~Server(void);
 
 		int						get_id(void);
-		void					setPort(std::vector<int> _port);
-		void 					set__epfd(int value);
+		void					setPort(std::vector<int>);
+		void 					set__epfd(int );
 		std::vector<int>&		get_sockets_fds();
 		std::vector<int>&		get_clientsSockets(void);
-		bool					verifyServer_sockets_fds(int NewEvent_fd);
-		bool					verifyClientFD(int client_fd);
-		void					incomingConnection(int NewEvent_fd);			
+		bool					verifyServer_sockets_fds(int);
+		bool					verifyClientFD(int);
+		void					incomingConnection(int);			
 		void					checkTimeOut(void);
 		bool					getIsSocketOwner(void);
-		void					closeConnection(int clientSocket);
-		void    				receiveRequests(struct epoll_event& event);
-		void					sendResponses(struct epoll_event& event);
+		void					closeConnection(int);
+		void    				receiveRequests(struct epoll_event&);
+		void					sendResponses(struct epoll_event&);
 		int						getTimeOut(void);
 		std::map<int, Client>&	getClients(void);
-		
-		
-		
 };
 
-std::vector<int>::iterator	get_iterator(int	client_socket, std::vector<int>& sockets);
-void						printRequet(std::string Requet);
+std::vector<int>::iterator		get_iterator(int, std::vector<int>&);
+void							printRequet(std::string);
 
 #endif
