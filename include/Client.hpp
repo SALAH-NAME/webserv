@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/06/01 10:34:23 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/03 12:34:30 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,8 +48,8 @@ class Client {
 		void		setResponse(std::string response);
 		std::string &		getResponse(void);
 
-		void	setOutStatus(int status);
-		int	getOutStatus(void);
+		void	setEventStatus(int status);
+		int	getEventStatus(void);
 		void						clearRequestHolder(void);
 		void		resetLastConnectionTime(void);
 		time_t		getLastConnectionTime(void);

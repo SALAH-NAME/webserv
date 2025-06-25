@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/06/02 17:53:07 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/25 09:57:11 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 	ssize_t				clientEventLen = sizeof(client_event);
 		
 	memset(&client_event, 0, clientEventLen);
-	client_event.events = EPOLLIN;
+	client_event.events = EPOLLIN | EPOLLOUT;
 	
 	while (true) {
 		// used accept4() to set the client socket as a Non-Blocking
@@ -78,23 +78,29 @@ void	ServerManager::process_event(Server& server) {
 	int clientSocket;
 	
 	// server.set_nfds(_nfds);
-	
+	if (_nfds)
+		std::cout << "==========> Detected an event  <=========\n";
 	for (int i = 0; i < _nfds; i++) {
 		clientSocket = _events[i].data.fd;
 		if (server.verifyServer_sockets_fds(clientSocket)) {
-			// std::cout << "########### got an event on the server socket {" << clientSocket << "} ##############\n";
+			std::cout << "########### got an event on the server socket {" << clientSocket << "} ##############\n";
 			server.incomingConnection(clientSocket);
 		}
 		else if (server.verifyClientFD(clientSocket)){
-			// std::cout << "############  got an event on an existing client socket " << clientSocket << " #############\n";
-			server.getClients()[clientSocket].setOutStatus(IN);
+			std::cout << "############  got an event on an existing client socket " << clientSocket << " #############\n";
+			std::cout << "event ==> " << _events[i].events << "\n";
+			
+			if (_events[i].events == EPOLLIN)
+				server.getClients()[clientSocket].setEventStatus(IN);
+			else if (_events[i].events == EPOLLOUT && server.getClients()[clientSocket].getEventStatus() != OUT)
+				continue ;
 			server.receiveRequests(_events[i]);
 			server.sendResponses(_events[i]);
 		}
 	}
 }
 
-void    ServerManager::waitingForEvents(void) {
+void    ServerManager::waitingForEvents(void) {	
 	while (true) {
 		// std::cout << "wait ...\n";
 		_nfds = epoll_wait(_epfd, _events, MAX_EVENTS, EPOLLTIMEOUT);

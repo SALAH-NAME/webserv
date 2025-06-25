@@ -6,10 +6,39 @@
 #define BYTES_TO_READ 1000
 #define IN 1
 #define OUT 2
+#define NOEVENT 0
 
-#include "Server.hpp"
+#include <netinet/in.h> // For sockaddr_in
+#include <unistd.h>     // For close()
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fcntl.h>
+#include <sys/epoll.h>
+#include <map>
+#include <cstring>
+#include <csignal>
+#include <cstdlib>
+#include <cstdio>
+#include <ctime>
+#include <cerrno> // should be removed
+#include <map>
+#include <sstream>
+#include <algorithm>
+#include <arpa/inet.h> // for inet_addr()
+
+#include "Client.hpp"
+#include "Response.hpp"
+
+// #include "ConfigManager.hpp"
+// #include "ConfigPrinter.hpp"
+#include "HttpRequest.hpp"
+
+// #include "Server.hpp"
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
+
+class Server;
 
 class ServerManager {
 	private:
@@ -33,5 +62,7 @@ class ServerManager {
 		void								waitingForEvents(void);
 
 };
+
+#include "Server.hpp"
 
 #endif

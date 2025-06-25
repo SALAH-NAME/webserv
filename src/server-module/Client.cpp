@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/06/02 12:26:19 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/03 12:34:30 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,11 +49,11 @@ int		Client::get_serverSocketFD(void) {
 	return serverSocket_fd;
 }
 
-void	Client::setOutStatus(int status) {
+void	Client::setEventStatus(int status) {
 	outStatus = status;
 }
 
-int	Client::getOutStatus(void) {
+int	Client::getEventStatus(void) {
 	return outStatus;
 }
 

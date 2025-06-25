@@ -6,38 +6,40 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/06/02 17:52:30 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/03 12:29:01 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include <netinet/in.h> // For sockaddr_in
-#include <unistd.h>     // For close()
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fcntl.h>
-#include <sys/epoll.h>
-#include <map>
-#include <cstring>
-#include <csignal>
-#include <cstdlib>
-#include <cstdio>
-#include <ctime>
-#include <cerrno> // should be removed
-#include <map>
-#include <sstream>
-#include <algorithm>
-#include <arpa/inet.h> // for inet_addr()
+// #include <netinet/in.h> // For sockaddr_in
+// #include <unistd.h>     // For close()
+// #include <iostream>
+// #include <string>
+// #include <vector>
+// #include <fcntl.h>
+// #include <sys/epoll.h>
+// #include <map>
+// #include <cstring>
+// #include <csignal>
+// #include <cstdlib>
+// #include <cstdio>
+// #include <ctime>
+// #include <cerrno> // should be removed
+// #include <map>
+// #include <sstream>
+// #include <algorithm>
+// #include <arpa/inet.h> // for inet_addr()
 
-#include "Client.hpp"
-#include "Response.hpp"
+// #include "Client.hpp"
+// #include "Response.hpp"
 
-#include "ConfigManager.hpp"
-#include "ConfigPrinter.hpp"
-#include "HttpRequest.hpp"
+// #include "ConfigManager.hpp"
+// #include "ConfigPrinter.hpp"
+// #include "HttpRequest.hpp"
+
+#include "ServerManager.hpp"
 
 class Server {
 	private:
