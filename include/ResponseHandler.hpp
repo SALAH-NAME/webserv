@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sstream>
 #include "Request.hpp"
+#include "CgiHandler.hpp"
 #include "GlobalConfig.hpp"
 #include "ServerConfig.hpp"
 
@@ -16,6 +17,7 @@ class ResponseHandler {
 		int						socket_fd;
 		std::string 			resource_path;
 		bool					require_cgi;
+		CgiHandler				CgiObj;
 		LocationConfig const	*loc_config;
 		
 		void RouteResolver(const std::string &path, ServerConfig &conf, const std::string &method);
@@ -27,6 +29,9 @@ class ResponseHandler {
 	public:
 		ResponseHandler(int sockfd);
 		void	ProccessRequest(Request &req, ServerConfig &conf);
+		int		*GetCgiInPipe();
+		int		*GetCgiOutPipe();
+		pid_t	GetCgiChildPid();
 		~ResponseHandler();
 
 		class RequestError : std::exception

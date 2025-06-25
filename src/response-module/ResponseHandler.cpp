@@ -1,7 +1,4 @@
 #include "ResponseHandler.hpp"
-#include "Request.hpp"
-#include "GlobalConfig.hpp"
-#include "ServerConfig.hpp"
 
 ResponseHandler::ResponseHandler(int sockfd){
     socket_fd = sockfd;
@@ -9,6 +6,13 @@ ResponseHandler::ResponseHandler(int sockfd){
     resource_path = "";
     require_cgi = false;
 }
+
+
+int *ResponseHandler::GetCgiInPipe(){return (CgiObj.GetInPipe());}
+
+int *ResponseHandler::GetCgiOutPipe(){return (CgiObj.GetOutPipe());}
+
+pid_t ResponseHandler::GetCgiChildPid(){return (CgiObj.GetChildPid());}
 
 bool locationMatched(const std::string &req_path, const LocationConfig &locationConf, std::string &current_path, const std::string &method)
 {
@@ -103,8 +107,10 @@ void ResponseHandler::ProccessRequest(Request &req, ServerConfig &conf)
 
 void ResponseHandler::ProccessHttpGET(Request &req, ServerConfig &conf)
 {
-    if (!access(resource_path.c_str(), R_OK) || is_dir(resource_path.c_str())
-        && loc_config->getIndex().empty() && !loc_config->getAutoindex())
+    if (require_cgi)
+        CgiObj.RunCgi(req, conf, *loc_config, resource_path);
+    if (!access(resource_path.c_str(), R_OK) || (is_dir(resource_path.c_str())
+        && loc_config->getIndex().empty() && !loc_config->getAutoindex()))
             throw (RequestError("HTTP/1.1 403 Forbidden"));
     //if it's a file send it 
     //if a directory and has an index file send it if not generate an html listing the files in the dir 
@@ -113,15 +119,20 @@ void ResponseHandler::ProccessHttpGET(Request &req, ServerConfig &conf)
 
 void ResponseHandler::ProccessHttpPOST(Request &req, ServerConfig &conf)
 {
+    if (require_cgi)
+        CgiObj.RunCgi(req, conf, *loc_config, resource_path);
     if (access(resource_path.c_str(), F_OK))
         throw ("HTTP/1.1 409 Conflict");
     if (req.getPath()[req.getPath().size() - 1] == '/')
         throw ("HTTP/1.1 403 Forbidden");
+
     //create the file with the same name as the full path and use the body of the request as it's content
 }
 
 void ResponseHandler::ProccessHttpDELETE(Request &req, ServerConfig &conf)
 {
+    if (require_cgi)
+        CgiObj.RunCgi(req, conf, *loc_config, resource_path);
     if (!access(resource_path.c_str(), R_OK) || is_dir(resource_path.c_str()))
         throw("HTTP/1.1 403 Forbidden");
     //just delete the file

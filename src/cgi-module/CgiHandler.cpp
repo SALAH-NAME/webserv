@@ -52,19 +52,20 @@ CgiHandler::CgiHandler()
 	exec_t0 = -1;
 }
 
-int	CgiHandler::GetChildPid(){return child_pid;}
+pid_t	CgiHandler::GetChildPid(){return child_pid;}
 
 int	*CgiHandler::GetOutPipe(){return output_pipe;}
 
 int	*CgiHandler::GetInPipe(){return input_pipe;}
 
-void CgiHandler::RunCgi(Request &current_req, ServerConfig &conf, LocationConfig &cgi_conf)
+void CgiHandler::RunCgi(Request &current_req, ServerConfig &conf,
+				const LocationConfig &cgi_conf, std::string &script_path)
 {
 	int 	id;
 	char	**argv = new char*[3];
 	
 	is_POST = current_req.getMethod() == "POST" ? true : false;
-	setArgv(argv, cgi_conf.getCgiPass(), current_req.getPath());
+	setArgv(argv, cgi_conf.getCgiPass(), script_path);
 	if (pipe(output_pipe) == -1)
 	throw "pipe syscall failed";
 	if (this->is_POST && pipe(input_pipe) == -1)
