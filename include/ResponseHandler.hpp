@@ -3,6 +3,7 @@
 #define RESPONSE_HPP
 
 #include <iostream>
+#include <cstdio>
 #include <sys/stat.h>
 #include <sstream>
 #include "Request.hpp"
@@ -11,13 +12,20 @@
 #include "ServerConfig.hpp"
 
 typedef const std::map<std::string, LocationConfig> LOCATIONS;
+typedef std::map<std::string, std::vector<std::string>> STRINGS_MAP;
+
+#define CRLF "\r\n"
+#define SRV_NAME "Ed, Edd n Eddy/1.0"//or use webserv instead
 
 class ResponseHandler {
 	private:
 		int						socket_fd;
+		std::string				response_header;
 		std::string 			resource_path;
 		bool					require_cgi;
 		CgiHandler				CgiObj;
+		STRINGS_MAP				content_types;
+		std::string				response_body;
 		LocationConfig const	*loc_config;
 		
 		void RouteResolver(const std::string &path, ServerConfig &conf, const std::string &method);
@@ -25,7 +33,9 @@ class ResponseHandler {
 		void ProccessHttpGET(Request &req, ServerConfig &conf);
 		void ProccessHttpPOST(Request &req, ServerConfig &conf);
 		void ProccessHttpDELETE(Request &req, ServerConfig &conf);
-
+		void SetResponseHeader(Request &req, ServerConfig &conf, const std::string &);
+		std::string GenerateContentType(const std::string file_extension);
+		void GenerateDirListing(Request &req, ServerConfig &conf);
 	public:
 		ResponseHandler(int sockfd);
 		void	ProccessRequest(Request &req, ServerConfig &conf);
@@ -48,4 +58,6 @@ class ResponseHandler {
 //util functions
 bool is_dir(const char  *path);
 std::string ExtractFileExtension(const std::string &path);
+std::string GenerateTimeStamp();
+std::string NumtoString(int num);
 #endif

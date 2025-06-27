@@ -27,4 +27,6 @@ class CgiHandler{// a class made to abstract working with the cgi
 		~CgiHandler();
 };
 
+std::string NumtoString(int num);
+
 #endif

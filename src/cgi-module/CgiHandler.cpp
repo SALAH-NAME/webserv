@@ -1,7 +1,7 @@
 #include "CgiHandler.hpp"
 #include "Request.hpp"
 
-std::string num_to_string(int num){
+std::string NumtoString(int num){
 	std::stringstream ss;
 	ss << num;
 	return ss.str();
@@ -23,7 +23,7 @@ void	prepare_cgi_env(Request	&http_req, Environment &my_env, ServerConfig &conf)
 	my_env.Add("REQUEST_METHOD=", http_req.getMethod());
 	my_env.Add("SCRIPT_NAME=", http_req.getPath());
 	my_env.Add("SERVER_NAME=", conf.getSessionName());
-	my_env.Add("SERVER_PORT=", num_to_string(conf.getListen()));
+	my_env.Add("SERVER_PORT=", NumtoString(conf.getListen()));
 	my_env.Add("SERVER_PROTOCOL=", "HTTP/1.1");
 	my_env.Add("SERVER_SOFTWARE=", "Ed Edd n Eddy/1.0");
 	my_env.Add("CONTENT_LENGTH=", "non");

@@ -8,6 +8,33 @@ bool is_dir(const char  *path)
     return (S_ISDIR(file_stat.st_mode));
 }
 
+std::string GenerateTimeStamp()
+{
+    time_t current_time;
+    time(&current_time);
+
+    return (static_cast <std::string>(ctime(&current_time)));
+}
+
+std::string ResponseHandler::GenerateContentType(std::string extension)
+{
+    std::string default_type = "application/octet-stream";
+    if (extension.empty())
+        return (default_type);
+    extension = (extension == ".ico") ? ".vnd.microsoft.icon" : extension;
+    extension = (extension == ".js" || extension == ".mjs") ? ".javascript" : extension;
+    extension = (extension == ".mp3") ? ".mpeg" : extension;
+    for (std::map<std::string, std::vector<std::string> >::iterator it =
+            content_types.begin();it != content_types.end();it++)
+    {
+        for (std::vector<std::string>::iterator innerIt = it->second.begin();
+            innerIt != it->second.end(); innerIt++)
+            if (*innerIt == extension.c_str()+1)
+                return (it->first + *innerIt);
+    }
+    return default_type;
+}
+
 std::string ExtractFileExtension(const std::string &path)
 {
     std::string result;
@@ -20,4 +47,5 @@ std::string ExtractFileExtension(const std::string &path)
         if (path[i] == '.')
             return ("." + result);
     }
+    return "";
 }

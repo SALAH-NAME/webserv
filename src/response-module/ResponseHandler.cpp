@@ -1,6 +1,18 @@
 #include "ResponseHandler.hpp"
 
-ResponseHandler::ResponseHandler(int sockfd){
+ResponseHandler::ResponseHandler(int sockfd)
+{
+    std::string image[] = {"jpeg", "jpg", "png", "svg", "webp", "vnd.microsoft.icon"};
+    std::string text[] = {"html", "htm", "css", "javascript", "xml", "csv"};
+    std::string audio[] = {"mpeg", "wav"};
+    std::string video[] = {"mp4", "webm"};
+    std::string application[] = {"json", "pdf", "xml", "zip", "wasm"};
+  
+    content_types["image/"] = std::vector<std::string>(image, image+6);
+    content_types["text/"] = std::vector<std::string>(text, text+6);
+    content_types["video/"] = std::vector<std::string>(video, video+2);
+    content_types["audio/"] = std::vector<std::string>(audio, audio+2);
+    content_types["application/"] = std::vector<std::string>(application, application+5);
     socket_fd = sockfd;
     loc_config = NULL;
     resource_path = "";
@@ -62,7 +74,7 @@ bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_lo
 void ResponseHandler::RouteResolver(const std::string &req_path, ServerConfig &conf, const std::string &method)
 {
     LOCATIONS   &srv_locations = conf.getLocations();
-    if (CheckForCgi(req_path, srv_locations))
+    if (CheckForCgi(req_path, srv_locations) && method != "DELETE")
         return ;
     std::string current_resource_path;//    will be setted by 'locationMatched' each time a route is validated and is longer than prev value
     if (srv_locations.find("/") != srv_locations.end() && access((srv_locations.at("/").getRoot() + "/" + req_path).c_str(), F_OK))
@@ -105,6 +117,19 @@ void ResponseHandler::ProccessRequest(Request &req, ServerConfig &conf)
     }
 }
 
+void ResponseHandler::SetResponseHeader(Request &req, ServerConfig &conf, const std::string &status_line)
+{
+    struct stat path_info;
+
+    if (stat(resource_path.c_str(), &path_info) != 0)//if it failed -> server error because file does exist with the right permissions
+        throw (RequestError("HTTP/1.1 500 Internal Server Error"));
+    response_header = status_line + CRLF + "server: " + SRV_NAME + CRLF + "Date: " +
+        GenerateTimeStamp() + CRLF ;
+    response_header += (req.getMethod() == "GET") ? GenerateContentType(ExtractFileExtension(resource_path))
+        + CRLF + "Content-Length: " + NumtoString(path_info.st_size) : "";
+    
+}
+
 void ResponseHandler::ProccessHttpGET(Request &req, ServerConfig &conf)
 {
     if (require_cgi)
@@ -112,7 +137,9 @@ void ResponseHandler::ProccessHttpGET(Request &req, ServerConfig &conf)
     if (!access(resource_path.c_str(), R_OK) || (is_dir(resource_path.c_str())
         && loc_config->getIndex().empty() && !loc_config->getAutoindex()))
             throw (RequestError("HTTP/1.1 403 Forbidden"));
-    //if it's a file send it 
+    if (loc_config->getIndex().empty() && is_dir(resource_path.c_str()))
+        GenerateDirListing(req, conf);
+    //if it's a file set the response header and the ostream
     //if a directory and has an index file send it if not generate an html listing the files in the dir 
 
 }
@@ -131,11 +158,10 @@ void ResponseHandler::ProccessHttpPOST(Request &req, ServerConfig &conf)
 
 void ResponseHandler::ProccessHttpDELETE(Request &req, ServerConfig &conf)
 {
-    if (require_cgi)
-        CgiObj.RunCgi(req, conf, *loc_config, resource_path);
     if (!access(resource_path.c_str(), R_OK) || is_dir(resource_path.c_str()))
         throw("HTTP/1.1 403 Forbidden");
-    //just delete the file
+    if (std::remove(resource_path.c_str()) == -1)
+        throw("HTTP/1.1 500 Internal Server Error");
 }
 
 
