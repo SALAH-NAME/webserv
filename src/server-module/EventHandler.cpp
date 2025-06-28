@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/06/25 19:43:54 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/28 13:05:20 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,9 @@ void	Server::incomingConnection(int NewEvent_fd) {
 	client_event.events = EPOLLIN;
 	
 	while (true) {
-		// used accept4() to set the client socket as a Non-Blocking
-		newClient_socket = accept4(NewEvent_fd, NULL, NULL, SOCK_NONBLOCK);
+		// since the listening socket is Non-Blocking
+		// acccept() should make the new return socket Non-Blocking. 
+		newClient_socket = accept(NewEvent_fd, NULL, NULL);
 		
 		try {
 			if (newClient_socket == -1) {
@@ -44,7 +45,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 				if (epoll_ctl(_epfd, EPOLL_CTL_ADD, newClient_socket, &client_event) == -1)
 					throw "epoll_ctl: client_socket failed";
 				else {
-					// std::cout << "accept ==> " << newClient_socket << "\n";
+					std::cout << "accept ==> " << newClient_socket << "\n";
 					_clients[newClient_socket] = Client(newClient_socket, NewEvent_fd); // create a new object where to store the request
 					_clientsSockets.push_back(newClient_socket);
 				}
@@ -78,7 +79,7 @@ void	ServerManager::process_event(Server& server) {
 	}
 }
 
-void    ServerManager::waitingForEvents(void) {	
+void    ServerManager::waitingForEvents(void) { 
 	while (true) {
 		std::cout << "[INFO] Waiting for events...\n";
 		_nfds = epoll_wait(_epfd, _events, MAX_EVENTS, EPOLLTIMEOUT);

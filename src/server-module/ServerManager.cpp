@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/06/25 19:44:35 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/28 12:10:46 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ void    ServerManager::setEpoll(void) {
 			_servers[i].set__epfd(_epfd);
 			memset(&_event, 0, sizeof(_event));
 			_event.data.fd = _sockets_fds[x];
-			_event.events = EPOLLIN | EPOLLOUT;
+			_event.events = EPOLLIN | EPOLLET; // make the listening socket Edge-triggered 
 			
 			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, _sockets_fds[x], &_event) == -1) {
 				std::cout << "\nepoll ctl failed with server: " << _servers[i].get_id() << " socket: " << _sockets_fds[x] << "\n";
