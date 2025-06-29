@@ -8,12 +8,26 @@ bool is_dir(const char  *path)
     return (S_ISDIR(file_stat.st_mode));
 }
 
+std::string formatDate(const char *format, time_t time, int len)
+{
+    struct tm* time_info;
+    std::string result;
+    char *tab = new char[len+1];
+
+    tab[len] = 0;
+    time_info = std::localtime(&time);
+    strftime (tab,len+1, format, time_info);
+    result = tab;
+    delete[] tab;
+    return (result);
+}
+
 std::string GenerateTimeStamp()
 {
     time_t current_time;
     time(&current_time);
 
-    return (static_cast <std::string>(ctime(&current_time)));
+    return (formatDate("%a, %d %b %Y %H:%M:%S GMT", current_time, 29));
 }
 
 std::string ResponseHandler::GenerateContentType(std::string extension)

@@ -139,9 +139,6 @@ void ResponseHandler::ProccessHttpGET(Request &req, ServerConfig &conf)
             throw (RequestError("HTTP/1.1 403 Forbidden"));
     if (loc_config->getIndex().empty() && is_dir(resource_path.c_str()))
         GenerateDirListing(req, conf);
-    //if it's a file set the response header and the ostream
-    //if a directory and has an index file send it if not generate an html listing the files in the dir 
-
 }
 
 void ResponseHandler::ProccessHttpPOST(Request &req, ServerConfig &conf)

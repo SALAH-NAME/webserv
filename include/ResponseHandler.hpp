@@ -1,11 +1,13 @@
-
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
 #include <iostream>
 #include <cstdio>
+#include <iomanip>
 #include <sys/stat.h>
+#include <algorithm>
 #include <sstream>
+#include <dirent.h>
 #include "Request.hpp"
 #include "CgiHandler.hpp"
 #include "GlobalConfig.hpp"
@@ -56,8 +58,10 @@ class ResponseHandler {
 
 
 //util functions
-bool is_dir(const char  *path);
-std::string ExtractFileExtension(const std::string &path);
-std::string GenerateTimeStamp();
-std::string NumtoString(int num);
+bool 		is_dir(const char  *path);
+std::string	ExtractFileExtension(const std::string &path);
+std::string	GenerateTimeStamp();
+std::string	NumtoString(int num);
+std::string	formatDate(const char *format, time_t time, int len);
+
 #endif
