@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/06/30 12:38:07 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/30 16:20:17 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,14 +18,15 @@
 
 Client::Client(void) {}
 
-Client::Client(int fd, int socket_fd) : _socket_fd(fd), _serverSocket_fd(socket_fd),
+Client::Client(int fd, int socketFD) : _socketFD(fd), _serverSocketFD(socketFD),
 											_readBytes(0), _timeOut(std::time(NULL)),
 											_incomingDataDetected(INCOMING_DATA_OFF),
-											_isKeepAlive(true), _sentBytes(0),
+											_responseInFlight(false), _sentBytes(0),
+											_isKeepAlive(true),
 											_availableResponseBytes(RESPONSESIZE) {}
 
 int			Client::getFD() {
-	return _socket_fd;
+	return _socketFD;
 }
 											
 size_t	Client::getReadBytes(void) {
@@ -36,8 +37,8 @@ std::string	Client::getRequest(void) {
 	return _requestHolder;
 }
 
-int		Client::get_serverSocketFD(void) {
-	return _serverSocket_fd;
+int		Client::getServerSocketFD(void) {
+	return _serverSocketFD;
 }
 
 std::string &Client::getResponse(void) {
@@ -60,7 +61,7 @@ bool	Client::getIsKeepAlive(void) {
 	return _isKeepAlive;
 }
 
-int	Client::getSentBytes(void) {
+size_t	Client::getSentBytes(void) {
 	return _sentBytes;
 }
 
@@ -90,8 +91,8 @@ void	Client::setEvent(struct epoll_event& event) {
 	memcpy(&_event, &event, sizeof(event));
 }
 
-void    Client::set_serverSocketFD(int s_fd) {
-	_serverSocket_fd = s_fd;
+void    Client::setServerSocketFD(int s_fd) {
+	_serverSocketFD = s_fd;
 }
 
 void		 Client::setResponse(std::string response) {
@@ -106,12 +107,12 @@ void	Client::resetLastConnectionTime(void){
 	_timeOut = std::time(NULL);
 }
 
-void	Client::setEventStatus(int epfd, struct epoll_event& event) {
+void	Client::setEventStatus(int epfd) {
 	_event.events = EPOLLIN | EPOLLOUT;  // enable write temporarily
-	epoll_ctl(epfd, EPOLL_CTL_MOD, _socket_fd, &_event);
+	epoll_ctl(epfd, EPOLL_CTL_MOD, _socketFD, &_event);
 }
 
-void	Client::setSentBytes(int bytes) {
+void	Client::setSentBytes(size_t bytes) {
 	_sentBytes += bytes;
 	_availableResponseBytes -= _sentBytes;
 }

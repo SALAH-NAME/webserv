@@ -57,7 +57,7 @@ class ServerManager {
 		void								setUpServers(void);
 		void    							setEpoll(void);
 		void								checkTimeOut(void);
-		void								process_event(Server&);
+		void								processEvent(Server&);
 		void								collectRequestData(Client& client, int serverIndex);
 
 		std::ofstream						_fileStream; // 

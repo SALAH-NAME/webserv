@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/06/30 12:38:54 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/30 16:20:17 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,14 +22,14 @@
 
 #define INCOMING_DATA_ON true
 #define INCOMING_DATA_OFF false
-#define RESPONSESIZE 746 // Fix size for the temp response
+#define RESPONSESIZE 746 // Fixed size for the temp response
 #define BYTES_TO_SEND 1
 
 
 class Client {
 	private:
-		int					_socket_fd;
-		int					_serverSocket_fd;
+		int					_socketFD;
+		int					_serverSocketFD;
 		size_t				_readBytes;
 		std::string			_requestHolder;
 		std::string			_responseHolder;
@@ -38,7 +38,7 @@ class Client {
 		const ServerConfig*	_serverInfo;
 		bool				_incomingDataDetected;
 		bool				_responseInFlight;
-		int					_sentBytes;
+		size_t				_sentBytes;
 		struct epoll_event	_event;
 		bool				_isKeepAlive;
 		int					_availableResponseBytes;
@@ -46,33 +46,32 @@ class Client {
 
 	public:
 							Client(void);
-							Client(int fd, int socket_fd);
+							Client(int fd, int socketFD);
 							
 		size_t				getReadBytes(void);
 		int					getFD();
 		std::string			getRequest(void);
-		int					get_serverSocketFD(void);
+		int					getServerSocketFD(void);
 		std::string&		getResponse(void);
 		time_t				getLastConnectionTime(void);
 		bool				getIncomingDataDetected(void);
 		struct epoll_event&	getEvent();
 		bool				getResponseInFlight(void);
 		bool				getIsKeepAlive(void);
-		int					getSentBytes(void);
+		size_t				getSentBytes(void);
 		int					getBytesToSendNow(void);
 
 		void				setReadBytes(size_t);
 		void				appendToRequest(const std::string& requestData);
-		void				set_serverSocketFD(int);
+		void				setServerSocketFD(int);
 		void				setResponse(std::string );
 		void				setIncomingDataFlag(bool flag);
 		void				resetLastConnectionTime(void);
 		void				setEvent(struct epoll_event& event);
-		void				setEventStatus(int epfd, struct epoll_event& event);
+		void				setEventStatus(int epfd);
 		void				setResponseInFlight(bool value);
-		void				setSentBytes(int bytes);
+		void				setSentBytes(size_t bytes);
 		void				resetSendBytes(void);
-		// void				_availableResponseBytes();
 
 		void				clearRequestHolder(void);
 		bool				parseRequest(void);

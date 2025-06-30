@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/06/29 16:45:58 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/30 16:21:14 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,8 @@ class Server {
 	private:
 		const ServerConfig&		_serverConfig;
 		static int 				_id;
-		int						_server_id;
-		std::vector<int>		_sockets_fds;
+		int						_serverID;
+		std::vector<int>		_socketsFDs;
 		sockaddr_in				_Address;
 		std::vector<int>		_ports;
 		int						_domin;
@@ -28,7 +28,6 @@ class Server {
 		int						_protocol;
 		int						_nMaxBacklog; // this parameter is for listen()
 		int 					_epfd; // epoll fd
-		// std::string				_2CRLF;
 		bool					_isKeepAlive;
 		bool					_isSocketOwner;
 		char					_buffer[1024];
@@ -37,7 +36,7 @@ class Server {
 		std::map<int, Client>	_clients;
 		std::vector<int>		_clientsSockets;
 
-		void					__init_attributes(void);
+		void					initAttributes(void);
 		void					setEventStatus(struct epoll_event&, int);
 
 
@@ -45,29 +44,24 @@ class Server {
 								Server(const ServerConfig&);
 								~Server(void);
 
-		int						get_id(void);
-		std::vector<int>&		get_sockets_fds();
-		std::vector<int>&		get_clientsSockets(void);
+		int						getID(void);
+		std::vector<int>&		getSocketsFDs();
+		std::vector<int>&		getClientsSockets(void);
 		bool					getIsSocketOwner(void);
 		std::map<int, Client>&	getClients(void);
 		int						getTimeOut(void);
 
 		void					setPort(std::vector<int>);
-		void 					set__epfd(int );
+		void 					setEPFD(int );
 
-		bool					verifyServer_sockets_fds(int);
+		bool					verifyServerSocketsFDs(int);
 		bool					verifyClientFD(int);
 		void					incomingConnection(int);			
 		void					checkTimeOut(void);
 		void					closeConnection(int);
-		// void					closeConnection(void);
-
-
-		// void    				receiveRequests(struct epoll_event&);
-		// void					sendResponses(struct epoll_event&);
 };
 
-std::vector<int>::iterator		get_iterator(int, std::vector<int>&);
+std::vector<int>::iterator		getIterator(int, std::vector<int>&);
 void							printRequet(std::string);
 
 #endif

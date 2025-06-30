@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/06/30 12:39:16 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/30 16:20:49 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,20 +47,19 @@ void    ServerManager::sendClientsResponse(Server& server) {
 	std::string response = getResponseString();
 
 	std::map<int, Client>& clients = server.getClients();
-	std::vector<int>&	clientsSocket = server.get_clientsSockets();
-	ssize_t bytes_sent;
+	std::vector<int>&	clientsSocket = server.getClientsSockets();
+	ssize_t sentBytes;
 
-	for (int i = 0; i < clientsSocket.size(); i++) {
+	for (size_t i = 0; i < clientsSocket.size(); i++) {
 		if (!clients[clientsSocket[i]].getResponseInFlight())
 			continue ;
-		struct epoll_event& event = clients[clientsSocket[i]].getEvent();
 		int bytesToSendNow =  clients[clientsSocket[i]].getBytesToSendNow();
-		bytes_sent = send(clientsSocket[i], response.c_str() + clients[clientsSocket[i]].getSentBytes(),
+		sentBytes = send(clientsSocket[i], response.c_str() + clients[clientsSocket[i]].getSentBytes(),
 							bytesToSendNow, 0);
-		if (bytes_sent == -1)
+		if (sentBytes == -1)
 			server.closeConnection(clientsSocket[i]);
 		else {
-			clients[clientsSocket[i]].setSentBytes(bytes_sent);
+			clients[clientsSocket[i]].setSentBytes(sentBytes);
 			if (clients[clientsSocket[i]].getSentBytes() == response.size()){
 				clients[clientsSocket[i]].setResponseInFlight(false);
 				clients[clientsSocket[i]].clearRequestHolder();
