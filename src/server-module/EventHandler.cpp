@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/06/28 13:05:20 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/30 09:50:27 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,11 @@ void	Server::incomingConnection(int NewEvent_fd) {
 	ssize_t				clientEventLen = sizeof(client_event);
 		
 	memset(&client_event, 0, clientEventLen);
-	client_event.events = EPOLLIN;
+	client_event.events = EPOLLIN | EPOLLET; // make the client socket Edge-Triggered
 	
 	while (true) {
 		// since the listening socket is Non-Blocking
-		// acccept() should make the new return socket Non-Blocking. 
+		// accept() should make the new return socket Non-Blocking. 
 		newClient_socket = accept(NewEvent_fd, NULL, NULL);
 		
 		try {
@@ -45,7 +45,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 				if (epoll_ctl(_epfd, EPOLL_CTL_ADD, newClient_socket, &client_event) == -1)
 					throw "epoll_ctl: client_socket failed";
 				else {
-					std::cout << "accept ==> " << newClient_socket << "\n";
+					// std::cout << "accept ==> " << newClient_socket << "\n";
 					_clients[newClient_socket] = Client(newClient_socket, NewEvent_fd); // create a new object where to store the request
 					_clientsSockets.push_back(newClient_socket);
 				}
@@ -61,38 +61,38 @@ void	Server::incomingConnection(int NewEvent_fd) {
 
 void	ServerManager::process_event(Server& server) {
 	int clientSocket;
-	
-	if (_nfds)
-		std::cout << "==========> Detected an event  <=========\n";
+
 	for (int i = 0; i < _nfds; i++) {
 		clientSocket = _events[i].data.fd;
 		if (server.verifyServer_sockets_fds(clientSocket)) {
-			std::cout << "########### got an event on the server socket {" << clientSocket << "} ##############\n";
+			// std::cout << "########### got an event on the server socket {" << clientSocket << "} ##############\n";
 			server.incomingConnection(clientSocket);
 		}
-		else if (server.verifyClientFD(clientSocket)){
-			std::cout << "############  got an event on an existing client socket " << clientSocket << " #############\n";
-			
-			server.receiveRequests(_events[i]);
-			server.sendResponses(_events[i]);
+		else if (server.verifyClientFD(clientSocket)) {
+			// std::cout << "############  got an event on an existing client socket " << clientSocket << " #############\n";
+			server.getClients()[clientSocket].setIncomingDataFlag(INCOMING_DATA_ON);
+			server.getClients()[clientSocket].setEvent(_events[i]);
 		}
 	}
+
 }
 
-void    ServerManager::waitingForEvents(void) { 
+void    ServerManager::waitingForEvents(void) {
 	while (true) {
-		std::cout << "[INFO] Waiting for events...\n";
+		// std::cout << "   === >>  Waiting for events...\n";
 		_nfds = epoll_wait(_epfd, _events, MAX_EVENTS, EPOLLTIMEOUT);
 
 		if (_nfds < 0)
 			throw "epoll_wait failed";
-		
+			
 		checkTimeOut();
-
+		
 		for (size_t x = 0; x < _servers.size(); x++) {
 			if (!_servers[x].getIsSocketOwner())
-				continue ;
+			continue ;
 			process_event(_servers[x]);
+			receiveClientsData(x);
+			sendClientsResponse(_servers[x]);
 		}
 	}
 }

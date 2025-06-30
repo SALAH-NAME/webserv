@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/06/28 12:10:46 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/29 14:00:51 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ void	ServerManager::setUpServers(void) {
 }
 
 void    ServerManager::setEpoll(void) {
-    std::cout << "----------------- Set Epoll ----------------------\n";
+	std::cout << "----------------- Set Epoll ----------------------\n";
 	_epfd = epoll_create1(0);
 	if (_epfd == -1)
 		throw ("epoll create1 failed");
@@ -75,8 +75,19 @@ void    ServerManager::setEpoll(void) {
 }
 
 
-ServerManager::ServerManager(const std::vector<ServerConfig> &serversInfo) : _serversConfig(serversInfo) {
-    setUpServers();
+ServerManager::ServerManager(const std::vector<ServerConfig> &serversInfo) : _serversConfig(serversInfo),
+																				_2CRLF("\r\n\r\n"), _fileStream("outFile.txt") {
+	
+	// std::cout << "fail ==> " <<  _fileStream.fail() << "\n";																
+	// std::cout << "file is open ==> " << _fileStream.is_open() << "\n";
+	// // exit(0);
+	// _fileStream << "hello hello";
+	// _fileStream.flush();
+
+	// exit (0);
+	
+	
+	setUpServers();
 	setEpoll();
 }
 

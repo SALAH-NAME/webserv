@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/06/27 18:23:44 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/29 21:11:01 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,8 @@ void	Server::__init_attributes(void) {
 	_domin = AF_INET;
 	_type = SOCK_STREAM | SOCK_NONBLOCK;
 	_protocol = 0;
-	_2CRLF = "\r\n\r\n";
-	_isKeepAlive = true;
+	// _2CRLF = "\r\n\r\n";
+	// _isKeepAlive = true;
 	_ports.push_back(_serverConfig.getListen());
 	_isSocketOwner = false;
 	_timeOut = _serverConfig.getSessionTimeout();

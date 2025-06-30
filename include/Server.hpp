@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/06/25 19:44:48 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/29 16:45:58 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ class Server {
 		int						_protocol;
 		int						_nMaxBacklog; // this parameter is for listen()
 		int 					_epfd; // epoll fd
-		std::string				_2CRLF;
+		// std::string				_2CRLF;
 		bool					_isKeepAlive;
 		bool					_isSocketOwner;
 		char					_buffer[1024];
@@ -46,20 +46,25 @@ class Server {
 								~Server(void);
 
 		int						get_id(void);
-		void					setPort(std::vector<int>);
-		void 					set__epfd(int );
 		std::vector<int>&		get_sockets_fds();
 		std::vector<int>&		get_clientsSockets(void);
+		bool					getIsSocketOwner(void);
+		std::map<int, Client>&	getClients(void);
+		int						getTimeOut(void);
+
+		void					setPort(std::vector<int>);
+		void 					set__epfd(int );
+
 		bool					verifyServer_sockets_fds(int);
 		bool					verifyClientFD(int);
 		void					incomingConnection(int);			
 		void					checkTimeOut(void);
-		bool					getIsSocketOwner(void);
 		void					closeConnection(int);
-		void    				receiveRequests(struct epoll_event&);
-		void					sendResponses(struct epoll_event&);
-		int						getTimeOut(void);
-		std::map<int, Client>&	getClients(void);
+		// void					closeConnection(void);
+
+
+		// void    				receiveRequests(struct epoll_event&);
+		// void					sendResponses(struct epoll_event&);
 };
 
 std::vector<int>::iterator		get_iterator(int, std::vector<int>&);
