@@ -6,49 +6,48 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/05/13 09:29:25 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/30 16:19:38 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
+#include "ServerManager.hpp"
 
-void	Server::setEventStatus(int i, bool completed) {
-	// std::cout << "(socket fd: " << socket_fd << ") finished receiving request from fd : " << events[i].data.fd << "\n";
-	epoll_ctl(epfd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
+void    ServerManager::collectRequestData(Client& client, int serverIndex) {
+	struct epoll_event& event = client.getEvent();
+	int clientSocket = client.getFD();
+	ssize_t readbytes;
 
-	requests.erase(events[i].data.fd);
+	if (event.events == EPOLLOUT)
+		return ;
+
+	memset(_buffer, 0, sizeof(_buffer));
+	readbytes = recv(clientSocket, (void *)_buffer, BYTES_TO_READ, 0);
 	
-	if (completed) {
-		responses[events[i].data.fd] = Response(events[i].data.fd);
-		responseWaitQueue.push_back(events[i].data.fd);
+	if (readbytes > 0) {
+		client.appendToRequest(std::string(_buffer, readbytes));
+		client.setReadBytes(readbytes);
+		client.resetLastConnectionTime();
 	}
 
-	clientsSockets.erase(events[i].data.fd);
-	
-	events.erase(events.begin() + i);
+	if (readbytes == 0 || client.getRequest().find(_2CRLF) != std::string::npos) {
+		// printRequet(client.getRequest());
+		if (client.parseRequest()) {
+			client.setEventStatus(_epfd);
+			client.setResponseInFlight(true);
+		}
+		else
+			_servers[serverIndex].closeConnection(clientSocket);
+	}
 }
 
-void    Server::receiveRequests() {
-	ssize_t bytes_read;
+void	ServerManager::receiveClientsData(int serverIndex) {
+	std::vector<int>& clienstSockets = _servers[serverIndex].getClientsSockets();
+	std::map<int, Client>& clients = _servers[serverIndex].getClients();
 
-	for (size_t i = 0; i < events.size(); i++) {
-		bytes_read = recv(events[i].data.fd, (void *)buffer, 1, 0);
-		if (bytes_read > 0) {
-			requests[events[i].data.fd].setRequest(buffer);
-			clientsSockets[events[i].data.fd] = std::time(NULL);
-		}
-		if (bytes_read == 0 || requests[events[i].data.fd].getRequest().find("\r\n\r\n") != std::string::npos) {
-			// std::cout << "request[" << i << "]: {" << requests[events[i].data.fd].getRequest() << "}\n";
-			setEventStatus(i, true);
-			i--;
-			continue ; 
-		}
-		if (std::time(NULL) - clientsSockets[events[i].data.fd] > 20) {
-			std::cout << "(socket: " << requests[events[i].data.fd].get_serverSocketFD() << ")Time out, close connection";
-			std::cout << " with client fd : " << events[i].data.fd << "\n";
-			setEventStatus(i, false);
-			clientsSockets.erase(events[i].data.fd);
-			close(events[i].data.fd);
+	for (size_t i = 0; i < clienstSockets.size(); i++) {
+		if (clients[clienstSockets[i]].getIncomingDataDetected() == INCOMING_DATA_ON) {
+			collectRequestData(clients[clienstSockets[i]], serverIndex);
 		}
 	}
 }

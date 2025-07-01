@@ -49,9 +49,9 @@ bool ConfigTokenizer::loadFromFile(const std::string& fileName)
 		return false;
 	}
 
-	std::stringstream buffer;
-	buffer << file.rdbuf();
-	std::string content = buffer.str();
+	std::stringstream _buffer;
+	_buffer << file.rdbuf();
+	std::string content = _buffer.str();
 	file.close();
 
 	_tokens.clear();

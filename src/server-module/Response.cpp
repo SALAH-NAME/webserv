@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/05 11:44:17 by karim             #+#    #+#             */
-/*   Updated: 2025/05/13 09:30:15 by karim            ###   ########.fr       */
+/*   Updated: 2025/06/30 16:20:17 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 Response::Response(void) {}
 
-Response::Response(int fd) : socket_fd(fd) {}
+Response::Response(int fd) : socketFD(fd) {}
 
 void    Response::setResponse(std::string responseData) {
     responseHolder += responseData;
@@ -26,5 +26,5 @@ std::string Response::getResponse(void) {
 }
 
 int			Response::getFD() {
-    return socket_fd;
+    return socketFD;
 }

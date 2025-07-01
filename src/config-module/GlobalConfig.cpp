@@ -6,6 +6,14 @@ GlobalConfig::GlobalConfig()
 		: BaseConfig(), _connection_timeout(DefaultConfig::CONNECTION_TIMEOUT),
 			_cgi_timeout(DefaultConfig::CGI_TIMEOUT)
 {
+	_root									= DefaultConfig::ROOT;
+	_autoindex						= DefaultConfig::AUTOINDEX;
+	_client_max_body_size = DefaultConfig::CLIENT_MAX_BODY_SIZE;
+
+	_index.push_back(DefaultConfig::INDEX[0]);
+	_allowed_methods.insert(HTTP_GET);
+	_allowed_methods.insert(HTTP_POST);
+	_allowed_methods.insert(HTTP_DELETE);
 }
 
 void GlobalConfig::setConnectionTimeout(unsigned int timeout)
