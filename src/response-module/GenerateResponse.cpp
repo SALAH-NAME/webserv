@@ -16,7 +16,41 @@ std::string GetFormattedEntryInfo(std::string name, const std::string &time_stam
     return (ss.str());
 }
 
-void    ResponseHandler::GenerateDirListing(Request &req, ServerConfig &conf)
+std::string ResponseHandler::GenerateContentType(std::string extension)
+{
+    std::string default_type = "application/octet-stream";
+    if (extension.empty())
+        return (default_type);
+    extension = (extension == ".ico") ? ".vnd.microsoft.icon" : extension;
+    extension = (extension == ".js" || extension == ".mjs") ? ".javascript" : extension;
+    extension = (extension == ".mp3") ? ".mpeg" : extension;
+    for (std::map<std::string, std::vector<std::string> >::iterator it =
+            content_types.begin();it != content_types.end();it++)
+    {
+        for (std::vector<std::string>::iterator innerIt = it->second.begin();
+            innerIt != it->second.end(); innerIt++)
+            if (*innerIt == extension.c_str()+1)
+                return (it->first + *innerIt);
+    }
+    return default_type;
+}
+
+void ResponseHandler::SetResponseHeader(Request &req, const std::string &status_line, int len,
+        std::string location = "")
+{
+    struct stat path_info;
+
+    if (stat(resource_path.c_str(), &path_info) != 0)//if it failed -> server error because file does exist with the right permissions
+        throw (RequestError("HTTP/1.1 500 Internal Server Error"));
+    len = (len == -1) ? path_info.st_size : len;
+    response_header = status_line + CRLF + "server: " + SRV_NAME + CRLF + "Date: " +
+        GenerateTimeStamp() + CRLF ;
+    response_header += (req.getMethod() == "GET") ? GenerateContentType(ExtractFileExtension(resource_path))
+        + CRLF + "Content-Length: " + NumtoString(len) : "";
+    response_header += location + std::string(CRLF) + std::string(CRLF);
+}
+
+void    ResponseHandler::GenerateDirListing(Request &req)
 {
     DIR                         *dir;
     std::vector<std::string>    dir_entries;
@@ -45,4 +79,24 @@ void    ResponseHandler::GenerateDirListing(Request &req, ServerConfig &conf)
         }
     }
     response_body += "</pre><hr>\n\t</body>\n</html>";
+    SetResponseHeader(req, "HTTP/1.1 200 OK", response_body.size());
+}
+
+void ResponseHandler::GenerateRedirection(Request &req)
+{
+    std::string status_code;
+    std::string location = NumtoString(301);
+
+    if (IsDir(resource_path.c_str()))
+        location = "Location: http://" + req.getHeaders()["Host"] + '/' + req.getPath() + '/';
+    else {
+        location = "Location: " + loc_config->getRedirect().url;
+        status_code = NumtoString(loc_config->getRedirect().status_code);
+    }
+    response_body = 
+        "<html>\n<head><title>301 Moved Permanently"
+        "</title></head>\n<body>\n<center><h1>301 Moved Permanently"
+        "</h1></center>\n<hr><center>" + std::string(SRV_NAME) + " (Ubuntu)</center>\n"
+        "</body>\n</html>";
+    SetResponseHeader(req, "HTTP/1.1 " + status_code + " Moved Permanently", response_body.size(), location);
 }

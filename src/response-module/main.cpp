@@ -1,88 +1,11 @@
 #include <string>
 #include <iostream>
-#include <ctime>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <vector>
-#include <sstream>
-#include <algorithm>
-#include <iomanip>
-#include <map>
-#include <dirent.h>
 
-std::string GetFormattedEntryInfo(std::string name, const std::string &time_stamp, const std::string &size)
+int main()
 {
-    std::stringstream ss;
-
-    if (name.size() > 50){
-        name.erase(47);
-        name+="..&gt;";
-        ss << std::left << std::setw(51) << std::setfill(' ') << (name + "</a> ");
-    }
-    else 
-        ss << std::left << std::setw(55) << std::setfill(' ') << (name + "</a>");
-    ss << time_stamp;
-    ss << std::right <<std::setw(20) << std::setfill(' ') << size;
-    return (ss.str());
-}
-
-std::string NumtoString(int num){
-	std::stringstream ss;
-	ss << num;
-	return ss.str();
-}
-
-
-std::string formatDate(const char *format, time_t time, int len)
-{
-    struct tm* time_info;
-    std::string result;
-    char *tab = new char[len+1];
-
-    tab[len] = 0;
-    time_info = std::localtime(&time);
-    strftime (tab,len+1, format, time_info);
-    result = tab;
-    delete[] tab;
-    return (result);
-}
-
-std::string    GenerateDirListing()
-{
-    std::string response_body;
-    std::string path = "response-module";
-    std::string resource_path = "/home/midbella/Desktop/webserv/src/response-module";
-    DIR                         *dir;
-    std::vector<std::string>    dir_entries;
-    struct dirent               *dir_iter;
-    struct stat                 file_stat;
-    std::string                 element_last_mod_date;
-    std::string                 element_size_in_bytes;
-
-    dir = opendir(resource_path.c_str());
-    if (!dir)
-        throw ("HTTP/1.1 Internal Server Error");
-    while ((dir_iter = readdir(dir)) != NULL)
-        if (static_cast <std::string>(dir_iter->d_name) != "." && static_cast <std::string>(dir_iter->d_name) != "..")
-            dir_entries.push_back(dir_iter->d_name);
-    std::sort(dir_entries.begin(), dir_entries.end());
-    response_body = "<html>\n\t<head><title>Index of /" + path + "/</title></head>\n\t<body>\n";
-    response_body += "\t\t<h1>Index of /" + path + "/</h1><hr>\n\t\t<pre>\n<a href=\"../\">../</a>";
-    for (std::vector<std::string>::iterator it = dir_entries.begin(); it != dir_entries.end(); it++)
-    {
-        if (stat((resource_path + "/" + *it).c_str(), &file_stat) == 0)
-        {
-            element_last_mod_date = formatDate("%d-%b-%Y %R", file_stat.st_atim.tv_sec, 17);
-            element_size_in_bytes = NumtoString(file_stat.st_size); 
-            response_body += "\n<a href=\"" + *it + "\">";
-            response_body += GetFormattedEntryInfo(*it, element_last_mod_date, element_size_in_bytes);
-        }
-    }
-    response_body += "</pre><hr>\n\t</body>\n</html>";
-    return response_body;
-}
-
-int main(int ac , char **av)
-{
-    std::cout << GenerateDirListing();
+    std::string response_body = "<html>\n<head><title>301 Moved Permanently"
+        "</title></head>\n<body>\n<center><h1>301 Moved Permanently"
+        "</h1></center>\n<hr><center>nginx/1.18.0 (Ubuntu)</center>\n"
+        "</body>\n</html>"; 
+    std::cout << response_body;
 }
