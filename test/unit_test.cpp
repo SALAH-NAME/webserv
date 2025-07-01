@@ -1,9 +1,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "SharedPtr.hpp"
 
 void testAllTokenizer();
 void testConfigPrint();
+void testSharedPtr();
 
 typedef void (*TestFunction)();
 
@@ -42,6 +44,7 @@ std::vector<Test> buildTests()
 
 	addTest(tests, "testAllTokenizer", testAllTokenizer);
 	addTest(tests, "testConfigPrint", testConfigPrint);
+	addTest(tests, "testSharedPtr", testSharedPtr);
 
 	return tests;
 }
