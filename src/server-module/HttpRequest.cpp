@@ -1,6 +1,5 @@
 #include "HttpRequest.hpp"
 
-
 bool HttpRequest::parse(const std::string& raw_request) {
     std::istringstream stream(raw_request);
     std::string line;
@@ -29,7 +28,9 @@ bool HttpRequest::parse(const std::string& raw_request) {
     // 3. Parse body (if Content-Length is present)
     std::string content_length_str = headers["Content-Length"];
     if (!content_length_str.empty()) {
-        int content_length = std::stoi(content_length_str);
+        std::istringstream iss(content_length_str);
+        int content_length;
+        iss >> content_length;
         body.resize(content_length);
         stream.read(&body[0], content_length);
     }
