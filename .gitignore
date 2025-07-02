@@ -10,3 +10,4 @@ unit
 intra_test/
 .vscode
 deleteme/
+./*.txt
