@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/06/30 16:20:17 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/02 10:16:54 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@
 #define INCOMING_DATA_ON true
 #define INCOMING_DATA_OFF false
 #define RESPONSESIZE 746 // Fixed size for the temp response
-#define BYTES_TO_SEND 1
+#define BYTES_TO_SEND 100
 
 
 class Client {

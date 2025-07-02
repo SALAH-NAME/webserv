@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/06/30 16:20:17 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/02 10:13:09 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,7 @@ void	Client::setEventStatus(int epfd) {
 
 void	Client::setSentBytes(size_t bytes) {
 	_sentBytes += bytes;
-	_availableResponseBytes -= _sentBytes;
+	_availableResponseBytes -= bytes;
 }
 
 void	Client::resetSendBytes(void) {
