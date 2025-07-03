@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/02 10:14:30 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/03 14:27:39 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,13 +68,12 @@ void	ServerManager::processEvent(Server& server) {
 			// std::cout << "########### got an event on the server socket {" << clientSocket << "} ##############\n";
 			server.incomingConnection(clientSocket);
 		}
-		else if (server.verifyClientFD(clientSocket)) {
+		else if (server.verifyClientsFD(clientSocket)) {
 			// std::cout << "############  got an event on an existing client socket " << clientSocket << " #############\n";
 			server.getClients()[clientSocket].setIncomingDataFlag(INCOMING_DATA_ON);
-			server.getClients()[clientSocket].setEvent(_events[i]);
+			server.getClients()[clientSocket].setEvent(_epfd, _events[i]);
 		}
 	}
-
 }
 
 void    ServerManager::waitingForEvents(void) {

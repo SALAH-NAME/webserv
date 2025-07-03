@@ -1,7 +1,7 @@
 #ifndef SERVERMANAGER_HPP
 #define SERVERMANAGER_HPP
 
-#define EPOLLTIMEOUT 10
+#define EPOLLTIMEOUT 100
 #define MAX_EVENTS 100
 #define BYTES_TO_READ 1000
 // #define BYTES_TO_SEND 1000
@@ -31,7 +31,6 @@
 #include <algorithm>
 #include <arpa/inet.h> // for inet_addr()
 #include "Client.hpp"
-#include "Response.hpp"
 #include "HttpRequest.hpp"
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
@@ -59,8 +58,6 @@ class ServerManager {
 		void								checkTimeOut(void);
 		void								processEvent(Server&);
 		void								collectRequestData(Client& client, int serverIndex);
-
-		std::ofstream						_fileStream; // 
 
 	public:
 

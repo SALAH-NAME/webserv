@@ -6,20 +6,11 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:24:40 by karim             #+#    #+#             */
-/*   Updated: 2025/06/30 16:18:41 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/03 10:25:39 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServerManager.hpp"
-
-void	closeFDS(std::vector<Server>& servers) {
-
-	for (size_t i = 0; i < servers.size(); i++) {
-		int size = servers[i].getClientsSockets().size();
-		for (int x = 0; x < size; x++ )
-			close(servers[i].getClientsSockets()[x]);
-	}
-}
 
 void    printRequet(std::string requet) {
 	for (size_t i = 0; i < requet.size(); i++) {
@@ -57,7 +48,6 @@ int main(int argc, char** argv)
 
     }
     catch (const char* errorMssg) {
-		// closeFDS(servers);
 		perror(errorMssg);
 		return 1;
 	}

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/06/30 16:21:14 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/02 11:11:46 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ class Server {
 		void 					setEPFD(int );
 
 		bool					verifyServerSocketsFDs(int);
-		bool					verifyClientFD(int);
+		bool					verifyClientsFD(int);
 		void					incomingConnection(int);			
 		void					checkTimeOut(void);
 		void					closeConnection(int);
