@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/03 11:13:32 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/03 14:09:46 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,7 @@ class Client {
 
 		void				clearRequestHolder(void);
 		bool				parseRequest(void);
+		void				prinfRequestinfos(void);
 };
 
 #endif

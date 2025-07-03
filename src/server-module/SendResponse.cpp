@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/07/03 11:10:25 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/03 15:39:38 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,9 +65,8 @@ void    ServerManager::sendClientsResponse(Server& server) {
 	ssize_t sentBytes;
 
 	for (size_t i = 0; i < clientsSocket.size(); i++) {
-		if (!clients[clientsSocket[i]].getResponseInFlight()) {
+		if (!clients[clientsSocket[i]].getResponseInFlight())
 			continue ;
-		}
 		
 		int bytesToSendNow =  clients[clientsSocket[i]].getBytesToSendNow();
 		sentBytes = send(clientsSocket[i], response.c_str() + clients[clientsSocket[i]].getSentBytes(),

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/03 10:24:39 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/03 14:30:14 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,4 +124,8 @@ void	Client::clearRequestHolder(void) {
 
 bool		Client::parseRequest() {
 	return _requestInfos.parse(_requestHolder);
+}
+
+void	Client::prinfRequestinfos(void) {
+	_requestInfos.printInfos();
 }

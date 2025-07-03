@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/03 10:13:58 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/03 15:41:12 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,9 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 
 	if (readbytes == 0 || client.getRequest().find(_2CRLF) != std::string::npos) {
 		// std::cout << "   ====>> request is comleted <<=====\n";
+		// printRequet(client.getRequest());
 		if (client.parseRequest()) {
+			// client.prinfRequestinfos();
 			client.setResponseInFlight(true);
 			client.setIncomingDataDetected(INCOMING_DATA_OFF);
 		}
