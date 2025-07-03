@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/07/02 10:12:48 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/03 11:10:25 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,20 @@ static std::string getResponseString(void) {
 		return response;
 }
 
+static void	finalizeRequestHandling(Server& server, Client& client, int sentBytes) {
+	client.setSentBytes(sentBytes);
+	if (client.getSentBytes() == RESPONSESIZE){
+		client.clearRequestHolder();
+		client.resetSendBytes();
+		client.setResponseInFlight(false);
+		if (!client.getIsKeepAlive()) {
+			server.closeConnection(client.getFD());
+			// std::cout << "   ====>> close connection with : " << client.getFD() << " <<=======\n";
+		}
+		// std::cout << "    ===> sent response <<=== \n";
+	}
+}
+
 void    ServerManager::sendClientsResponse(Server& server) {
 
 	std::string response = getResponseString();
@@ -51,23 +65,16 @@ void    ServerManager::sendClientsResponse(Server& server) {
 	ssize_t sentBytes;
 
 	for (size_t i = 0; i < clientsSocket.size(); i++) {
-		if (!clients[clientsSocket[i]].getResponseInFlight())
+		if (!clients[clientsSocket[i]].getResponseInFlight()) {
 			continue ;
+		}
+		
 		int bytesToSendNow =  clients[clientsSocket[i]].getBytesToSendNow();
 		sentBytes = send(clientsSocket[i], response.c_str() + clients[clientsSocket[i]].getSentBytes(),
 							bytesToSendNow, 0);
 		if (sentBytes == -1)
 			server.closeConnection(clientsSocket[i]);
-		else {
-			clients[clientsSocket[i]].setSentBytes(sentBytes);
-			if (clients[clientsSocket[i]].getSentBytes() == response.size()){
-				clients[clientsSocket[i]].setResponseInFlight(false);
-				clients[clientsSocket[i]].clearRequestHolder();
-				clients[clientsSocket[i]].resetSendBytes();
-				if (!clients[clientsSocket[i]].getIsKeepAlive()) {
-					server.closeConnection(clientsSocket[i]);
-				}
-			}
-		}
+		else
+			finalizeRequestHandling(server, clients[clientsSocket[i]], sentBytes);
 	}
 }

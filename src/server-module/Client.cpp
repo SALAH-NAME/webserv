@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/02 10:13:09 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/03 10:24:39 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,10 +53,6 @@ bool	Client::getIncomingDataDetected(void) {
 	return _incomingDataDetected;
 }
 
-struct epoll_event&	Client::getEvent() {
-	return _event;
-}
-
 bool	Client::getIsKeepAlive(void) {
 	return _isKeepAlive;
 }
@@ -87,8 +83,9 @@ void		Client::appendToRequest(const std::string& requestData) {
 	_requestHolder += requestData;
 }
 
-void	Client::setEvent(struct epoll_event& event) {
-	memcpy(&_event, &event, sizeof(event));
+void	Client::setEvent(int _epfd, struct epoll_event& event) {
+	event.events = EPOLLIN | EPOLLOUT | EPOLLET;
+	epoll_ctl(_epfd, EPOLL_CTL_ADD, event.data.fd, &event);
 }
 
 void    Client::setServerSocketFD(int s_fd) {
@@ -107,11 +104,6 @@ void	Client::resetLastConnectionTime(void){
 	_timeOut = std::time(NULL);
 }
 
-void	Client::setEventStatus(int epfd) {
-	_event.events = EPOLLIN | EPOLLOUT;  // enable write temporarily
-	epoll_ctl(epfd, EPOLL_CTL_MOD, _socketFD, &_event);
-}
-
 void	Client::setSentBytes(size_t bytes) {
 	_sentBytes += bytes;
 	_availableResponseBytes -= bytes;
@@ -120,6 +112,10 @@ void	Client::setSentBytes(size_t bytes) {
 void	Client::resetSendBytes(void) {
 	_sentBytes = 0;
 	_availableResponseBytes = RESPONSESIZE;
+}
+
+void	Client::setIncomingDataDetected(int mode) {
+	_incomingDataDetected = mode;
 }
 
 void	Client::clearRequestHolder(void) {

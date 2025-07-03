@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/06/30 16:21:23 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/02 11:11:46 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,7 +110,7 @@ std::vector<int>&	Server::getClientsSockets(void) {
 	return _clientsSockets;
 }
 
-bool	Server::verifyClientFD(int client_fd) {
+bool	Server::verifyClientsFD(int client_fd) {
 	for (size_t i = 0; i < _clientsSockets.size(); i++) {
 		if (client_fd == _clientsSockets[i])
 			return true;

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/06/30 16:15:50 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/03 10:24:14 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ void    ServerManager::setEpoll(void) {
 
 
 ServerManager::ServerManager(const std::vector<ServerConfig> &serversInfo) : _serversConfig(serversInfo),
-																				_2CRLF("\r\n\r\n"), _fileStream("outFile.txt") {
+																				_2CRLF("\r\n\r\n") {
 	setUpServers();
 	setEpoll();
 }
