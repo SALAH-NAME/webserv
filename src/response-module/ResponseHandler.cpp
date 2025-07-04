@@ -28,18 +28,12 @@ pid_t ResponseHandler::GetCgiChildPid(){return (CgiObj.GetChildPid());}
 
 void ResponseHandler::ProccessRequest(Request &req)
 {
-    if (req.getHttpVersion() != "HTTP/1.1")// using a different http version
-        throw (RequestError("HTTP/1.1 505 HTTP Version Not Supported"));
-    if (req.getHeaders().find("Host") == req.getHeaders().end())// a request with no host header
-        throw (RequestError("HTTP/1.1 400 Bad Request"));
-    try {stringToHttpMethod(req.getMethod());}
-    catch (std::invalid_argument){//    using a method other than GET, POST and DELETE 
-        throw (RequestError("HTTP/1.1 405 Not Allowed"));}
-    RouteResolver(req.getPath(), req.getMethod());//  set the resource_path and loc_config methods to the appropriate value (full route & location conf)
+    CheckForInitialErrors(req);
+    RouteResolver(req.getPath(), req.getMethod());//  set the resource_path and loc_config
     if (NeedToRedirect(req))
         return (GenerateRedirection(req));
     if (loc_config->getAllowedMethods().find(stringToHttpMethod(req.getMethod())) == loc_config->getAllowedMethods().end())
-        throw (RequestError("HTTP/1.1 405 Not Allowed"));//req method is not allowed on the route
+        throw (RequestError("HTTP/1.1 405 Not Allowed", 405));//req method is not allowed on the route
     switch (stringToHttpMethod(req.getMethod()))
     {
         case HTTP_GET:
@@ -60,7 +54,7 @@ void ResponseHandler::ProccessHttpGET(Request &req)
         CgiObj.RunCgi(req, conf, *loc_config, resource_path);
     if (!access(resource_path.c_str(), R_OK) || (IsDir(resource_path.c_str())
         && loc_config->getIndex().empty() && !loc_config->getAutoindex()))
-            throw (RequestError("HTTP/1.1 403 Forbidden"));
+            throw (RequestError("HTTP/1.1 403 Forbidden", 403));
     if (loc_config->getIndex().empty() && IsDir(resource_path.c_str()))
         GenerateDirListing(req);
 }
@@ -70,9 +64,9 @@ void ResponseHandler::ProccessHttpPOST(Request &req)
     if (require_cgi)
         CgiObj.RunCgi(req, conf, *loc_config, resource_path);
     if (access(resource_path.c_str(), F_OK))
-        throw ("HTTP/1.1 409 Conflict");
+        throw ("HTTP/1.1 409 Conflict", 409);
     if (req.getPath()[req.getPath().size() - 1] == '/')
-        throw ("HTTP/1.1 403 Forbidden");
+        throw ("HTTP/1.1 403 Forbidden", 403);
 
     //create the file with the same name as the full path and use the body of the request as it's content
 }
@@ -83,11 +77,8 @@ void ResponseHandler::ProccessHttpDELETE(Request &req)
         throw("HTTP/1.1 403 Forbidden");
     if (std::remove(resource_path.c_str()) == -1)
         throw("HTTP/1.1 500 Internal Server Error");
+    SetResponseHeader(req, "HTTP/1.1 200 OK", 0);
 }
 
 
 ResponseHandler::~ResponseHandler(){}
-
-ResponseHandler::RequestError::RequestError(const std::string &Errmsg){ error = Errmsg; }
-
-const char *ResponseHandler::RequestError::what(){return error.c_str();}

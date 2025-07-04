@@ -41,7 +41,7 @@ void ResponseHandler::SetResponseHeader(Request &req, const std::string &status_
     struct stat path_info;
 
     if (stat(resource_path.c_str(), &path_info) != 0)//if it failed -> server error because file does exist with the right permissions
-        throw (RequestError("HTTP/1.1 500 Internal Server Error"));
+        throw (RequestError("HTTP/1.1 500 Internal Server Error", 500));
     len = (len == -1) ? path_info.st_size : len;
     response_header = status_line + CRLF + "server: " + SRV_NAME + CRLF + "Date: " +
         GenerateTimeStamp() + CRLF ;
@@ -61,7 +61,7 @@ void    ResponseHandler::GenerateDirListing(Request &req)
 
     dir = opendir(resource_path.c_str());
     if (!dir)
-        throw (RequestError("HTTP/1.1 Internal Server Error"));
+        throw (RequestError("HTTP/1.1 500 Internal Server Error", 500));
     while ((dir_iter = readdir(dir)) != NULL)
         if (static_cast <std::string>(dir_iter->d_name) != ".")
             dir_entries.push_back(dir_iter->d_name);

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdio>
 #include <iomanip>
+#include <fstream>
 #include <sys/stat.h>
 #include <algorithm>
 #include <sstream>
@@ -19,7 +20,8 @@ typedef std::map<std::string, std::vector<std::string>> STRINGS_MAP;
 #define CRLF "\r\n"
 #define SRV_NAME "Ed, Edd n Eddy/1.0"//or use webserv instead
 
-class ResponseHandler {
+class ResponseHandler 
+{
 	private:
 		int						socket_fd;
 		ServerConfig			&conf;
@@ -30,7 +32,8 @@ class ResponseHandler {
 		STRINGS_MAP				content_types;
 		std::string				response_body;
 		LocationConfig const	*loc_config;
-		
+	
+		void		CheckForInitialErrors(Request &req);
 		void 		RouteResolver(const std::string &path, const std::string &method);
 		bool 		CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations);
 		void 		ProccessHttpGET(Request &req);
@@ -40,7 +43,9 @@ class ResponseHandler {
 		void 		GenerateDirListing(Request &req);
 		bool 		NeedToRedirect(Request &req);
 		void 		GenerateRedirection(Request &Req);
-		void ResponseHandler::SetResponseHeader(Request &req, const std::string &status_line, int len,
+		void		LoadErrorPage(const std::string &status_line, int status_code, Request &req);
+		void		GenerateErrorPage(const std::string &status_line, Request &req);
+		void 		SetResponseHeader(Request &req, const std::string &status_line, int len,
 						std::string location = "");
 
 	public:
@@ -54,9 +59,11 @@ class ResponseHandler {
 		class RequestError : std::exception
 		{
 			private:
+				int 		status_code;
 				std::string error;
 			public:
-				RequestError(const std::string &Errmsg);
+				int getStatusCode();
+				RequestError(const std::string &Errmsg, int statusCode);
 				const char *what() noexcept;
 		};
 };
