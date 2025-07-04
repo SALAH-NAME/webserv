@@ -1,65 +1,19 @@
-#include "Server.hpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.cpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/06/25 10:24:40 by karim             #+#    #+#             */
+/*   Updated: 2025/07/03 10:25:39 by karim            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-void	close_fds(std::vector<Server>& servers) {
-
-	for (size_t i = 0; i < servers.size(); i++) {
-		int size = servers[i].get_clientsSockets().size();
-		for (int x = 0; x < size; x++ )
-			close(servers[i].get_clientsSockets()[x]);
-	}
-}
-
-void	setUpServers(std::vector<Server>& servers, const std::vector<ServerConfig> &serversInfo) {
-
-	for (size_t i = 0; i < serversInfo.size(); i++) {
-		try {
-			servers.push_back(Server(serversInfo[i]));
-			if (!servers.back().getSockets_fds().size())
-				servers.pop_back();
-		}
-		catch (const char *errorMssg) {
-			perror(errorMssg);
-		}
-	}
-	if (!servers.size())
-		throw "No server is available";
-}
-
-int	setEpoll(std::vector<Server> &servers) {
-	std::cout << "----------------- Set Epoll ----------------------\n";
-	int epfd = epoll_create1(0);
-	if (epfd == -1)
-		throw ("epoll create1 failed");
-	std::cout << "an epoll instance for the servers sockets created(" << epfd << ")\n";
-
-	for (size_t i = 0; i < servers.size(); i++) {
-
-		std::vector<int>& sockets_fds = servers[i].getSockets_fds();
-		std::cout << "Server(" << servers[i].get_id() << ") || sockets fds{"; //
-		for (size_t x = 0; x < sockets_fds.size(); x++) {
-			servers[i].set_epfd(epfd);
-			struct epoll_event	&targetInfos = servers[i].getTarget();
-			targetInfos.data.fd = sockets_fds[x];
-			targetInfos.events = EPOLLIN;
-			targetInfos.events |= EPOLLET;
-			
-			if (epoll_ctl(epfd, EPOLL_CTL_ADD, sockets_fds[x], &targetInfos) == -1) {
-				std::cout << "\nepoll ctl failed with server: " << servers[i].get_id() << " socket: " << sockets_fds[x] << "\n";
-				throw "epoll_ctl failed";
-			}
-
-			std::cout << sockets_fds[x]; //
-			if ((x + 1) < sockets_fds.size()) //
-				std::cout << ", "; //
-		}
-		std::cout << "} added to epoll set\n"; //
-	}
-	std::cout << "---------------------------------------------------------\n";
-	return epfd;
-}
+#include "ServerManager.hpp"
 
 void    printRequet(std::string requet) {
-	for (int i = 0; i < requet.size(); i++) {
+	for (size_t i = 0; i < requet.size(); i++) {
 		if (requet[i] == '\r')
 			std::cout << "\\r";
 		else if (requet[i] == '\n')
@@ -87,15 +41,13 @@ int main(int argc, char** argv)
 	ConfigPrinter printer(config_manager);
 	printer.print();
 
-    std::vector<Server> servers;
     try {
-        setUpServers(servers, config_manager.getServers());
-		int epfd = setEpoll(servers);
 
-		waitingForEvents(servers, epfd);
+		ServerManager	serverManager(config_manager.getServers());
+		serverManager.waitingForEvents();
+
     }
     catch (const char* errorMssg) {
-		close_fds(servers);
 		perror(errorMssg);
 		return 1;
 	}

@@ -6,114 +6,62 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/05/30 12:48:44 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/02 11:11:46 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include <netinet/in.h> // For sockaddr_in
-#include <unistd.h>     // For close()
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fcntl.h>
-#include <sys/epoll.h>
-#include <map>
-#include <cstring>
-#include <csignal>
-#include <cstdlib>
-#include <cstdio>
-#include <ctime>
-#include <cerrno> // should be removed
-#include <map>
-#include <sstream>
-#include <algorithm>
-#include <arpa/inet.h> // for inet_addr()
-
-#include "Client.hpp"
-#include "Response.hpp"
-
-#include "ConfigManager.hpp"
-// #include "ConfigManager.hpp"
-#include "ConfigPrinter.hpp"
-
-
-
-#define MAX_EVENTS 100
-#define BYTES_TO_READ 1000
-#define IN 1
-#define OUT 2
+#include "ServerManager.hpp"
 
 class Server {
 	private:
-		static int 							_id;
-		int									server_id;
-		std::vector<int>					sockets_fds;
-		sockaddr_in							_Address;
-		std::vector<int>					ports;
-		int									_domin;
-		int									_type;
-		int									_protocol;
-		std::string							_host;
-		int									_nMaxBacklog; // this parameter is for listen()
-		int 								epfd; // epoll fd
-		int									nfds; // number of fds in which the event occurred
-		unsigned int 						_timeout;
-		std::string							_2CRLF;
-		bool								_isKeepAlive;
+		const ServerConfig&		_serverConfig;
+		static int 				_id;
+		int						_serverID;
+		std::vector<int>		_socketsFDs;
+		sockaddr_in				_Address;
+		std::vector<int>		_ports;
+		int						_domin;
+		int						_type;
+		int						_protocol;
+		int						_nMaxBacklog; // this parameter is for listen()
+		int 					_epfd; // epoll fd
+		bool					_isKeepAlive;
+		bool					_isSocketOwner;
+		char					_buffer[1024];
+		size_t					_bufferSize;
+		int						_timeOut;
+		std::map<int, Client>	_clients;
+		std::vector<int>		_clientsSockets;
 
-		struct epoll_event					targetInfos; // Structure to define the event we are interested in
-		// std::vector<struct epoll_event>		events;
+		void					initAttributes(void);
+		void					setEventStatus(struct epoll_event&, int);
 
-		char								buffer[1024];
-		size_t								bufferSize;
-
-		std::map<int, Client>				clients;
-		std::vector<int>					clientsSockets;
-
-		// struct epoll_event	events[MAX_EVENTS];
-		
-		// std::map<int, Response>				responses;
-		// std::vector<int>					responseWaitQueue;
-
-		void	__init_attributes(const ServerConfig& _serverInfo);
-		void						setEventStatus(struct epoll_event& event, int completed);
-		void    					receiveRequests(struct epoll_event& event);
-		void						sendResponses(struct epoll_event& event);
-		void						closeConnection(int clientSocket);
 
 	public:
-		Server(const ServerConfig& _serverInfo);
-		~Server(void);
+								Server(const ServerConfig&);
+								~Server(void);
 
-		unsigned int				getTimeout(void);
-		int							get_id(void);
-		void						setPort(std::vector<int> _port);
-		void 						set_epfd(int value);
-		struct epoll_event& 		getTarget();
-		std::vector<int>&			getSockets_fds();
-		void						set_nfds(int value);
-		std::vector<int>&			get_clientsSockets(void);
-		// std::vector<int>&			get_responseWaitQueue(void);
-		void						process_event(struct epoll_event(&tempEvents)[MAX_EVENTS]);
-		bool						verifyServerSockets_fds(int NewEvent_fd);
-		bool						verifyClientFD(int client_fd);
-		void						incomingConnection(int NewEvent_fd);
-		// void						merge_new_events(struct epoll_event* event);
-		
-		// void    					receiveRequests(struct epoll_event(&tempEvents)[MAX_EVENTS]); //
-		// void						setEventStatus(size_t &i, bool completed, struct epoll_event& tempEvents);
-					
-		void    					sendResponses(struct epoll_event(&tempEvents)[MAX_EVENTS]);
-		void						checkTimeOut(void);
-		
+		int						getID(void);
+		std::vector<int>&		getSocketsFDs();
+		std::vector<int>&		getClientsSockets(void);
+		bool					getIsSocketOwner(void);
+		std::map<int, Client>&	getClients(void);
+		int						getTimeOut(void);
+
+		void					setPort(std::vector<int>);
+		void 					setEPFD(int );
+
+		bool					verifyServerSocketsFDs(int);
+		bool					verifyClientsFD(int);
+		void					incomingConnection(int);			
+		void					checkTimeOut(void);
+		void					closeConnection(int);
 };
 
-void    waitingForEvents(std::vector<Server> &servers, int epfd);
-std::vector<int>::iterator	get_iterator(int	client_socket, std::vector<int>& sockets);
-
-void    printRequet(std::string Requet);
+std::vector<int>::iterator		getIterator(int, std::vector<int>&);
+void							printRequet(std::string);
 
 #endif

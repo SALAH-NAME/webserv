@@ -1,9 +1,13 @@
 **.o
 **.d
 **.a
+**.out
+.vscode
 .clangd
 compile_flags.txt
 webserv
 unit
 intra_test/
 .vscode
+deleteme/
+./*.txt
