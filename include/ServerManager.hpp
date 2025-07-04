@@ -53,8 +53,9 @@ class ServerManager {
 		char								_buffer[BUFFERSIZE];
 		std::string							_2CRLF;
 
+		void								createEpoll(void);
 		void								setUpServers(void);
-		void    							setEpoll(void);
+		void    							addToEpollSet(void);
 		void								checkTimeOut(void);
 		void								processEvent(Server&);
 		void								collectRequestData(Client& client, int serverIndex);

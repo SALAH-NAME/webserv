@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/03 10:24:14 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/04 17:55:33 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,12 +41,12 @@ void	ServerManager::setUpServers(void) {
 		throw "No server is available";
 }
 
-void    ServerManager::setEpoll(void) {
+void    ServerManager::addToEpollSet(void) {
 	std::cout << "----------------- Set Epoll ----------------------\n";
-	_epfd = epoll_create1(0);
-	if (_epfd == -1)
-		throw ("epoll create1 failed");
-	std::cout << "an epoll instance for the servers sockets created(" << _epfd << ")\n";
+	// _epfd = epoll_create1(0);
+	// if (_epfd == -1)
+	// 	throw ("epoll create1 failed");
+	// std::cout << "an epoll instance for the servers sockets created(" << _epfd << ")\n";
 
 	for (size_t i = 0; i < _servers.size(); i++) {
 		if (!_servers[i].getIsSocketOwner())
@@ -74,11 +74,19 @@ void    ServerManager::setEpoll(void) {
 	std::cout << "---------------------------------------------------------\n";
 }
 
+void	ServerManager::createEpoll() {
+	_epfd = epoll_create1(0);
+	if (_epfd == -1)
+		throw ("epoll create1 failed");
+	std::cout << "an epoll instance for the servers sockets created(" << _epfd << ")\n";
+
+}
 
 ServerManager::ServerManager(const std::vector<ServerConfig> &serversInfo) : _serversConfig(serversInfo),
 																				_2CRLF("\r\n\r\n") {
+	createEpoll();
 	setUpServers();
-	setEpoll();
+	addToEpollSet();
 }
 
 ServerManager::~ServerManager(void) {}
