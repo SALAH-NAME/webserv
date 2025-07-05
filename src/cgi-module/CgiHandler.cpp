@@ -7,13 +7,13 @@ std::string NumtoString(int num){
 	return ss.str();
 }
 
-void	set_fds(bool is_POST, int *in_pipe, int *out_pipe)
+void	set_fds(bool is_POST, Pipe &in_pipe, Pipe &out_pipe)
 {
-	close(out_pipe[0]);
-	dup2(out_pipe[1], 1);
+	out_pipe.closeRead();
+	dup2(out_pipe.getWriteFd(), 1);
 	if (is_POST){
-		close (in_pipe[1]);
-		dup2(in_pipe[0], 0);
+		in_pipe.closeWrite();
+		dup2(in_pipe.getReadFd(), 0);
 	}
 }
 
@@ -46,17 +46,15 @@ void	setArgv(char **Argv, const std::string &interpiter, const std::string &scri
 
 CgiHandler::CgiHandler()
 {
-	output_pipe = new int[2];
-	input_pipe = new int[2];
 	child_pid = 0;
 	exec_t0 = -1;
 }
 
 pid_t	CgiHandler::GetChildPid(){return child_pid;}
 
-int	*CgiHandler::GetOutPipe(){return output_pipe;}
+Pipe&	CgiHandler::GetOutPipe(){return output_pipe;}
 
-int	*CgiHandler::GetInPipe(){return input_pipe;}
+Pipe&	CgiHandler::GetInPipe(){return input_pipe;}
 
 void CgiHandler::RunCgi(Request &current_req, ServerConfig &conf,
 				const LocationConfig &cgi_conf, std::string &script_path)
@@ -66,31 +64,30 @@ void CgiHandler::RunCgi(Request &current_req, ServerConfig &conf,
 	
 	is_POST = current_req.getMethod() == "POST" ? true : false;
 	setArgv(argv, cgi_conf.getCgiPass(), script_path);
-	if (pipe(output_pipe) == -1)
-	throw "pipe syscall failed";
-	if (this->is_POST && pipe(input_pipe) == -1)
-	throw "pipe syscall failed";
+	output_pipe.create();
+	if (this->is_POST)
+		input_pipe.create();
 	id = fork();
+	if (id == -1)
+		throw (std::runtime_error("failed to spawn child"));
 	if (id == 0)//child
 	{
 		set_fds(this->is_POST, input_pipe, output_pipe);
 		prepare_cgi_env(current_req, this->env, conf);
 		execve(cgi_conf.getCgiPass().c_str(), argv, this->env.GetRawEnv());
-		throw "failed to spawn child";
+		exit(1);
 	}
 	this->exec_t0 = time(NULL);
 	this->child_pid = id;
-	close(output_pipe[1]);
-	close(input_pipe[0]);
+	output_pipe.closeWrite();
+	input_pipe.closeRead();
 	delete_strings(argv);
 	env.clear();
 }
 
 CgiHandler::~CgiHandler()
 {
-	close(output_pipe[0]);
-	close(input_pipe[1]);
-	delete[] output_pipe;
-	delete[] input_pipe;
+	output_pipe.closeRead();
+	input_pipe.closeWrite();
 	env.clear();
 }
