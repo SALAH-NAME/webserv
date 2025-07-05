@@ -6,22 +6,14 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2025/05/30 16:35:58 by karim            ###   ########.fr       */
-=======
 /*   Updated: 2025/07/03 14:27:39 by karim            ###   ########.fr       */
->>>>>>> main
 /*                                                                            */
 /* ************************************************************************** */
 
 // #include "Server.hpp"
 #include "ServerManager.hpp"
 
-<<<<<<< HEAD
-std::vector<int>::iterator	get_iterator(int	client_socket, std::vector<int>& sockets) {
-=======
 std::vector<int>::iterator	getIterator(int	client_socket, std::vector<int>& sockets) {
->>>>>>> main
 	return std::find(sockets.begin(), sockets.end(), client_socket);
 }
 

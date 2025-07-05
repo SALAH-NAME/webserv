@@ -3,12 +3,12 @@
 void ResponseHandler::CheckForInitialErrors(Request &req)
 {
 	if (req.getHttpVersion() != "HTTP/1.1")// using a different http version
-        throw (RequestError("HTTP/1.1 505 HTTP Version Not Supported", 505));
+        throw (ResponseHandlerError("HTTP/1.1 505 HTTP Version Not Supported", 505));
     if (req.getHeaders().find("Host") == req.getHeaders().end())// a request with no host header
-        throw (RequestError("HTTP/1.1 400 Bad Request", 400));
+        throw (ResponseHandlerError("HTTP/1.1 400 Bad Request", 400));
     try {stringToHttpMethod(req.getMethod());}
     catch (std::invalid_argument){//    using a method other than GET, POST and DELETE 
-        throw (RequestError("HTTP/1.1 405 Not Allowed", 405));}
+        throw (ResponseHandlerError("HTTP/1.1 405 Not Allowed", 405));}
 }
 
 void	ResponseHandler::GenerateErrorPage(const std::string &status_line, Request &req)
@@ -25,15 +25,16 @@ void	ResponseHandler::LoadErrorPage(const std::string &status_line, int status_c
 {
 	std::string error_page = conf.getErrorPage(status_code);
 	
-	if (error_page == "" || access(error_page.c_str(), R_OK)!= 0)
+	if (error_page == "" || access(error_page.c_str(), R_OK) != 0)
 		GenerateErrorPage(status_line, req);
-	
+	else
+		LoadStaticFile(req, error_page);
 }
 
-ResponseHandler::RequestError::RequestError(const std::string &Errmsg, int statusCode)
+ResponseHandler::ResponseHandlerError::ResponseHandlerError(const std::string &Errmsg, int statusCode)
     : error(Errmsg) , status_code(statusCode){}
 
-const char *ResponseHandler::RequestError::what(){return error.c_str();}
+const char *ResponseHandler::ResponseHandlerError::what(){return error.c_str();}
 
-int ResponseHandler::RequestError::getStatusCode(){return status_code;}
+int ResponseHandler::ResponseHandlerError::getStatusCode(){return status_code;}
 

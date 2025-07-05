@@ -13,6 +13,7 @@
 #include "CgiHandler.hpp"
 #include "GlobalConfig.hpp"
 #include "ServerConfig.hpp"
+#include "File.hpp"
 
 typedef const std::map<std::string, LocationConfig> LOCATIONS;
 typedef std::map<std::string, std::vector<std::string>> STRINGS_MAP;
@@ -32,38 +33,45 @@ class ResponseHandler
 		STRINGS_MAP				content_types;
 		std::string				response_body;
 		LocationConfig const	*loc_config;
+		File					*response_file;
 	
 		void		CheckForInitialErrors(Request &req);
+		void		ProccessRequest(Request &req);
 		void 		RouteResolver(const std::string &path, const std::string &method);
 		bool 		CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations);
+		void 		InitializeStandardContentTypes();
 		void 		ProccessHttpGET(Request &req);
 		void 		ProccessHttpPOST(Request &req);
 		void 		ProccessHttpDELETE(Request &req);
 		std::string GenerateContentType(const std::string file_extension);
+		void		LoadStaticFile(Request &req, const std::string &file_path);
 		void 		GenerateDirListing(Request &req);
 		bool 		NeedToRedirect(Request &req);
 		void 		GenerateRedirection(Request &Req);
-		void		LoadErrorPage(const std::string &status_line, int status_code, Request &req);
 		void		GenerateErrorPage(const std::string &status_line, Request &req);
 		void 		SetResponseHeader(Request &req, const std::string &status_line, int len,
-						std::string location = "");
-
+			std::string location = "");
+			
 	public:
 		ResponseHandler(int sockfd, ServerConfig &server_conf);
-		void	ProccessRequest(Request &req);
-		int		*GetCgiInPipe();
-		int		*GetCgiOutPipe();
-		pid_t	GetCgiChildPid();
+		void		LoadErrorPage(const std::string &status_line, int status_code, Request &req);
+		void 		Run(Request &req);			
+		int			*GetCgiInPipe();
+		int			*GetCgiOutPipe();
+		std::string	GetResponseHeader();
+		std::string GetResponseBody();
+		File		*GetResponseFilePtr();
+		pid_t		GetCgiChildPid();
 		~ResponseHandler();
 
-		class RequestError : std::exception
+		class ResponseHandlerError : std::exception
 		{
 			private:
 				int 		status_code;
 				std::string error;
 			public:
 				int getStatusCode();
-				RequestError(const std::string &Errmsg, int statusCode);
+				ResponseHandlerError(const std::string &Errmsg, int statusCode);
 				const char *what() noexcept;
 		};
 };
