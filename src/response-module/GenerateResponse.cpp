@@ -65,8 +65,8 @@ void    ResponseHandler::GenerateDirListing(Request &req)
 
 void ResponseHandler::GenerateRedirection(Request &req)
 {
-    std::string status_code;
-    std::string location = NumtoString(301);
+    std::string status_code = NumtoString(301);
+    std::string location;
 
     if (IsDir(resource_path.c_str()))
         location = "Location: http://" + req.getHeaders()["Host"] + '/' + req.getPath() + '/';
@@ -75,8 +75,8 @@ void ResponseHandler::GenerateRedirection(Request &req)
         status_code = NumtoString(loc_config->getRedirect().status_code);
     }
     response_body = 
-        "<html>\n<head><title>301 Moved Permanently"
-        "</title></head>\n<body>\n<center><h1>301 Moved Permanently"
+        "<html>\n<head><title>" + status_code + " Moved Permanently"
+        "</title></head>\n<body>\n<center><h1>" + status_code + "Moved Permanently"
         "</h1></center>\n<hr><center>" + std::string(SRV_NAME) + " (Ubuntu)</center>\n"
         "</body>\n</html>";
     SetResponseHeader(req, "HTTP/1.1 " + status_code + " Moved Permanently", response_body.size(), location);
