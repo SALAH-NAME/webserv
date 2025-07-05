@@ -8,6 +8,8 @@
 #define BUFFERSIZE 1024
 // #define RESPONSESIZE 746 // Fix size for the temp response
 
+#define CONNECTION_ERROR (EPOLLIN | EPOLLERR | EPOLLHUP)
+
 
 // #define INCOMING_DATA_ON true
 // #define INCOMING_DATA_OFF false
@@ -34,10 +36,7 @@
 #include "HttpRequest.hpp"
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
-
-#include <fstream> //
-#include <stdio.h> //
-#include <unistd.h> //
+#include "Socket.hpp"
 
 class Server;
 

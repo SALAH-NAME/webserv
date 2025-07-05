@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/02 11:11:46 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/05 22:15:34 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,22 +34,20 @@ class Server {
 		size_t					_bufferSize;
 		int						_timeOut;
 		std::map<int, Client>	_clients;
-		std::vector<int>		_clientsSockets;
-
+		std::vector<int>		_markedForEraseClients;
+		
 		void					initAttributes(void);
 		void					setEventStatus(struct epoll_event&, int);
-
-
 	public:
 								Server(const ServerConfig&);
 								~Server(void);
 
 		int						getID(void);
 		std::vector<int>&		getSocketsFDs();
-		std::vector<int>&		getClientsSockets(void);
 		bool					getIsSocketOwner(void);
 		std::map<int, Client>&	getClients(void);
 		int						getTimeOut(void);
+		std::vector<int>		getMarkedForEraseClients();
 
 		void					setPort(std::vector<int>);
 		void 					setEPFD(int );
@@ -59,6 +57,7 @@ class Server {
 		void					incomingConnection(int);			
 		void					checkTimeOut(void);
 		void					closeConnection(int);
+		void					eraseMarked();
 };
 
 std::vector<int>::iterator		getIterator(int, std::vector<int>&);
