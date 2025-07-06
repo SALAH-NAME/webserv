@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/03 15:41:12 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/06 10:53:36 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,12 +41,13 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 }
 
 void	ServerManager::receiveClientsData(int serverIndex) {
-	std::vector<int>& clienstSockets = _servers[serverIndex].getClientsSockets();
+
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();
 
-	for (size_t i = 0; i < clienstSockets.size(); i++){	
-			if (clients[clienstSockets[i]].getIncomingDataDetected() == INCOMING_DATA_ON) {
-				collectRequestData(clients[clienstSockets[i]], serverIndex);
+	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++){
+		if (clients[it->first].getIncomingDataDetected() == INCOMING_DATA_ON) {
+			collectRequestData(clients[it->first], serverIndex);
 		}
 	}
+	_servers[serverIndex].eraseMarked();
 }

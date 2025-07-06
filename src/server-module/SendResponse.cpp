@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/07/03 15:39:38 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/06 10:49:10 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,30 +50,31 @@ static void	finalizeRequestHandling(Server& server, Client& client, int sentByte
 		client.setResponseInFlight(false);
 		if (!client.getIsKeepAlive()) {
 			server.closeConnection(client.getFD());
-			// std::cout << "   ====>> close connection with : " << client.getFD() << " <<=======\n";
 		}
 		// std::cout << "    ===> sent response <<=== \n";
 	}
 }
 
-void    ServerManager::sendClientsResponse(Server& server) {
+void    ServerManager::sendClientsResponse(int serverIndex) {
 
 	std::string response = getResponseString();
+	Server& server = _servers[serverIndex];
 
 	std::map<int, Client>& clients = server.getClients();
-	std::vector<int>&	clientsSocket = server.getClientsSockets();
 	ssize_t sentBytes;
 
-	for (size_t i = 0; i < clientsSocket.size(); i++) {
-		if (!clients[clientsSocket[i]].getResponseInFlight())
-			continue ;
-		
-		int bytesToSendNow =  clients[clientsSocket[i]].getBytesToSendNow();
-		sentBytes = send(clientsSocket[i], response.c_str() + clients[clientsSocket[i]].getSentBytes(),
-							bytesToSendNow, 0);
-		if (sentBytes == -1)
-			server.closeConnection(clientsSocket[i]);
-		else
-			finalizeRequestHandling(server, clients[clientsSocket[i]], sentBytes);
+	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+			if (!(it->second.getResponseInFlight()))
+				continue ;
+			int bytesToSendNow =  it->second.getBytesToSendNow();
+			sentBytes = send(it->first, response.c_str() + it->second.getSentBytes(),
+								bytesToSendNow, 0);
+			if (sentBytes == -1) {
+				if (errno == EPIPE || errno == ECONNRESET)	
+					server.closeConnection(it->first);
+			}
+			else
+				finalizeRequestHandling(server, it->second, sentBytes);
 	}
-}
+	server.eraseMarked();
+} 

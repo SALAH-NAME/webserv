@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/07/02 11:11:46 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/05 22:14:33 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,6 +98,10 @@ int		Server::getID(void) {
 	return _serverID;
 }
 
+std::vector<int>	Server::getMarkedForEraseClients() {
+	return _markedForEraseClients;
+}
+
 void Server::setEPFD(int value) {
 	_epfd = value;
 }
@@ -106,14 +110,10 @@ std::vector<int>&		Server::getSocketsFDs() {
 	return _socketsFDs;
 }
 
-std::vector<int>&	Server::getClientsSockets(void) {
-	return _clientsSockets;
-}
-
 bool	Server::verifyClientsFD(int client_fd) {
-	for (size_t i = 0; i < _clientsSockets.size(); i++) {
-		if (client_fd == _clientsSockets[i])
-			return true;
+	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+		if (client_fd == it->first)
+			return true ;
 	}
 	return false;
 }
@@ -126,10 +126,18 @@ bool	Server::verifyServerSocketsFDs(int NewEvent_fd) {
 
 void	Server::closeConnection(int clientSocket) {
 	epoll_ctl(_epfd, EPOLL_CTL_DEL, clientSocket, NULL);
-	_clientsSockets.erase(getIterator(clientSocket, _clientsSockets));
-	_clients.erase(clientSocket);
-	close(clientSocket);
+	_markedForEraseClients.push_back(clientSocket);
 }
+
+void	Server::eraseMarked() {
+	for (size_t i = 0; i < _markedForEraseClients.size(); i++) {
+		close(_markedForEraseClients[i]);
+		_clients.erase(_markedForEraseClients[i]);
+		// std::cout << "close the connection : " << _markedForEraseClients[i] << "\n";
+	}
+	_markedForEraseClients.clear();
+}
+
 
 bool	Server::getIsSocketOwner(void) {
 	return _isSocketOwner;

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:24:40 by karim             #+#    #+#             */
-/*   Updated: 2025/07/03 10:25:39 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/06 10:44:12 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,6 @@ void    printRequet(std::string requet) {
 
 int main(int argc, char** argv)
 {
-
 	std::string config_file = "conf/webserv.conf";
 	if (argc > 1)
 	{
