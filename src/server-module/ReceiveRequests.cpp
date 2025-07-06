@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/05 22:07:28 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/06 10:49:18 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,4 +49,5 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 			collectRequestData(clients[it->first], serverIndex);
 		}
 	}
+	_servers[serverIndex].eraseMarked();
 }

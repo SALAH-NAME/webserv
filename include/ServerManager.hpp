@@ -56,8 +56,11 @@ class ServerManager {
 		void								setUpServers(void);
 		void    							addToEpollSet(void);
 		void								checkTimeOut(void);
-		void								processEvent(Server&);
-		void								collectRequestData(Client& client, int serverIndex);
+		void								collectRequestData(Client&, int);
+
+		void								processEvent(int);
+		void								receiveClientsData(int);
+		void								sendClientsResponse(int);
 
 	public:
 
@@ -65,8 +68,6 @@ class ServerManager {
 											~ServerManager(void);
 		void								waitingForEvents(void);
 
-		void								receiveClientsData(int serverIndex);
-		void								sendClientsResponse(Server& server);
 
 };
 

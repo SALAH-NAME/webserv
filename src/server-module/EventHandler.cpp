@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/05 22:11:45 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/06 10:49:41 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,8 +60,9 @@ void	Server::incomingConnection(int NewEvent_fd) {
 	}
 }
 
-void	ServerManager::processEvent(Server& server) {
+void	ServerManager::processEvent(int serverIndex) {
 	int clientSocket;
+	Server& server =_servers[serverIndex];
 
 	for (int i = 0; i < _nfds; i++) {
 		clientSocket = _events[i].data.fd;
@@ -79,6 +80,7 @@ void	ServerManager::processEvent(Server& server) {
 			server.getClients()[clientSocket].setEvent(_epfd, _events[i]);
 		}
 	}
+	server.eraseMarked();
 }
 
 void    ServerManager::waitingForEvents(void) {
@@ -95,10 +97,9 @@ void    ServerManager::waitingForEvents(void) {
 			if (!_servers[x].getIsSocketOwner())
 				continue ;
 				
-			processEvent(_servers[x]);
+			processEvent(x);
 			receiveClientsData(x);
-			sendClientsResponse(_servers[x]);
-			_servers[x].eraseMarked();
+			sendClientsResponse(x);
 		}
 	}
 }

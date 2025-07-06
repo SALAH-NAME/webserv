@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/07/05 22:07:36 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/06 10:49:10 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,9 +55,10 @@ static void	finalizeRequestHandling(Server& server, Client& client, int sentByte
 	}
 }
 
-void    ServerManager::sendClientsResponse(Server& server) {
+void    ServerManager::sendClientsResponse(int serverIndex) {
 
 	std::string response = getResponseString();
+	Server& server = _servers[serverIndex];
 
 	std::map<int, Client>& clients = server.getClients();
 	ssize_t sentBytes;
@@ -75,4 +76,5 @@ void    ServerManager::sendClientsResponse(Server& server) {
 			else
 				finalizeRequestHandling(server, it->second, sentBytes);
 	}
+	server.eraseMarked();
 } 
