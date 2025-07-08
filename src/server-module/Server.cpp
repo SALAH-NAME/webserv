@@ -6,133 +6,114 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/07/02 11:11:46 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/08 12:09:19 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
-int	Server::_id = 1;
-
-void	Server::initAttributes(void) {
+void	Server::initAttributes(int id) {
 	_domin = AF_INET;
 	_type = SOCK_STREAM | SOCK_NONBLOCK;
 	_protocol = 0;
 	_ports.push_back(_serverConfig.getListen());
-	_isSocketOwner = false;
 	_timeOut = _serverConfig.getSessionTimeout();
+	_id = id;
 }
 
-Server::Server(const ServerConfig& serverConfig) : _serverConfig(serverConfig) {
+Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serverConfig), _id(id), _transferSocket() {
+	initAttributes(id);
 
-	int socketFD;
-	initAttributes();
+	// Add temp ports
+	_ports.push_back(2323);
+	_ports.push_back(4545);
 
 	for (size_t i = 0; i < _ports.size(); i++) {
 		
 		try {
-			if ((socketFD = socket(_domin, _type, _protocol)) < 0) {
-				throw "socket failed: ";
-			}	
+			_listeningSockets.push_back(Socket());
+		
+			_listeningSockets[_listeningSockets.size() - 1].create();
+			
 			int reuse = 1;
-			if (setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
-				throw "setsockopt(SO_REUSEADDR) failed";
+			_listeningSockets[_listeningSockets.size() - 1].setsockopt(SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 			// fixed this problem ==>  the OS keeps the port in a "cool-down" period (TIME_WAIT)
 			// ==> It’s mainly for quick restart development or for binding during graceful restarts.
 			
 			memset(&_Address, 0, sizeof(_Address));
 			_Address.sin_family = _domin;
 			_Address.sin_port = htons(_ports[i]);
-			/*htons():  These functions shall convert 16-bit and 32-bit quantities between
-			network byte order and host byte order.*/
 			
 			if (inet_pton(AF_INET, serverConfig.getHost().c_str(), &_Address.sin_addr) <= 0)
-				throw "Invalid IP address";
+				throw std::runtime_error(std::string("Invalid IP address: ") + strerror(errno));
+
+			struct sockaddr addr;
+			memcpy(&addr, &_Address, sizeof(_Address));
 		
 			_bufferSize = sizeof(_buffer);
 			memset(_buffer, 0, _bufferSize);
-			
-			if (bind(socketFD, (sockaddr*)&_Address, sizeof(_Address)) < 0) {
-				if (errno == EADDRINUSE) {
-					_serverID = _id++;
-					std::cout << "Server(" << _serverID << ") is listening on USED IP:PORT\n";
-					std::cout << "==> this server is using used SOCKET\n";
-					std::cout << "is socket owner => " << _isSocketOwner << "\n";
-					close(socketFD);
-					return ;
-				}
-				else
-					throw "bind failed";
-			}
-			else {
-				/* _nMaxBacklog: the maximum length to which the queue
-				of pending connections for sockfd may grow*/
-				if (listen(socketFD, _nMaxBacklog) < 0)
-					throw "listen failed";
-				_socketsFDs.push_back(socketFD);
-				_isSocketOwner = true;
-				_serverID = _id++;
-				std::cout << "Server(" << _serverID << ") {socket: " << socketFD << "} is listening on => ";
-				std::cout << serverConfig.getHost() << ":" << _ports[i] << "\n";
-				std::cout << "is socket owner => " << _isSocketOwner << "\n";
-			}
+
+			_listeningSockets[_listeningSockets.size() - 1].bind(&addr, sizeof(_Address));
+			_listeningSockets[_listeningSockets.size() - 1].listen();
+			std::cout << "Server(" << _id << ") {socket: " << _listeningSockets[_listeningSockets.size() - 1].getFd() << "} is listening on => ";
+			std::cout << serverConfig.getHost() << ":" << _ports[i] << "\n";
 		}
-		catch (const char* errorMssg) {
-			perror(errorMssg);
-			if (!(socketFD < 0))
-				close(socketFD);
+		catch (const std::runtime_error& e) {
+			_listeningSockets.pop_back();
+			perror(e.what());
 		}
-		if (errno == EADDRINUSE)
-			return ;
-		
 	}
-	if (!_socketsFDs.size() || !_socketsFDs.size())
+	if (!_listeningSockets.size())
 		throw "server failed";
 }
 
-Server::~Server(void) {
-	// std::cout << "destructor called\n";
-}
+Server::~Server(void) {}
 
 int		Server::getID(void) {
-	return _serverID;
+	return _id;
+}
+
+std::vector<int>	Server::getMarkedForEraseClients() {
+	return _markedForEraseClients;
 }
 
 void Server::setEPFD(int value) {
 	_epfd = value;
 }
 
-std::vector<int>&		Server::getSocketsFDs() {
-	return _socketsFDs;
-}
-
-std::vector<int>&	Server::getClientsSockets(void) {
-	return _clientsSockets;
+std::vector<Socket>&		Server::getListeningSockets() {
+	return _listeningSockets;
 }
 
 bool	Server::verifyClientsFD(int client_fd) {
-	for (size_t i = 0; i < _clientsSockets.size(); i++) {
-		if (client_fd == _clientsSockets[i])
-			return true;
+	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+		if (client_fd == it->first)
+			return true ;
 	}
 	return false;
 }
 
 bool	Server::verifyServerSocketsFDs(int NewEvent_fd) {
-	std::vector<int>::iterator it = std::find(_socketsFDs.begin(), _socketsFDs.end(), NewEvent_fd);
-	return (it != _socketsFDs.end());
+	for (size_t i = 0; i < _listeningSockets.size(); i++) {
+		if (NewEvent_fd == _listeningSockets[i].getFd())
+			return true;
+	}
+	return false;
 }
 
 
 void	Server::closeConnection(int clientSocket) {
 	epoll_ctl(_epfd, EPOLL_CTL_DEL, clientSocket, NULL);
-	_clientsSockets.erase(getIterator(clientSocket, _clientsSockets));
-	_clients.erase(clientSocket);
-	close(clientSocket);
+	_markedForEraseClients.push_back(clientSocket);
 }
 
-bool	Server::getIsSocketOwner(void) {
-	return _isSocketOwner;
+void	Server::eraseMarked() {
+	for (size_t i = 0; i < _markedForEraseClients.size(); i++) {
+		close(_markedForEraseClients[i]);
+		_clients.erase(_markedForEraseClients[i]);
+		std::cout << "close the connection : " << _markedForEraseClients[i] << "\n";
+	}
+	_markedForEraseClients.clear();
 }
 
 std::map<int, Client>& Server::getClients() {
@@ -141,4 +122,8 @@ std::map<int, Client>& Server::getClients() {
 
 int	Server::getTimeOut(void) {
 	return _timeOut;
+}
+
+Socket&	Server::getTransferSocket(void) {
+	return _transferSocket;
 }

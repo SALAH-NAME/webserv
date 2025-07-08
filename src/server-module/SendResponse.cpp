@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/07/03 15:39:38 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/08 14:26:56 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,31 +49,35 @@ static void	finalizeRequestHandling(Server& server, Client& client, int sentByte
 		client.resetSendBytes();
 		client.setResponseInFlight(false);
 		if (!client.getIsKeepAlive()) {
-			server.closeConnection(client.getFD());
-			// std::cout << "   ====>> close connection with : " << client.getFD() << " <<=======\n";
+			server.closeConnection(client.getSocket().getFd());
 		}
 		// std::cout << "    ===> sent response <<=== \n";
 	}
 }
 
-void    ServerManager::sendClientsResponse(Server& server) {
-
+void	ServerManager::transmitResponse(Client& client, int serverIndex) {
 	std::string response = getResponseString();
-
-	std::map<int, Client>& clients = server.getClients();
-	std::vector<int>&	clientsSocket = server.getClientsSockets();
+	int bytesToSendNow =  client.getBytesToSendNow();
 	ssize_t sentBytes;
 
-	for (size_t i = 0; i < clientsSocket.size(); i++) {
-		if (!clients[clientsSocket[i]].getResponseInFlight())
-			continue ;
-		
-		int bytesToSendNow =  clients[clientsSocket[i]].getBytesToSendNow();
-		sentBytes = send(clientsSocket[i], response.c_str() + clients[clientsSocket[i]].getSentBytes(),
-							bytesToSendNow, 0);
-		if (sentBytes == -1)
-			server.closeConnection(clientsSocket[i]);
+	try {
+		sentBytes = client.getSocket().send(response.c_str() + client.getSentBytes(), bytesToSendNow);
+		if (sentBytes > 0)
+			finalizeRequestHandling(_servers[serverIndex], client, sentBytes);
 		else
-			finalizeRequestHandling(server, clients[clientsSocket[i]], sentBytes);
+			throwIfSocketError("send()");
+	} catch (const std::runtime_error& e) {
+		perror(e.what());
+		_servers[serverIndex].closeConnection(client.getSocket().getFd());
 	}
+}
+
+void    ServerManager::sendClientsResponse(int serverIndex) {
+	std::map<int, Client>& clients = _servers[serverIndex].getClients();
+
+	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+		if (it->second.getResponseInFlight())
+			transmitResponse(clients[it->first], serverIndex);
+	}
+	_servers[serverIndex].eraseMarked();
 }

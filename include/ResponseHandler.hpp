@@ -29,11 +29,12 @@ class ResponseHandler
 		std::string				response_header;
 		std::string 			resource_path;
 		bool					require_cgi;
+		bool					is_post;//true in case of POST but does not require cgi
 		CgiHandler				CgiObj;
 		STRINGS_MAP				content_types;
 		std::string				response_body;
 		LocationConfig const	*loc_config;
-		File					*response_file;
+		File					*target_file;
 	
 		void		CheckForInitialErrors(Request &req);
 		void		ProccessRequest(Request &req);
@@ -55,12 +56,13 @@ class ResponseHandler
 	public:
 		ResponseHandler(int sockfd, ServerConfig &server_conf);
 		void		LoadErrorPage(const std::string &status_line, int status_code, Request &req);
-		void 		Run(Request &req);			
+		void 		Run(Request &req);
+		bool		IsPost();		
 		int			*GetCgiInPipe();
 		int			*GetCgiOutPipe();
 		std::string	GetResponseHeader();
 		std::string GetResponseBody();
-		File		*GetResponseFilePtr();
+		File		*GetTargetFilePtr();
 		pid_t		GetCgiChildPid();
 		~ResponseHandler();
 
