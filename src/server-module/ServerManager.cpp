@@ -6,31 +6,42 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/05 22:17:07 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/08 11:15:51 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServerManager.hpp"
 
-void	ServerManager::checkTimeOut(void) {
+void ServerManager::checkTimeOut(void)
+{
 
-	for (size_t x = 0; x < _servers.size(); x++) {
-		
-		std::map<int, Client>&	clients = _servers[x].getClients();
-		for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-			if (std::time(NULL) - it->second.getLastConnectionTime() > _servers[x].getTimeOut()) {
+	for (size_t x = 0; x < _servers.size(); x++)
+	{
+
+		std::map<int, Client>& clients = _servers[x].getClients();
+		for (std::map<int, Client>::iterator it = clients.begin();
+				 it != clients.end(); it++)
+		{
+			if (std::time(NULL) - it->second.getLastConnectionTime() >
+					_servers[x].getTimeOut())
+			{
 				_servers[x].closeConnection(it->first);
 			}
 		}
 	}
 }
 
-void	ServerManager::setUpServers(void) {
-	for (size_t i = 0; i < _serversConfig.size(); i++) {
+void ServerManager::setUpServers(void)
+{
+
+	std::cout << "----------------- Set Up Servers ----------------------\n";
+
+	for (size_t i = 0; i < _serversConfig.size(); i++)
+	{
 		try {
-			_servers.push_back(Server(_serversConfig[i]));
+			_servers.push_back(Server(_serversConfig[i], _servers.size() + 1));
 		}
-		catch (const char *errorMssg) {
+		catch (const char* errorMssg) {
 			perror(errorMssg);
 		}
 	}
@@ -38,44 +49,56 @@ void	ServerManager::setUpServers(void) {
 		throw "No server is available";
 }
 
-void    ServerManager::addToEpollSet(void) {
-	std::cout << "----------------- Set Epoll ----------------------\n";
-	for (size_t i = 0; i < _servers.size(); i++) {
-		if (!_servers[i].getIsSocketOwner())
-			continue ;
-		
-		std::vector<int>& _socketsFDs = _servers[i].getSocketsFDs();
-		std::cout << "Server(" << _servers[i].getID() << ") || sockets fds{"; //
-		for (size_t x = 0; x < _socketsFDs.size(); x++) {
-			_servers[i].setEPFD(_epfd);
+void ServerManager::addToEpollSet(void)
+{
+	std::cout << "----------------- Add To Epoll Set ----------------------\n";
+	for (size_t i = 0; i < _servers.size(); i++)
+	{
+		std::vector<Socket>& listeningSockets = _servers[i].getListeningSockets();
+		if (!listeningSockets.size())
+			continue;
+
+		_servers[i].setEPFD(_epfd);
+
+		std::cout << "Server(" << _servers[i].getID() << ") || sockets FDs(" << listeningSockets.size() << ") => {"; //
+
+		for (size_t x = 0; x < listeningSockets.size(); x++)
+		{
 			memset(&_event, 0, sizeof(_event));
-			_event.data.fd = _socketsFDs[x];
-			_event.events = EPOLLIN | EPOLLET; // make the listening socket Edge-triggered 
-			
-			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, _socketsFDs[x], &_event) == -1) {
-				std::cout << "\nepoll ctl failed with server: " << _servers[i].getID() << " socket: " << _socketsFDs[x] << "\n";
+			_event.data.fd = listeningSockets[x].getFd();
+			_event.events =
+					EPOLLIN | EPOLLET; // make the listening socket Edge-triggered
+
+			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, listeningSockets[x].getFd(),
+										&_event) == -1)
+			{
+				std::cout << "\nepoll ctl failed with server: "
+									<< listeningSockets[x].getFd()
+									<< " socket: " << listeningSockets[x].getFd() << "\n";
 				throw "epoll_ctl failed";
 			}
 
-			std::cout << _socketsFDs[x]; //
-			if ((x + 1) < _socketsFDs.size()) //
-				std::cout << ", "; //
+			std::cout << listeningSockets[x].getFd();
+			if ((x + 1) < listeningSockets.size())
+				std::cout << ", ";
 		}
-		std::cout << "} added to epoll set\n"; //
+		std::cout << "} added to epoll set\n";
 	}
-	std::cout << "---------------------------------------------------------\n";
 }
 
-void	ServerManager::createEpoll() {
+void ServerManager::createEpoll()
+{
+	std::cout << "----------------- Create Epoll ----------------------\n";
 	_epfd = epoll_create1(0);
 	if (_epfd == -1)
-		throw ("epoll create1 failed");
-	std::cout << "an epoll instance for the servers sockets created(" << _epfd << ")\n";
-
+		throw("epoll create1 failed");
+	std::cout << "an epoll instance for the servers sockets created(" << _epfd
+						<< ")\n";
 }
 
-ServerManager::ServerManager(const std::vector<ServerConfig> &serversInfo) : _serversConfig(serversInfo),
-																				_2CRLF("\r\n\r\n") {
+ServerManager::ServerManager(const std::vector<ServerConfig>& serversInfo)
+		: _serversConfig(serversInfo), _2CRLF("\r\n\r\n")
+{
 	createEpoll();
 	setUpServers();
 	addToEpollSet();

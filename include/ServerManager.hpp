@@ -4,10 +4,12 @@
 #define EPOLLTIMEOUT 100
 #define MAX_EVENTS 100
 #define BYTES_TO_READ 1000
-// #define BYTES_TO_SEND 1000
+#define BYTES_TO_SEND 1000
 #define BUFFERSIZE 1024
-// #define RESPONSESIZE 746 // Fix size for the temp response
+#define RESPONSESIZE 746 // Fix size for the temp response
 
+#define INCOMING_DATA_ON true
+#define INCOMING_DATA_OFF false
 #define CONNECTION_ERROR (EPOLLIN | EPOLLERR | EPOLLHUP)
 
 
@@ -32,13 +34,14 @@
 #include <sstream>
 #include <algorithm>
 #include <arpa/inet.h> // for inet_addr()
-#include "Client.hpp"
+#include <utility>
 #include "HttpRequest.hpp"
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
 #include "Socket.hpp"
 
 class Server;
+class Client;
 
 class ServerManager {
 	private:
@@ -57,6 +60,7 @@ class ServerManager {
 		void    							addToEpollSet(void);
 		void								checkTimeOut(void);
 		void								collectRequestData(Client&, int);
+		void								transmitResponse(Client&, int);
 
 		void								processEvent(int);
 		void								receiveClientsData(int);
@@ -71,6 +75,9 @@ class ServerManager {
 
 };
 
+void throwIfSocketError(const std::string& context);
+
 #include "Server.hpp"
+#include "Client.hpp"
 
 #endif

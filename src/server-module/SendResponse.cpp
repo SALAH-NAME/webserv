@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/07/06 10:49:10 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/08 14:26:56 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,32 +49,35 @@ static void	finalizeRequestHandling(Server& server, Client& client, int sentByte
 		client.resetSendBytes();
 		client.setResponseInFlight(false);
 		if (!client.getIsKeepAlive()) {
-			server.closeConnection(client.getFD());
+			server.closeConnection(client.getSocket().getFd());
 		}
 		// std::cout << "    ===> sent response <<=== \n";
 	}
 }
 
-void    ServerManager::sendClientsResponse(int serverIndex) {
-
+void	ServerManager::transmitResponse(Client& client, int serverIndex) {
 	std::string response = getResponseString();
-	Server& server = _servers[serverIndex];
-
-	std::map<int, Client>& clients = server.getClients();
+	int bytesToSendNow =  client.getBytesToSendNow();
 	ssize_t sentBytes;
 
-	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-			if (!(it->second.getResponseInFlight()))
-				continue ;
-			int bytesToSendNow =  it->second.getBytesToSendNow();
-			sentBytes = send(it->first, response.c_str() + it->second.getSentBytes(),
-								bytesToSendNow, 0);
-			if (sentBytes == -1) {
-				if (errno == EPIPE || errno == ECONNRESET)	
-					server.closeConnection(it->first);
-			}
-			else
-				finalizeRequestHandling(server, it->second, sentBytes);
+	try {
+		sentBytes = client.getSocket().send(response.c_str() + client.getSentBytes(), bytesToSendNow);
+		if (sentBytes > 0)
+			finalizeRequestHandling(_servers[serverIndex], client, sentBytes);
+		else
+			throwIfSocketError("send()");
+	} catch (const std::runtime_error& e) {
+		perror(e.what());
+		_servers[serverIndex].closeConnection(client.getSocket().getFd());
 	}
-	server.eraseMarked();
-} 
+}
+
+void    ServerManager::sendClientsResponse(int serverIndex) {
+	std::map<int, Client>& clients = _servers[serverIndex].getClients();
+
+	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+		if (it->second.getResponseInFlight())
+			transmitResponse(clients[it->first], serverIndex);
+	}
+	_servers[serverIndex].eraseMarked();
+}

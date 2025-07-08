@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/05 22:15:34 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/08 11:16:30 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,7 @@
 class Server {
 	private:
 		const ServerConfig&		_serverConfig;
-		static int 				_id;
-		int						_serverID;
-		std::vector<int>		_socketsFDs;
+		int 					_id;
 		sockaddr_in				_Address;
 		std::vector<int>		_ports;
 		int						_domin;
@@ -29,25 +27,26 @@ class Server {
 		int						_nMaxBacklog; // this parameter is for listen()
 		int 					_epfd; // epoll fd
 		bool					_isKeepAlive;
-		bool					_isSocketOwner;
 		char					_buffer[1024];
 		size_t					_bufferSize;
 		int						_timeOut;
 		std::map<int, Client>	_clients;
 		std::vector<int>		_markedForEraseClients;
+		std::vector<Socket>		_listeningSockets;
+		Socket					_transferSocket;
 		
-		void					initAttributes(void);
+		void					initAttributes(int);
 		void					setEventStatus(struct epoll_event&, int);
 	public:
-								Server(const ServerConfig&);
+								Server(const ServerConfig&, size_t);
 								~Server(void);
 
 		int						getID(void);
-		std::vector<int>&		getSocketsFDs();
-		bool					getIsSocketOwner(void);
+		std::vector<Socket>&	getListeningSockets(void);
 		std::map<int, Client>&	getClients(void);
 		int						getTimeOut(void);
 		std::vector<int>		getMarkedForEraseClients();
+		Socket&					getTransferSocket(void);
 
 		void					setPort(std::vector<int>);
 		void 					setEPFD(int );
