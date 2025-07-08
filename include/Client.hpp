@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/06 10:25:37 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/08 14:34:55 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,16 +19,12 @@
 #include <sys/epoll.h>
 #include "HttpRequest.hpp"
 #include "ConfigManager.hpp"
-
-#define INCOMING_DATA_ON true
-#define INCOMING_DATA_OFF false
-#define RESPONSESIZE 746 // Fixed size for the temp response
-#define BYTES_TO_SEND 1000
-
+#include "ServerManager.hpp"
+#include "Socket.hpp"
 
 class Client {
 	private:
-		int					_socketFD;
+		Socket				_socket; //
 		int					_serverSocketFD;
 		size_t				_readBytes;
 		std::string			_requestHolder;
@@ -45,10 +41,10 @@ class Client {
 
 	public:
 							Client(void);
-							Client(int fd, int socketFD);
+							Client(Socket, int);
 							
 		size_t				getReadBytes(void);
-		int					getFD();
+		Socket&				getSocket(); //
 		std::string			getRequest(void);
 		int					getServerSocketFD(void);
 		std::string&		getResponse(void);
