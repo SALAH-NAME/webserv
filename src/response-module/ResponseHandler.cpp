@@ -7,14 +7,17 @@ ResponseHandler::ResponseHandler(int sockfd, ServerConfig &server_conf) : conf(s
     loc_config = NULL;
     resource_path = "";
     require_cgi = false;
-    response_file = new File();
+    is_post = false;
+    target_file = new File();
 }
 
 std::string	ResponseHandler::GetResponseHeader(){return response_header;}
 
 std::string ResponseHandler::GetResponseBody(){return response_body;}
 
-File *ResponseHandler::GetResponseFilePtr(){return response_file;}
+File *ResponseHandler::GetTargetFilePtr(){return target_file;}
+
+bool ResponseHandler::IsPost(){return is_post;}
 
 int *ResponseHandler::GetCgiInPipe(){return (CgiObj.GetInPipe());}
 
@@ -28,8 +31,10 @@ void ResponseHandler::Run(Request &req)
     response_body = "";
     resource_path = "";
     require_cgi = false;
+    is_post = false;
     loc_config = NULL;
-    response_file = new File();
+    delete target_file;
+    target_file = NULL;
     try {
         ProccessRequest(req);
     }
@@ -86,8 +91,9 @@ void ResponseHandler::ProccessHttpPOST(Request &req)
         throw ("HTTP/1.1 409 Conflict", 409);
     if (req.getPath()[req.getPath().size() - 1] == '/')
         throw ("HTTP/1.1 403 Forbidden", 403);
-
-    //create the file with the same name as the full path and use the body of the request as it's content
+    SetResponseHeader(req, "HTTP/1.1 200 OK", -1);
+    *target_file = File(resource_path.c_str(), O_CREAT | O_WRONLY, 0644);
+    is_post = true;
 }
 
 void ResponseHandler::ProccessHttpDELETE(Request &req)
@@ -96,9 +102,9 @@ void ResponseHandler::ProccessHttpDELETE(Request &req)
         throw("HTTP/1.1 403 Forbidden");
     if (std::remove(resource_path.c_str()) == -1)
         throw("HTTP/1.1 500 Internal Server Error");
-    SetResponseHeader(req, "HTTP/1.1 200 OK", 0);
+    SetResponseHeader(req, "HTTP/1.1 200 OK", -1);
 }
 
 ResponseHandler::~ResponseHandler(){
-    delete response_file;
+    delete target_file;
 }
