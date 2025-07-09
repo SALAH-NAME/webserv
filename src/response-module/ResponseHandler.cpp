@@ -33,7 +33,7 @@ void ResponseHandler::Run(Request &req)
     is_post = false;
     loc_config = NULL;
     delete target_file;
-    target_file = NULL;
+    target_file = new std::fstream();
     try {
         ProccessRequest(req);
     }
