@@ -9,16 +9,23 @@
 #include "Environment.hpp"
 #include "ServerConfig.hpp"
 
+// Max header name length: 256 bytes
+// Max header value length: 4KB 
+// Max total headers size: 8KB
+// Max number of headers: 100
+
 class ResponseHandler;
 
-class CgiHandler{// a class made to abstract working with the cgi
+class CgiHandler{
 	private:
 		bool		is_POST;
-		Pipe		output_pipe;// used to pass data from cgi to server
-		Pipe		input_pipe;// used to pass data from server to cgi (pass the body of a POST req)
+		Pipe		output_pipe;
+		Pipe		input_pipe;
 		Environment	env;
 		int			child_pid;
-		std::time_t	exec_t0;// time passed since epoch to the time of execution
+		std::time_t	exec_t0;
+		void	SetCgiChildFileDescriptors();
+		void	SetCgiEnvironment(Request	&http_req, ServerConfig &conf);
 
 	public:
 		CgiHandler();

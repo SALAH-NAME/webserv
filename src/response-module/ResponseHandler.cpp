@@ -19,9 +19,9 @@ File *ResponseHandler::GetTargetFilePtr(){return target_file;}
 
 bool ResponseHandler::IsPost(){return is_post;}
 
-int *ResponseHandler::GetCgiInPipe(){return (CgiObj.GetInPipe());}
+Pipe &ResponseHandler::GetCgiInPipe(){return (CgiObj.GetInPipe());}
 
-int *ResponseHandler::GetCgiOutPipe(){return (CgiObj.GetOutPipe());}
+Pipe &ResponseHandler::GetCgiOutPipe(){return (CgiObj.GetOutPipe());}
 
 pid_t ResponseHandler::GetCgiChildPid(){return (CgiObj.GetChildPid());}
 

@@ -16,7 +16,7 @@
 #include "File.hpp"
 
 typedef const std::map<std::string, LocationConfig> LOCATIONS;
-typedef std::map<std::string, std::vector<std::string>> STRINGS_MAP;
+typedef std::map<std::string, std::vector<std::string> > STRINGS_MAP;
 
 #define CRLF "\r\n"
 #define SRV_NAME "Ed, Edd n Eddy/1.0"//or use webserv instead
@@ -34,7 +34,7 @@ class ResponseHandler
 		STRINGS_MAP				content_types;
 		std::string				response_body;
 		LocationConfig const	*loc_config;
-		File					*target_file;
+		File					*target_file;//use streams instead
 	
 		void		CheckForInitialErrors(Request &req);
 		void		ProccessRequest(Request &req);
@@ -58,8 +58,9 @@ class ResponseHandler
 		void		LoadErrorPage(const std::string &status_line, int status_code, Request &req);
 		void 		Run(Request &req);
 		bool		IsPost();		
-		int			*GetCgiInPipe();
-		int			*GetCgiOutPipe();
+		void 		Run(Request &req);			
+		Pipe 		&GetCgiInPipe();
+		Pipe 		&GetCgiOutPipe();
 		std::string	GetResponseHeader();
 		std::string GetResponseBody();
 		File		*GetTargetFilePtr();
@@ -74,7 +75,7 @@ class ResponseHandler
 			public:
 				int getStatusCode();
 				ResponseHandlerError(const std::string &Errmsg, int statusCode);
-				const char *what() noexcept;
+				const char *what() throw();
 		};
 };
 
