@@ -42,5 +42,7 @@ void	ResponseHandler::LoadStaticFile(Request &req, const std::string &file_path)
 	if (stat(file_path.c_str(), &path_info) != 0)
 		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
 	SetResponseHeader(req, "HTTP/1.1 200 OK", path_info.st_size);
-	*target_file = File(file_path.c_str(), O_RDONLY, 0);
+	target_file->open(resource_path.c_str(), std::ios::in);
+    if (!target_file->is_open())
+        throw(ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
 }

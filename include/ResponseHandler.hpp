@@ -9,14 +9,13 @@
 #include <algorithm>
 #include <sstream>
 #include <dirent.h>
-#include "Request.hpp"
+#include "../src/tmp/Request.hpp"//tem req
 #include "CgiHandler.hpp"
 #include "GlobalConfig.hpp"
 #include "ServerConfig.hpp"
-#include "File.hpp"
 
 typedef const std::map<std::string, LocationConfig> LOCATIONS;
-typedef std::map<std::string, std::vector<std::string>> STRINGS_MAP;
+typedef std::map<std::string, std::vector<std::string> > STRINGS_MAP;
 
 #define CRLF "\r\n"
 #define SRV_NAME "Ed, Edd n Eddy/1.0"//or use webserv instead
@@ -24,8 +23,7 @@ typedef std::map<std::string, std::vector<std::string>> STRINGS_MAP;
 class ResponseHandler 
 {
 	private:
-		int						socket_fd;
-		ServerConfig			&conf;
+		const ServerConfig		&conf;
 		std::string				response_header;
 		std::string 			resource_path;
 		bool					require_cgi;
@@ -34,7 +32,7 @@ class ResponseHandler
 		STRINGS_MAP				content_types;
 		std::string				response_body;
 		LocationConfig const	*loc_config;
-		File					*target_file;
+		std::fstream			*target_file;
 	
 		void		CheckForInitialErrors(Request &req);
 		void		ProccessRequest(Request &req);
@@ -54,16 +52,16 @@ class ResponseHandler
 			std::string location = "");
 			
 	public:
-		ResponseHandler(int sockfd, ServerConfig &server_conf);
-		void		LoadErrorPage(const std::string &status_line, int status_code, Request &req);
-		void 		Run(Request &req);
-		bool		IsPost();		
-		int			*GetCgiInPipe();
-		int			*GetCgiOutPipe();
-		std::string	GetResponseHeader();
-		std::string GetResponseBody();
-		File		*GetTargetFilePtr();
-		pid_t		GetCgiChildPid();
+		ResponseHandler(const ServerConfig &server_conf);
+		void			LoadErrorPage(const std::string &status_line, int status_code, Request &req);
+		void 			Run(Request &req);
+		bool			IsPost();		
+		int				*GetCgiInPipe();
+		int				*GetCgiOutPipe();
+		std::string		GetResponseHeader();
+		std::string 	GetResponseBody();
+		std::fstream	*GetTargetFilePtr();
+		pid_t			GetCgiChildPid();
 		~ResponseHandler();
 
 		class ResponseHandlerError : std::exception
@@ -74,7 +72,8 @@ class ResponseHandler
 			public:
 				int getStatusCode();
 				ResponseHandlerError(const std::string &Errmsg, int statusCode);
-				const char *what() noexcept;
+				const char *what() throw();
+				~ResponseHandlerError() throw();
 		};
 };
 

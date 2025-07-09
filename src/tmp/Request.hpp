@@ -17,6 +17,7 @@ class Request
 		std::string content_length;
 		std::map<std::string, std::string> headers;//exclude content-type and content-length
     public:
+        Request();
         void set_method(const std::string &method);
         void set_path(const std::string &path);
         void set_http_version(const std::string &http_version);
@@ -24,10 +25,6 @@ class Request
         void set_query_string(const std::string &query_string);
         void set_content_type(const std::string &content_type);
         void set_content_length(const std::string &content_length);
-        void set_server_name(const std::string &server_name);
-        void set_server_port(int server_port);
-        void set_client_addrs(const std::string &client_addrs);
-        void set_client_port(int client_port);
         void set_headers(const std::map<std::string, std::string> &headers);
         void set_cgi_required(bool cgi_required);
 

@@ -1,5 +1,4 @@
 #include "CgiHandler.hpp"
-#include "Request.hpp"
 
 std::string NumtoString(int num){
 	std::stringstream ss;
@@ -17,7 +16,7 @@ void	set_fds(bool is_POST, int *in_pipe, int *out_pipe)
 	}
 }
 
-void	prepare_cgi_env(Request	&http_req, Environment &my_env, ServerConfig &conf)//adding data fetched from the request into the env object
+void	prepare_cgi_env(Request	&http_req, Environment &my_env, const ServerConfig &conf)//adding data fetched from the request into the env object
 {
 	my_env.Add("GATEWAY_INTERFACE=", "CGI/1.1");
 	my_env.Add("REQUEST_METHOD=", http_req.getMethod());
@@ -58,7 +57,7 @@ int	*CgiHandler::GetOutPipe(){return output_pipe;}
 
 int	*CgiHandler::GetInPipe(){return input_pipe;}
 
-void CgiHandler::RunCgi(Request &current_req, ServerConfig &conf,
+void CgiHandler::RunCgi(Request &current_req, const ServerConfig &conf,
 				const LocationConfig &cgi_conf, std::string &script_path)
 {
 	int 	id;
