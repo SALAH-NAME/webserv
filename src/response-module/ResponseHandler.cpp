@@ -1,21 +1,20 @@
 #include "ResponseHandler.hpp"
 
-ResponseHandler::ResponseHandler(int sockfd, ServerConfig &server_conf) : conf(server_conf)
+ResponseHandler::ResponseHandler(const ServerConfig &server_conf) : conf(server_conf)
 {
     InitializeStandardContentTypes();
-    socket_fd = sockfd;
     loc_config = NULL;
     resource_path = "";
     require_cgi = false;
     is_post = false;
-    target_file = new File();
+    target_file = new std::fstream();
 }
 
 std::string	ResponseHandler::GetResponseHeader(){return response_header;}
 
 std::string ResponseHandler::GetResponseBody(){return response_body;}
 
-File *ResponseHandler::GetTargetFilePtr(){return target_file;}
+std::fstream *ResponseHandler::GetTargetFilePtr(){return target_file;}
 
 bool ResponseHandler::IsPost(){return is_post;}
 
@@ -88,11 +87,13 @@ void ResponseHandler::ProccessHttpPOST(Request &req)
     if (require_cgi)
         CgiObj.RunCgi(req, conf, *loc_config, resource_path);
     if (access(resource_path.c_str(), F_OK))
-        throw ("HTTP/1.1 409 Conflict", 409);
+        throw (ResponseHandlerError("HTTP/1.1 409 Conflict", 409));
     if (req.getPath()[req.getPath().size() - 1] == '/')
-        throw ("HTTP/1.1 403 Forbidden", 403);
+        throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
     SetResponseHeader(req, "HTTP/1.1 200 OK", -1);
-    *target_file = File(resource_path.c_str(), O_CREAT | O_WRONLY, 0644);
+    target_file->open(resource_path.c_str(), std::ios::out);
+    if (!target_file->is_open())
+        throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
     is_post = true;
 }
 

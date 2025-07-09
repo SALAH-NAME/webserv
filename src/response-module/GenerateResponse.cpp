@@ -17,7 +17,7 @@ std::string GetFormattedEntryInfo(std::string name, const std::string &time_stam
 }
 
 void ResponseHandler::SetResponseHeader(Request &req, const std::string &status_line, int len,
-        std::string location = "")
+        std::string location)
 {
     struct stat path_info;
 

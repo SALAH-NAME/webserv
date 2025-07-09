@@ -26,6 +26,7 @@ bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_lo
             return (true);
         }
     }
+    return (false);
 }
 
 bool locationMatched(const std::string &req_path, const LocationConfig &locationConf,

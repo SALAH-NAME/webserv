@@ -7,7 +7,7 @@ void ResponseHandler::CheckForInitialErrors(Request &req)
     if (req.getHeaders().find("Host") == req.getHeaders().end())// a request with no host header
         throw (ResponseHandlerError("HTTP/1.1 400 Bad Request", 400));
     try {stringToHttpMethod(req.getMethod());}
-    catch (std::invalid_argument){//    using a method other than GET, POST and DELETE 
+    catch (std::invalid_argument &ex){//    using a method other than GET, POST and DELETE 
         throw (ResponseHandlerError("HTTP/1.1 405 Not Allowed", 405));}
 }
 
@@ -31,10 +31,12 @@ void	ResponseHandler::LoadErrorPage(const std::string &status_line, int status_c
 		LoadStaticFile(req, error_page);
 }
 
-ResponseHandler::ResponseHandlerError::ResponseHandlerError(const std::string &Errmsg, int statusCode)
-    : error(Errmsg) , status_code(statusCode){}
+ResponseHandler::ResponseHandlerError::ResponseHandlerError(const std::string &Errmsg, int statusCode) : error(Errmsg){
+	status_code =statusCode;
+}
 
-const char *ResponseHandler::ResponseHandlerError::what(){return error.c_str();}
+const char *ResponseHandler::ResponseHandlerError::what()throw() {return error.c_str();}
 
 int ResponseHandler::ResponseHandlerError::getStatusCode(){return status_code;}
 
+ResponseHandler::ResponseHandlerError::~ResponseHandlerError() throw(){}
