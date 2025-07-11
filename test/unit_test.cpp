@@ -2,11 +2,13 @@
 #include <string>
 #include <vector>
 #include "SharedPtr.hpp"
+#include "HttpRequest.hpp"
 
 void testAllTokenizer();
 void testConfigPrint();
 void testSharedPtr();
 void testSocket();
+void testHttpRequestParse();
 
 typedef void (*TestFunction)();
 
@@ -30,7 +32,7 @@ int displayMenu(const std::vector<Test>& tests)
 	for (size_t i = 0; i < tests.size(); ++i)
 		std::cout << i + 1 << ". " << tests[i].name << std::endl;
 
-	std::cout << (tests.size() + 1) << ".Run all tests" << std::endl;
+	std::cout << (tests.size() + 1) << ". Run all tests" << std::endl;
 	std::cout << "0. Exit" << std::endl;
 
 	int choice;
@@ -47,6 +49,7 @@ std::vector<Test> buildTests()
 	addTest(tests, "testConfigPrint", testConfigPrint);
 	addTest(tests, "testSharedPtr", testSharedPtr);
 	addTest(tests, "testSocket", testSocket);
+	addTest(tests, "testHttpRequestParse", testHttpRequestParse);
 
 	return tests;
 }

@@ -1,6 +1,6 @@
 #include "ResponseHandler.hpp"
 
-bool ResponseHandler::NeedToRedirect(Request &req){
+bool ResponseHandler::NeedToRedirect(HttpRequest &req){
     return ((IsDir(resource_path.c_str()) &&
         req.getPath()[req.getPath().size()-1] != '/')||
             loc_config->getRedirect().isValid());

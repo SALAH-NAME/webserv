@@ -1,6 +1,6 @@
 #include "ResponseHandler.hpp"
 
-void ResponseHandler::CheckForInitialErrors(Request &req)
+void ResponseHandler::CheckForInitialErrors(HttpRequest &req)
 {
 	if (req.getHttpVersion() != "HTTP/1.1")// using a different http version
         throw (ResponseHandlerError("HTTP/1.1 505 HTTP Version Not Supported", 505));
@@ -11,7 +11,7 @@ void ResponseHandler::CheckForInitialErrors(Request &req)
         throw (ResponseHandlerError("HTTP/1.1 405 Not Allowed", 405));}
 }
 
-void	ResponseHandler::GenerateErrorPage(const std::string &status_line, Request &req)
+void	ResponseHandler::GenerateErrorPage(const std::string &status_line, HttpRequest &req)
 {
 	response_body =
 		"<html>\n<head><title>"+ status_line +"</title></head>\n"
@@ -21,7 +21,7 @@ void	ResponseHandler::GenerateErrorPage(const std::string &status_line, Request 
 	SetResponseHeader(req, status_line, response_body.size());
 }
 
-void	ResponseHandler::LoadErrorPage(const std::string &status_line, int status_code, Request &req)
+void	ResponseHandler::LoadErrorPage(const std::string &status_line, int status_code, HttpRequest &req)
 {
 	std::string error_page = conf.getErrorPage(status_code);
 	

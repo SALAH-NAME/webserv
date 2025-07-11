@@ -28,7 +28,7 @@ UNIT_SRCS := $(filter-out server-module/main.cpp main.cpp, $(SRCS))
 
 TEST_SRCS := unit_test.cpp \
 						 testTokenizer.cpp testConfigPrint.cpp \
-						 testSharedPtr.cpp testSocket.cpp
+						 testSharedPtr.cpp testSocket.cpp testHttpRequestParse.cpp
 
 UNIT_OBJS := $(addprefix $(OBJ_DIR)/, $(UNIT_SRCS:.cpp=.o)) $(addprefix $(OBJ_DIR)/, $(TEST_SRCS:.cpp=.o))
 UNIT_DEPS := $(UNIT_OBJS:.o=.d)

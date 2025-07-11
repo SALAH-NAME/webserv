@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <sstream>
 #include <dirent.h>
-#include "../src/tmp/Request.hpp"//tem req
+#include "HttpRequest.hpp"
 #include "CgiHandler.hpp"
 #include "GlobalConfig.hpp"
 #include "ServerConfig.hpp"
@@ -34,27 +34,27 @@ class ResponseHandler
 		LocationConfig const	*loc_config;
 		std::fstream			*target_file;
 	
-		void		CheckForInitialErrors(Request &req);
-		void		ProccessRequest(Request &req);
+		void		CheckForInitialErrors(HttpRequest &req);
+		void		ProccessRequest(HttpRequest &req);
 		void 		RouteResolver(const std::string &path, const std::string &method);
 		bool 		CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations);
 		void 		InitializeStandardContentTypes();
-		void 		ProccessHttpGET(Request &req);
-		void 		ProccessHttpPOST(Request &req);
-		void 		ProccessHttpDELETE(Request &req);
+		void 		ProccessHttpGET(HttpRequest &req);
+		void 		ProccessHttpPOST(HttpRequest &req);
+		void 		ProccessHttpDELETE(HttpRequest &req);
 		std::string GenerateContentType(const std::string file_extension);
-		void		LoadStaticFile(Request &req, const std::string &file_path);
-		void 		GenerateDirListing(Request &req);
-		bool 		NeedToRedirect(Request &req);
-		void 		GenerateRedirection(Request &Req);
-		void		GenerateErrorPage(const std::string &status_line, Request &req);
-		void 		SetResponseHeader(Request &req, const std::string &status_line, int len,
+		void		LoadStaticFile(HttpRequest &req, const std::string &file_path);
+		void 		GenerateDirListing(HttpRequest &req);
+		bool 		NeedToRedirect(HttpRequest &req);
+		void 		GenerateRedirection(HttpRequest &Req);
+		void		GenerateErrorPage(const std::string &status_line, HttpRequest &req);
+		void 		SetResponseHeader(HttpRequest &req, const std::string &status_line, int len,
 			std::string location = "");
 			
 	public:
 		ResponseHandler(const ServerConfig &server_conf);
-		void			LoadErrorPage(const std::string &status_line, int status_code, Request &req);
-		void 			Run(Request &req);
+		void			LoadErrorPage(const std::string &status_line, int status_code, HttpRequest &req);
+		void 			Run(HttpRequest &req);
 		bool			IsPost();		
 		int				*GetCgiInPipe();
 		int				*GetCgiOutPipe();

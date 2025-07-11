@@ -34,7 +34,7 @@ std::string ResponseHandler::GenerateContentType(std::string extension)
     return default_type;
 }
 
-void	ResponseHandler::LoadStaticFile(Request &req, const std::string &file_path)
+void	ResponseHandler::LoadStaticFile(HttpRequest &req, const std::string &file_path)
 {
     struct stat path_info;
 

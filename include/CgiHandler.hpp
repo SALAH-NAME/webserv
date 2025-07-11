@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <ctime>
-#include "../src/tmp/Request.hpp"
+#include "HttpRequest.hpp"
 #include "Environment.hpp"
 #include "ServerConfig.hpp"
 
@@ -19,7 +19,7 @@ class CgiHandler{// a class made to abstract working with the cgi
 
 	public:
 		CgiHandler();
-		void RunCgi(Request &current_req, const ServerConfig &conf,
+		void RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 					const LocationConfig &cgi_conf, std::string &script_path);
 		pid_t GetChildPid();
 		int *GetInPipe();

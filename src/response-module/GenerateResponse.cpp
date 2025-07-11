@@ -16,7 +16,7 @@ std::string GetFormattedEntryInfo(std::string name, const std::string &time_stam
     return (ss.str());
 }
 
-void ResponseHandler::SetResponseHeader(Request &req, const std::string &status_line, int len,
+void ResponseHandler::SetResponseHeader(HttpRequest &req, const std::string &status_line, int len,
         std::string location)
 {
     struct stat path_info;
@@ -31,7 +31,7 @@ void ResponseHandler::SetResponseHeader(Request &req, const std::string &status_
     response_header += location + std::string(CRLF) + std::string(CRLF);
 }
 
-void    ResponseHandler::GenerateDirListing(Request &req)
+void    ResponseHandler::GenerateDirListing(HttpRequest &req)
 {
     DIR                         *dir;
     std::vector<std::string>    dir_entries;
@@ -63,7 +63,7 @@ void    ResponseHandler::GenerateDirListing(Request &req)
     SetResponseHeader(req, "HTTP/1.1 200 OK", response_body.size());
 }
 
-void ResponseHandler::GenerateRedirection(Request &req)
+void ResponseHandler::GenerateRedirection(HttpRequest &req)
 {
     std::string status_code = NumtoString(301);
     std::string location;
