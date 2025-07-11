@@ -1,0 +1,19 @@
+=== RESPONSE HEADER ===
+HTTP/1.1 200 OK
+server: Ed, Edd n Eddy/1.0
+Date: Fri, 11 Jul 2025 21:04:40 GMT
+Content-Type: text/html
+Content-Length: 552
+
+
+<html>
+	<head><title>Index of /</title></head>
+	<body>
+		<h1>Index of /</h1><hr>
+		<pre>
+<a href="..">..</a>                                                 11-Jul-2025 21:04                4096
+<a href="error">error</a>                                              11-Jul-2025 18:39                4096
+<a href="index.htm">index.htm</a>                                          11-Jul-2025 13:12                 144
+<a href="media">media</a>                                              11-Jul-2025 18:39                4096</pre><hr>
+	</body>
+</html>

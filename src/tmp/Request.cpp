@@ -5,7 +5,7 @@ Request::Request(){return ;}
 
 void   Request::set_method(const std::string &method){this->method = method;}
 void   Request::set_path(const std::string &path){this->path = path;}
-void   Request::set_http_version(const std::string &http_version){this->http_version = http_version;}
+void   Request::set_http_version(const std::string &http_v){http_version = http_v;}
 void   Request::set_path_info(const std::string &path_info){this->path_info = path_info;}
 void   Request::set_query_string(const std::string &query_string){this->query_string = query_string;}
 void   Request::set_content_type(const std::string &content_type){this->content_type = content_type;}

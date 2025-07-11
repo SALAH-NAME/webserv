@@ -11,24 +11,24 @@ void ResponseHandler::CheckForInitialErrors(Request &req)
         throw (ResponseHandlerError("HTTP/1.1 405 Not Allowed", 405));}
 }
 
-void	ResponseHandler::GenerateErrorPage(const std::string &status_line, Request &req)
+void	ResponseHandler::GenerateErrorPage(const std::string &status_line)
 {
 	response_body =
 		"<html>\n<head><title>"+ status_line +"</title></head>\n"
 		"<body>\n<center><h1>"+ status_line +"</h1></center>\n"
 		"<hr><center>"+ SRV_NAME +"</center>\n"
 		"</body>\n</html>\n";
-	SetResponseHeader(req, status_line, response_body.size());
+	SetResponseHeader(status_line, response_body.size(), false);
 }
 
-void	ResponseHandler::LoadErrorPage(const std::string &status_line, int status_code, Request &req)
+void	ResponseHandler::LoadErrorPage(const std::string &status_line, int status_code)
 {
 	std::string error_page = conf.getErrorPage(status_code);
 	
 	if (error_page == "" || access(error_page.c_str(), R_OK) != 0)
-		GenerateErrorPage(status_line, req);
+		GenerateErrorPage(status_line);
 	else
-		LoadStaticFile(req, error_page);
+		LoadStaticFile(error_page, status_line);
 }
 
 ResponseHandler::ResponseHandlerError::ResponseHandlerError(const std::string &Errmsg, int statusCode) : error(Errmsg){

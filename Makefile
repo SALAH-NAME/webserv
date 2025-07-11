@@ -15,7 +15,11 @@ SRCS := server-module/main.cpp \
 		server-module/ServerManager.cpp server-module/Server.cpp server-module/EventHandler.cpp \
 		server-module/ReceiveRequests.cpp server-module/Client.cpp \
 		server-module/SendResponse.cpp server-module/HttpRequest.cpp \
-		raii-module/Socket.cpp raii-module/File.cpp raii-module/Pipe.cpp
+		raii-module/Socket.cpp raii-module/File.cpp raii-module/Pipe.cpp \
+		cgi-module/CgiHandler.cpp cgi-module/Environment.cpp \
+		response-module/ResponseHandler.cpp response-module/GenerateResponse.cpp \
+		response-module/ResponseUtil.cpp response-module/HttpErrors.cpp \
+		response-module/ServerRouting.cpp response-module/StaticFiles.cpp
 
 OBJS := $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
 DEPS := $(OBJS:.o=.d)

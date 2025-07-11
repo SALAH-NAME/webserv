@@ -44,7 +44,6 @@ bool locationMatched(const std::string &req_path, const LocationConfig &location
         if (loc_part != req_part)
             return false;//route didn't match with the request path
     }
-    std::getline(req_path_ss, req_part);
     testing_path = locationConf.getRoot() + "/" + (method != "POST" ? req_part : ""); // appending the req_part to the config root if not POST
     if (access(testing_path.c_str(), F_OK)){// checks if the resulting path exists
         current_path = locationConf.getRoot() + "/" + req_part;
@@ -56,6 +55,12 @@ bool locationMatched(const std::string &req_path, const LocationConfig &location
 void ResponseHandler::RouteResolver(const std::string &req_path, const std::string &method)
 {
     LOCATIONS   &srv_locations = conf.getLocations();
+    if (req_path == "/" && srv_locations.find("/") != srv_locations.end())
+    {
+        resource_path = srv_locations.at("/").getRoot();
+        loc_config = &srv_locations.at("/");
+        return;
+    }
     if (method != "DELETE" && CheckForCgi(req_path, srv_locations))
         return ;
     std::string current_resource_path;//    will be setted by 'locationMatched' each time a route is validated and is longer than prev value
@@ -63,8 +68,10 @@ void ResponseHandler::RouteResolver(const std::string &req_path, const std::stri
         loc_config = &srv_locations.at("/");//   if the path matches with the '/' location the full path will be used (it may be changed later in the code)
     for (LOCATIONS::const_iterator it = srv_locations.begin(); it != srv_locations.end();it++)
     {
+        std::cout << "log: checking "+ it->first << std::endl;
         if (locationMatched(req_path, it->second, current_resource_path, method) &&
-            (loc_config || loc_config->getPath().size() < it->second.getPath().size())){
+            (!loc_config || loc_config->getPath().size() < it->second.getPath().size())){
+            std::cout << "log: matched with " + it->first << std::endl;
             loc_config = &it->second;//     update if the new route is longer
             resource_path = current_resource_path;
         }

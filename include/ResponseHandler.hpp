@@ -39,21 +39,23 @@ class ResponseHandler
 		void 		RouteResolver(const std::string &path, const std::string &method);
 		bool 		CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations);
 		void 		InitializeStandardContentTypes();
+		void	    HandleDirRequest(Request &req);
 		void 		ProccessHttpGET(Request &req);
 		void 		ProccessHttpPOST(Request &req);
-		void 		ProccessHttpDELETE(Request &req);
+		void 		ProccessHttpDELETE();
 		std::string GenerateContentType(const std::string file_extension);
-		void		LoadStaticFile(Request &req, const std::string &file_path);
+		void		LoadStaticFile(const std::string &file_path,
+						const std::string &status_line = "HTTP/1.1 200 OK");
 		void 		GenerateDirListing(Request &req);
 		bool 		NeedToRedirect(Request &req);
 		void 		GenerateRedirection(Request &Req);
-		void		GenerateErrorPage(const std::string &status_line, Request &req);
-		void 		SetResponseHeader(Request &req, const std::string &status_line, int len,
-			std::string location = "");
+		void		GenerateErrorPage(const std::string &status_line);
+		void 		SetResponseHeader(const std::string &status_line, int len,
+						bool is_static, std::string location = "");
 			
 	public:
 		ResponseHandler(const ServerConfig &server_conf);
-		void			LoadErrorPage(const std::string &status_line, int status_code, Request &req);
+		void			LoadErrorPage(const std::string &status_line, int status_code);
 		void 			Run(Request &req);
 		bool			IsPost();		
 		int				*GetCgiInPipe();
