@@ -4,9 +4,9 @@ std::string test5()
 {
 	/*
 		 URL /kapouet
-			is rooted to /home/midbella/Desktop/webserv/src/tmp/www/,
+			is rooted to /home/midbella/Desktop/webserv/src/local-tmp/www/,
 			URL /kapouet/pouic/toto/pouet will search for
-			/home/midbella/Desktop/webserv/src/tmp/www/pouic/toto/pouet
+			/home/midbella/Desktop/webserv/src/local-tmp/www/pouic/toto/pouet
 	*/
 	std::stringstream ss;
 	Request req;
