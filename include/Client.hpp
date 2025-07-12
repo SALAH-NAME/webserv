@@ -6,7 +6,7 @@
 /*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/11 20:18:40 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/12 08:50:14 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ class Client {
 		int					_availableResponseBytes;
 		int					_responseSize;
 
-		bool					_requestIsValid;
+		bool					_generateInProcess;
 
 	public:
 							Client(void);
@@ -56,7 +56,7 @@ class Client {
 		bool				getIsKeepAlive(void);
 		size_t				getSentBytes(void);
 		int					getBytesToSendNow(void);
-		bool				getRequestIsValid(void); //
+		bool				getGenerateInProcess(void); //
 
 		void				setReadBytes(size_t);
 		void				appendToRequest(const std::string& requestData);
@@ -69,7 +69,7 @@ class Client {
 		void				setSentBytes(size_t bytes);
 		void				resetSendBytes(void);
 		void				setIncomingDataDetected(int mode);
-		void				setRequestIsValid(bool); //
+		void				setGenerateInProcess(bool); //
 
 		void				clearRequestHolder(void);
 		bool				parseRequest(void);

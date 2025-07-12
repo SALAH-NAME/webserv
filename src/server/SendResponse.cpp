@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   SendResponse.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
+/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/07/08 14:26:56 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/12 08:54:25 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ static void	finalizeRequestHandling(Server& server, Client& client, int sentByte
 		if (!client.getIsKeepAlive()) {
 			server.closeConnection(client.getSocket().getFd());
 		}
-		// std::cout << "    ===> sent response <<=== \n";
+		// std::cout << "    ===> sent response to " << client.getSocket().getFd() << " <<=== \n";
 	}
 }
 

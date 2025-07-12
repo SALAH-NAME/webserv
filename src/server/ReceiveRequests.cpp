@@ -6,7 +6,7 @@
 /*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/11 20:36:43 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/12 08:55:24 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 
 	try {
 		readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ);
+		// std::cout << "read bytes ==> " << readbytes << " from : " << client.getSocket().getFd() << "\n";
 		
 		if (readbytes > 0) {
 			client.appendToRequest(std::string(_buffer, readbytes));
@@ -29,11 +30,11 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 
 			if (client.getRequest().find(_2CRLF) != std::string::npos) {
 				// std::cout << "   ====>> request is comleted <<=====\n";
-				// printRequet(client.getRequest());
+				// printRequet(client.getRequest());exit(0);
 				if (client.parseRequest()) {
 					// client.prinfRequestinfos();exit(0);
 					client.setIncomingDataDetected(INCOMING_DATA_OFF);
-					client.setRequestIsValid(GENERATE_RESPONSE_ON);
+					client.setGenerateInProcess(GENERATE_RESPONSE_ON);
 				}
 				else
 					_servers[serverIndex].closeConnection(clientSocket);

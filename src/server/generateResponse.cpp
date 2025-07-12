@@ -3,10 +3,13 @@
 void	ServerManager::generatResponses(int serverIndex) {
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->second.getRequestIsValid() == GENERATE_RESPONSE_OFF)
+		Client& client = it->second;
+		if (client.getGenerateInProcess() == GENERATE_RESPONSE_OFF)
 			continue ;
 
-		it->second.setResponseInFlight(true);
+		client.setResponseInFlight(true);
+		client.setGenerateInProcess(GENERATE_RESPONSE_OFF);
+		// client.prinfRequestinfos();exit(0);
 	}
 
 }
