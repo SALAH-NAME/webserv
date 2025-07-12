@@ -15,31 +15,22 @@ Socket::Socket(int fd) : _fd(fd), _ownsFd(true)
 		throw std::runtime_error("Invalid file descriptor");
 }
 
-Socket::Socket(const Socket& other) : _fd(-1), _ownsFd(false)
+Socket::Socket(const Socket& other) : _fd(other._fd), _ownsFd(other._ownsFd)
 {
-	if (other._fd >= 0 && other._ownsFd)
-	{
-		_fd = dup(other._fd);
-		if (_fd < 0)
-			throw std::runtime_error(std::string("Failed to duplicate socket in copy constructor: ") + strerror(errno));
-		_ownsFd = true;
-	}
+    const_cast<Socket&>(other)._fd = -1;
+    const_cast<Socket&>(other)._ownsFd = false;
 }
 
 Socket& Socket::operator=(const Socket& other)
 {
-	if (this != &other)
-	{
-		close();
-		if (other._fd >= 0 && other._ownsFd)
-		{
-			_fd = dup(other._fd);
-			if (_fd < 0)
-				throw std::runtime_error(std::string("Failed to duplicate socket in assignment: ") + strerror(errno));
-			_ownsFd = true;
-		}
-	}
-	return *this;
+    if (this != &other) {
+        close();
+        _fd = other._fd;
+        _ownsFd = other._ownsFd;
+        const_cast<Socket&>(other)._fd = -1;
+        const_cast<Socket&>(other)._ownsFd = false;
+    }
+    return *this;
 }
 
 Socket::~Socket()
@@ -82,8 +73,12 @@ Socket Socket::accept(struct sockaddr* addr, socklen_t* addrlen)
 	if (_fd < 0)
 		throw std::runtime_error("Socket not initialized");
 	int clientFd = ::accept(_fd, addr, addrlen);
-	if (clientFd < 0)
+	if (clientFd < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			throw "No more pending connections";
+		}
 		throw std::runtime_error(std::string("Failed to accept connection: ") + strerror(errno));
+	}
 	return Socket(clientFd);
 }
 

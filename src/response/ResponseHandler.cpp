@@ -24,7 +24,7 @@ int *ResponseHandler::GetCgiOutPipe(){return (CgiObj.GetOutPipe());}
 
 pid_t ResponseHandler::GetCgiChildPid(){return (CgiObj.GetChildPid());}
 
-void ResponseHandler::Run(Request &req)
+void ResponseHandler::Run(HttpRequest &req)
 {
     response_header = "";
     response_body = "";
@@ -43,7 +43,7 @@ void ResponseHandler::Run(Request &req)
     }
 }
 
-void ResponseHandler::ProccessRequest(Request &req)
+void ResponseHandler::ProccessRequest(HttpRequest &req)
 {
     CheckForInitialErrors(req);
     RouteResolver(req.getPath(), req.getMethod());//  set resource_path and loc_config
@@ -65,7 +65,7 @@ void ResponseHandler::ProccessRequest(Request &req)
     }
 }
 
-void    ResponseHandler::HandleDirRequest(Request &req)
+void    ResponseHandler::HandleDirRequest(HttpRequest &req)
 {
     const std::vector<std::string> &indexes = loc_config->getIndex();
     std::string current_path;
@@ -83,7 +83,7 @@ void    ResponseHandler::HandleDirRequest(Request &req)
         throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
 }
 
-void ResponseHandler::ProccessHttpGET(Request &req)
+void ResponseHandler::ProccessHttpGET(HttpRequest &req)
 {
     if (require_cgi)
         return (CgiObj.RunCgi(req, conf, *loc_config, resource_path));    
@@ -95,7 +95,7 @@ void ResponseHandler::ProccessHttpGET(Request &req)
     return (LoadStaticFile(resource_path));
 }
 
-void ResponseHandler::ProccessHttpPOST(Request &req)
+void ResponseHandler::ProccessHttpPOST(HttpRequest &req)
 {
     if (require_cgi)
         CgiObj.RunCgi(req, conf, *loc_config, resource_path);

@@ -3,7 +3,6 @@
 #include "ResponseHandler.hpp"
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
-#include "../Request.hpp"
 
 std::string test1();
 std::string test2();

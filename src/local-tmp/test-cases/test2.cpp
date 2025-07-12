@@ -6,11 +6,10 @@ std::string test2()
 		GET with path '/' and no index set + auto index off
 	*/
 	std::stringstream ss;
-	Request req;
-	req.set_method("GET");
-	req.set_path("/");
-	req.set_http_version("HTTP/1.1");
-	req.set_cgi_required(false);
+	HttpRequest req;
+	req.setMethod("GET");
+	req.setPath("/");
+	req.setVersion("HTTP/1.1");
 	req.getHeaders()["Host"] = "127.0.0.1";
 	std::string config_file = "test-cases/tests-conf/test2.conf";
 	ConfigManager config_manager(config_file);

@@ -16,13 +16,13 @@ private:
 
 public:
 	Socket();
-	explicit Socket(int fd);
-	Socket(const Socket& other);
-	Socket& operator=(const Socket& other);
-	~Socket();
-	operator int() const;
+    Socket(int fd);
+    Socket(const Socket& other); // ownership-transfer copy
+    Socket& operator=(const Socket& other); // ownership-transfer assignment
+    ~Socket();
+    operator int() const;
 
-	void create(int domain = AF_INET, int type = SOCK_STREAM, int protocol = 0);
+	void create(int domain = AF_INET, int type = SOCK_STREAM | SOCK_NONBLOCK, int protocol = 0); // Non-Blocking
 	void bind(const struct sockaddr* addr, socklen_t addrlen);
 	void listen(int backlog = SOMAXCONN);
 	Socket accept(struct sockaddr* addr = NULL, socklen_t* addreln = NULL);

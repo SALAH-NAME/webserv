@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/03 14:30:14 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/08 10:51:32 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,15 +18,16 @@
 
 Client::Client(void) {}
 
-Client::Client(int fd, int socketFD) : _socketFD(fd), _serverSocketFD(socketFD),
+Client::Client(Socket sock, int serverFD) : _socket(sock), _serverSocketFD(serverFD),
 											_readBytes(0), _timeOut(std::time(NULL)),
 											_incomingDataDetected(INCOMING_DATA_OFF),
 											_responseInFlight(false), _sentBytes(0),
 											_isKeepAlive(true),
-											_availableResponseBytes(RESPONSESIZE) {}
+											_availableResponseBytes(RESPONSESIZE)
+{}
 
-int			Client::getFD() {
-	return _socketFD;
+Socket&			Client::getSocket() {
+	return _socket;
 }
 											
 size_t	Client::getReadBytes(void) {

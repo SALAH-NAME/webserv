@@ -31,7 +31,7 @@ void ResponseHandler::SetResponseHeader(const std::string &status_line, int len,
     response_header += CRLF;
 }
 
-void    ResponseHandler::GenerateDirListing(Request &req)
+void    ResponseHandler::GenerateDirListing(HttpRequest &req)
 {
     DIR                         *dir;
     std::vector<std::string>    dir_entries;
@@ -64,7 +64,7 @@ void    ResponseHandler::GenerateDirListing(Request &req)
     free(dir); 
 }
 
-void ResponseHandler::GenerateRedirection(Request &req)
+void ResponseHandler::GenerateRedirection(HttpRequest &req)
 {
     std::string status_code = NumtoString(301);
     std::string location;

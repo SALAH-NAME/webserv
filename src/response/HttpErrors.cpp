@@ -1,8 +1,8 @@
 #include "ResponseHandler.hpp"
 
-void ResponseHandler::CheckForInitialErrors(Request &req)
+void ResponseHandler::CheckForInitialErrors(HttpRequest &req)
 {
-	if (req.getHttpVersion() != "HTTP/1.1")// using a different http version
+	if (req.getVersion() != "HTTP/1.1")// using a different http version
         throw (ResponseHandlerError("HTTP/1.1 505 HTTP Version Not Supported", 505));
     if (req.getHeaders().find("Host") == req.getHeaders().end())// a request with no host header
         throw (ResponseHandlerError("HTTP/1.1 400 Bad Request", 400));

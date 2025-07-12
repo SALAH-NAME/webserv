@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <sstream>
 #include <dirent.h>
-#include "../src/local-tmp/Request.hpp"//tem req
+#include "HttpRequest.hpp"
 #include "CgiHandler.hpp"
 #include "GlobalConfig.hpp"
 #include "ServerConfig.hpp"
@@ -34,21 +34,21 @@ class ResponseHandler
 		LocationConfig const	*loc_config;
 		std::fstream			*target_file;
 	
-		void		CheckForInitialErrors(Request &req);
-		void		ProccessRequest(Request &req);
+		void		CheckForInitialErrors(HttpRequest &req);
+		void		ProccessRequest(HttpRequest &req);
 		void 		RouteResolver(const std::string &path, const std::string &method);
 		bool 		CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations);
 		void 		InitializeStandardContentTypes();
-		void	    HandleDirRequest(Request &req);
-		void 		ProccessHttpGET(Request &req);
-		void 		ProccessHttpPOST(Request &req);
+		void	    HandleDirRequest(HttpRequest &req);
+		void 		ProccessHttpGET(HttpRequest &req);
+		void 		ProccessHttpPOST(HttpRequest &req);
 		void 		ProccessHttpDELETE();
 		std::string GenerateContentType(const std::string file_extension);
 		void		LoadStaticFile(const std::string &file_path,
 						const std::string &status_line = "HTTP/1.1 200 OK");
-		void 		GenerateDirListing(Request &req);
-		bool 		NeedToRedirect(Request &req);
-		void 		GenerateRedirection(Request &Req);
+		void 		GenerateDirListing(HttpRequest &req);
+		bool 		NeedToRedirect(HttpRequest &req);
+		void 		GenerateRedirection(HttpRequest &req);
 		void		GenerateErrorPage(const std::string &status_line);
 		void 		SetResponseHeader(const std::string &status_line, int len,
 						bool is_static, std::string location = "");
@@ -56,7 +56,7 @@ class ResponseHandler
 	public:
 		ResponseHandler(const ServerConfig &server_conf);
 		void			LoadErrorPage(const std::string &status_line, int status_code);
-		void 			Run(Request &req);
+		void 			Run(HttpRequest &req);
 		bool			IsPost();		
 		int				*GetCgiInPipe();
 		int				*GetCgiOutPipe();

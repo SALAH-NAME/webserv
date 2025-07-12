@@ -1,7 +1,6 @@
 #include "ResponseHandler.hpp"
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
-#include "Request.hpp"
 #include "test-cases/includeme.hpp"
 
 #define TESTS_NB 5

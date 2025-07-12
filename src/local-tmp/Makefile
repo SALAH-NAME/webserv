@@ -1,11 +1,11 @@
-CONF_SRC=$(shell find ../config-module -name "*.cpp")
-CGI_SRC=$(shell find ../cgi-module -name "*.cpp")
-RES_SRC=$(shell find ../response-module -name "*.cpp")
+CONF_SRC=$(shell find ../config -name "*.cpp")
+CGI_SRC=$(shell find ../cgi -name "*.cpp")
+RES_SRC=$(shell find ../response -name "*.cpp")
 Test_SRC=$(shell find test-cases -name "*.cpp")
 CPP_FLAGS = -Wall -Wextra -Werror -fsanitize=address -g3 -std=c++98 -I ../../include/
 
 OBJ_DIR = ../../obj
-ALL_SRCS = $(CONF_SRC) $(CGI_SRC) $(RES_SRC) $(Test_SRC) main.cpp Request.cpp
+ALL_SRCS = $(CONF_SRC) $(CGI_SRC) $(RES_SRC) $(Test_SRC) ../server/HttpRequest.cpp main.cpp
 
 OBJ = $(patsubst ../%.cpp,$(OBJ_DIR)/%.o,$(ALL_SRCS))
 

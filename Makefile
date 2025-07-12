@@ -7,15 +7,15 @@ DEPFLAGS := -MMD -MP
 
 SRC_DIR := src
 OBJ_DIR := obj
-
-SRCS := server-module/main.cpp \
-		config-module/ConfigTokenizer.cpp config-module/ConfigTypes.cpp config-module/BaseConfig.cpp \
-		config-module/GlobalConfig.cpp config-module/LocationConfig.cpp config-module/ServerConfig.cpp \
-		config-module/ConfigManager.cpp config-module/ConfigParser.cpp config-module/ConfigPrinter.cpp \
-		server-module/ServerManager.cpp server-module/Server.cpp server-module/EventHandler.cpp \
-		server-module/ReceiveRequests.cpp server-module/Client.cpp \
-		server-module/SendResponse.cpp server-module/HttpRequest.cpp \
-		raii-module/Socket.cpp raii-module/File.cpp raii-module/Pipe.cpp \
+		
+SRCS := main.cpp \
+		config/ConfigTokenizer.cpp config/ConfigTypes.cpp config/BaseConfig.cpp \
+		config/GlobalConfig.cpp config/LocationConfig.cpp config/ServerConfig.cpp \
+		config/ConfigManager.cpp config/ConfigParser.cpp config/ConfigPrinter.cpp \
+		server/ServerManager.cpp server/Server.cpp server/EventHandler.cpp \
+		server/ReceiveRequests.cpp server/Client.cpp \
+		server/SendResponse.cpp server/HttpRequest.cpp \
+		raii/Socket.cpp \
 		cgi-module/CgiHandler.cpp cgi-module/Environment.cpp \
 		response-module/ResponseHandler.cpp response-module/GenerateResponse.cpp \
 		response-module/ResponseUtil.cpp response-module/HttpErrors.cpp \
@@ -27,12 +27,12 @@ DEPS := $(OBJS:.o=.d)
 # UNIT_TEST
 UNIT_NAME := unit
 
-TEST_DIR := test
-UNIT_SRCS := $(filter-out server-module/main.cpp main.cpp, $(SRCS))
+TEST_DIR := tests
+UNIT_SRCS := $(filter-out server/main.cpp main.cpp, $(SRCS))
 
 TEST_SRCS := unit_test.cpp \
 						 testTokenizer.cpp testConfigPrint.cpp \
-						 testSharedPtr.cpp testSocket.cpp testFile.cpp testPipe.cpp
+						 testSharedPtr.cpp testSocket.cpp testHttpRequestParse.cpp
 
 UNIT_OBJS := $(addprefix $(OBJ_DIR)/, $(UNIT_SRCS:.cpp=.o)) $(addprefix $(OBJ_DIR)/, $(TEST_SRCS:.cpp=.o))
 UNIT_DEPS := $(UNIT_OBJS:.o=.d)

@@ -9,11 +9,10 @@ std::string test5()
 			/home/midbella/Desktop/webserv/src/local-tmp/www/pouic/toto/pouet
 	*/
 	std::stringstream ss;
-	Request req;
-	req.set_method("GET");
-	req.set_path("/kapouet/pouic/toto/pouet/");
-	req.set_http_version("HTTP/1.1");
-	req.set_cgi_required(false);
+	HttpRequest req;
+	req.setMethod("GET");
+	req.setPath("/kapouet/pouic/toto/pouet/");
+	req.setVersion("HTTP/1.1");
 	req.getHeaders()["Host"] = "127.0.0.1";
 	std::string config_file = "test-cases/tests-conf/test5.conf";
 	ConfigManager config_manager(config_file);
