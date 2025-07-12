@@ -39,14 +39,14 @@ void ResponseHandler::Run(HttpRequest &req)
     }
     catch (ResponseHandlerError &ex)
     {
-        LoadErrorPage(ex.what(), ex.getStatusCode(), req);
+        LoadErrorPage(ex.what(), ex.getStatusCode());
     }
 }
 
 void ResponseHandler::ProccessRequest(HttpRequest &req)
 {
     CheckForInitialErrors(req);
-    RouteResolver(req.getPath(), req.getMethod());//  set the resource_path and loc_config
+    RouteResolver(req.getPath(), req.getMethod());//  set resource_path and loc_config
     if (NeedToRedirect(req))
         return (GenerateRedirection(req));
     if (loc_config->getAllowedMethods().find(stringToHttpMethod(req.getMethod())) == loc_config->getAllowedMethods().end())
@@ -60,50 +60,63 @@ void ResponseHandler::ProccessRequest(HttpRequest &req)
             ProccessHttpPOST(req);
             break;
         case HTTP_DELETE:
-            ProccessHttpDELETE(req);
+            ProccessHttpDELETE();
             break;
     }
+}
+
+void    ResponseHandler::HandleDirRequest(HttpRequest &req)
+{
+    const std::vector<std::string> &indexes = loc_config->getIndex();
+    std::string current_path;
+    if (indexes.empty())
+        return (GenerateDirListing(req));
+    for (unsigned int i=0;i<indexes.size();i++)
+    {
+        current_path = loc_config->getRoot() + '/' + indexes[i];
+        if (access(current_path.c_str(), R_OK) == 0)
+            return (LoadStaticFile(current_path));
+    }
+    if (loc_config->getAutoindex())
+        return (GenerateDirListing(req));
+    else 
+        throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
 }
 
 void ResponseHandler::ProccessHttpGET(HttpRequest &req)
 {
     if (require_cgi)
-        return (CgiObj.RunCgi(req, conf, *loc_config, resource_path));
-    if (!access(resource_path.c_str(), R_OK) || (IsDir(resource_path.c_str())
+        return (CgiObj.RunCgi(req, conf, *loc_config, resource_path));    
+    if (access(resource_path.c_str(), R_OK) != 0 || (IsDir(resource_path.c_str())
         && loc_config->getIndex().empty() && !loc_config->getAutoindex()))
             throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
     if (IsDir(resource_path.c_str()))
-    {
-        if (loc_config->getIndex().empty())
-            return (GenerateDirListing(req));
-        else
-            return (LoadStaticFile(req, loc_config->getIndex().front()));
-    }
-    return (LoadStaticFile(req, resource_path));
+        return (HandleDirRequest(req));
+    return (LoadStaticFile(resource_path));
 }
 
 void ResponseHandler::ProccessHttpPOST(HttpRequest &req)
 {
     if (require_cgi)
         CgiObj.RunCgi(req, conf, *loc_config, resource_path);
-    if (access(resource_path.c_str(), F_OK))
+    if (access(resource_path.c_str(), F_OK) == 0)
         throw (ResponseHandlerError("HTTP/1.1 409 Conflict", 409));
     if (req.getPath()[req.getPath().size() - 1] == '/')
         throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
-    SetResponseHeader(req, "HTTP/1.1 200 OK", -1);
+    SetResponseHeader("HTTP/1.1 200 OK", -1, false);
     target_file->open(resource_path.c_str(), std::ios::out);
     if (!target_file->is_open())
         throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
     is_post = true;
 }
 
-void ResponseHandler::ProccessHttpDELETE(HttpRequest &req)
+void ResponseHandler::ProccessHttpDELETE()
 {
-    if (!access(resource_path.c_str(), R_OK) || IsDir(resource_path.c_str()))
+    if (access(resource_path.c_str(), R_OK) != 0 || IsDir(resource_path.c_str()))
         throw("HTTP/1.1 403 Forbidden");
     if (std::remove(resource_path.c_str()) == -1)
         throw("HTTP/1.1 500 Internal Server Error");
-    SetResponseHeader(req, "HTTP/1.1 200 OK", -1);
+    SetResponseHeader("HTTP/1.1 200 OK", -1, false);
 }
 
 ResponseHandler::~ResponseHandler(){

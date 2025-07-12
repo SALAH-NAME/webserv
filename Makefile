@@ -7,7 +7,7 @@ DEPFLAGS := -MMD -MP
 
 SRC_DIR := src
 OBJ_DIR := obj
-
+		
 SRCS := main.cpp \
 		config/ConfigTokenizer.cpp config/ConfigTypes.cpp config/BaseConfig.cpp \
 		config/GlobalConfig.cpp config/LocationConfig.cpp config/ServerConfig.cpp \
@@ -15,7 +15,11 @@ SRCS := main.cpp \
 		server/ServerManager.cpp server/Server.cpp server/EventHandler.cpp \
 		server/ReceiveRequests.cpp server/Client.cpp server/ResponseProcess.cpp \
 		server/SendResponse.cpp server/HttpRequest.cpp \
-		raii/Socket.cpp
+		raii/Socket.cpp \
+		cgi/CgiHandler.cpp cgi/Environment.cpp \
+		response/ResponseHandler.cpp response/GenerateResponse.cpp \
+		response/ResponseUtils.cpp response/HttpErrors.cpp \
+		response/ServerRouting.cpp response/StaticFiles.cpp
 
 OBJS := $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
 DEPS := $(OBJS:.o=.d)

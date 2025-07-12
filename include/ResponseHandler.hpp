@@ -39,21 +39,23 @@ class ResponseHandler
 		void 		RouteResolver(const std::string &path, const std::string &method);
 		bool 		CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations);
 		void 		InitializeStandardContentTypes();
+		void	    HandleDirRequest(HttpRequest &req);
 		void 		ProccessHttpGET(HttpRequest &req);
 		void 		ProccessHttpPOST(HttpRequest &req);
-		void 		ProccessHttpDELETE(HttpRequest &req);
+		void 		ProccessHttpDELETE();
 		std::string GenerateContentType(const std::string file_extension);
-		void		LoadStaticFile(HttpRequest &req, const std::string &file_path);
+		void		LoadStaticFile(const std::string &file_path,
+						const std::string &status_line = "HTTP/1.1 200 OK");
 		void 		GenerateDirListing(HttpRequest &req);
 		bool 		NeedToRedirect(HttpRequest &req);
-		void 		GenerateRedirection(HttpRequest &Req);
-		void		GenerateErrorPage(const std::string &status_line, HttpRequest &req);
-		void 		SetResponseHeader(HttpRequest &req, const std::string &status_line, int len,
-			std::string location = "");
+		void 		GenerateRedirection(HttpRequest &req);
+		void		GenerateErrorPage(const std::string &status_line);
+		void 		SetResponseHeader(const std::string &status_line, int len,
+						bool is_static, std::string location = "");
 			
 	public:
 		ResponseHandler(const ServerConfig &server_conf);
-		void			LoadErrorPage(const std::string &status_line, int status_code, HttpRequest &req);
+		void			LoadErrorPage(const std::string &status_line, int status_code);
 		void 			Run(HttpRequest &req);
 		bool			IsPost();		
 		int				*GetCgiInPipe();
