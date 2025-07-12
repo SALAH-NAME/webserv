@@ -25,7 +25,7 @@ void    printRequet(std::string requet) {
 
 int main(int argc, char** argv)
 {
-	std::string config_file = "conf/webserv.conf";
+	std::string config_file = "conf/default.conf";
 	if (argc > 1)
 	{
 		config_file = argv[1];
