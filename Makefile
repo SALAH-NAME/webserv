@@ -13,7 +13,7 @@ SRCS := main.cpp \
 		config/GlobalConfig.cpp config/LocationConfig.cpp config/ServerConfig.cpp \
 		config/ConfigManager.cpp config/ConfigParser.cpp config/ConfigPrinter.cpp \
 		server/ServerManager.cpp server/Server.cpp server/EventHandler.cpp \
-		server/ReceiveRequests.cpp server/Client.cpp server/generateResponse.cpp \
+		server/ReceiveRequests.cpp server/Client.cpp server/ResponseProcess.cpp \
 		server/SendResponse.cpp server/HttpRequest.cpp \
 		raii/Socket.cpp
 
