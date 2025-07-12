@@ -16,10 +16,10 @@ SRCS := main.cpp \
 		server/ReceiveRequests.cpp server/Client.cpp \
 		server/SendResponse.cpp server/HttpRequest.cpp \
 		raii/Socket.cpp \
-		cgi-module/CgiHandler.cpp cgi-module/Environment.cpp \
-		response-module/ResponseHandler.cpp response-module/GenerateResponse.cpp \
-		response-module/ResponseUtil.cpp response-module/HttpErrors.cpp \
-		response-module/ServerRouting.cpp response-module/StaticFiles.cpp
+		cgi/CgiHandler.cpp cgi/Environment.cpp \
+		response/ResponseHandler.cpp response/GenerateResponse.cpp \
+		response/ResponseUtils.cpp response/HttpErrors.cpp \
+		response/ServerRouting.cpp response/StaticFiles.cpp
 
 OBJS := $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
 DEPS := $(OBJS:.o=.d)
