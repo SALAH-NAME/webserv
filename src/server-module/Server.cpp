@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
+/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/07/08 12:09:19 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/11 20:37:52 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,7 +111,7 @@ void	Server::eraseMarked() {
 	for (size_t i = 0; i < _markedForEraseClients.size(); i++) {
 		close(_markedForEraseClients[i]);
 		_clients.erase(_markedForEraseClients[i]);
-		std::cout << "close the connection : " << _markedForEraseClients[i] << "\n";
+		// std::cout << "close the connection : " << _markedForEraseClients[i] << "\n";
 	}
 	_markedForEraseClients.clear();
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
+/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/08 10:51:32 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/11 20:21:52 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,8 @@ Client::Client(Socket sock, int serverFD) : _socket(sock), _serverSocketFD(serve
 											_incomingDataDetected(INCOMING_DATA_OFF),
 											_responseInFlight(false), _sentBytes(0),
 											_isKeepAlive(true),
-											_availableResponseBytes(RESPONSESIZE)
+											_availableResponseBytes(RESPONSESIZE),
+											_requestIsValid(GENERATE_RESPONSE_OFF)
 {}
 
 Socket&			Client::getSocket() {
@@ -67,6 +68,10 @@ int	Client::getBytesToSendNow(void) {
 	if (_availableResponseBytes >= BYTES_TO_SEND)
 		return BYTES_TO_SEND;
 	return _availableResponseBytes;
+}
+
+bool	Client::getRequestIsValid(void) {
+	return _requestIsValid;
 }
 
 void	Client::setReadBytes(size_t bytes) {
@@ -118,6 +123,10 @@ void	Client::resetSendBytes(void) {
 
 void	Client::setIncomingDataDetected(int mode) {
 	_incomingDataDetected = mode;
+}
+
+void	Client::setRequestIsValid(bool value) {
+	_requestIsValid = value;
 }
 
 void	Client::clearRequestHolder(void) {

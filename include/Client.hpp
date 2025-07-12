@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
+/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/08 14:34:55 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/11 20:18:40 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,8 @@ class Client {
 		int					_availableResponseBytes;
 		int					_responseSize;
 
+		bool					_requestIsValid;
+
 	public:
 							Client(void);
 							Client(Socket, int);
@@ -54,6 +56,7 @@ class Client {
 		bool				getIsKeepAlive(void);
 		size_t				getSentBytes(void);
 		int					getBytesToSendNow(void);
+		bool				getRequestIsValid(void); //
 
 		void				setReadBytes(size_t);
 		void				appendToRequest(const std::string& requestData);
@@ -66,6 +69,7 @@ class Client {
 		void				setSentBytes(size_t bytes);
 		void				resetSendBytes(void);
 		void				setIncomingDataDetected(int mode);
+		void				setRequestIsValid(bool); //
 
 		void				clearRequestHolder(void);
 		bool				parseRequest(void);
