@@ -47,7 +47,6 @@ void ResponseHandler::ProccessRequest(Request &req)
 {
     CheckForInitialErrors(req);
     RouteResolver(req.getPath(), req.getMethod());//  set resource_path and loc_config
-    std::cout << "log: path= " << resource_path << std::endl;
     if (NeedToRedirect(req))
         return (GenerateRedirection(req));
     if (loc_config->getAllowedMethods().find(stringToHttpMethod(req.getMethod())) == loc_config->getAllowedMethods().end())

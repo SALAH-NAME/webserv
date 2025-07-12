@@ -24,9 +24,11 @@ void ResponseHandler::SetResponseHeader(const std::string &status_line, int len,
     if (len != -1)
     {
         response_header += is_static ? GenerateContentType(resource_path) : "Content-Type: text/html";
-        response_header += CRLF + std::string("Content-Length: ") + NumtoString(len);
+        response_header += CRLF + std::string("Content-Length: ") + NumtoString(len) + CRLF;
     }
-    response_header += location + std::string(CRLF) + std::string(CRLF);
+    if (!location.empty())
+        response_header += location + CRLF;
+    response_header += CRLF;
 }
 
 void    ResponseHandler::GenerateDirListing(Request &req)
@@ -75,7 +77,7 @@ void ResponseHandler::GenerateRedirection(Request &req)
     }
     response_body = 
         "<html>\n<head><title>" + status_code + " Moved Permanently"
-        "</title></head>\n<body>\n<center><h1>" + status_code + "Moved Permanently"
+        "</title></head>\n<body>\n<center><h1>" + status_code + " Moved Permanently"
         "</h1></center>\n<hr><center>" + std::string(SRV_NAME) + " (Ubuntu)</center>\n"
         "</body>\n</html>";
     SetResponseHeader("HTTP/1.1 " + status_code + " Moved Permanently", response_body.size(), false,location);

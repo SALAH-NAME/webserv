@@ -29,23 +29,66 @@ bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_lo
     return (false);
 }
 
+std::string GetRestOfPath(const std::string &full_path, int pos)
+{
+    unsigned int i = 0;
+    while (pos > 0)
+    {
+        while (full_path[i] == '/' && i < full_path.size())
+            i++;
+        while (i < full_path.size())
+        {
+            if (full_path[i] == '/')
+                break;
+            i++;
+        }
+        pos--;
+    }
+    return full_path.substr(i);
+}
+
+bool PathPartExtractor(const std::string &full_path, int current_pos, std::string &part)
+{
+	bool found;
+    unsigned int i = 0;
+    while (current_pos >= 0)
+    {
+		part = "";
+		found = false;
+        while (full_path[i] == '/' && i < full_path.size())
+            i++;
+        for (;i < full_path.size();i++)
+        {
+            if (full_path[i] != '/'){
+                part += full_path[i];
+				found = true;
+			}
+            else
+                break ;
+        }
+        current_pos--;
+    }
+	return (found);
+}
+
 bool locationMatched(const std::string &req_path, const LocationConfig &locationConf,
         std::string &current_path, const std::string &method)
 {
-    std::stringstream   req_path_ss(req_path.c_str());
-    std::stringstream   loc_path_ss(locationConf.getPath().c_str());
+    int                 pos = 0;
     std::string         req_part;
     std::string         testing_path;
     std::string         loc_part;
 
-    while (std::getline(loc_path_ss, loc_part, '/'))//  comapiring the location with the request path
+    while (PathPartExtractor(locationConf.getPath(), pos, loc_part))//  comapiring the location with the request path
     {
-        std::getline(req_path_ss, req_part, '/');
+        PathPartExtractor(req_path, pos, req_part);
         if (loc_part != req_part)
             return false;//route didn't match with the request path
+        pos++;
     }
+    req_part = GetRestOfPath(req_path, pos);
     testing_path = locationConf.getRoot() + "/" + (method != "POST" ? req_part : ""); // appending the req_part to the config root if not POST
-    if (access(testing_path.c_str(), F_OK)){// checks if the resulting path exists
+    if (access(testing_path.c_str(), F_OK) == 0){// checks if the resulting path exists
         current_path = locationConf.getRoot() + "/" + req_part;
         return true;
     }
@@ -64,14 +107,16 @@ void ResponseHandler::RouteResolver(const std::string &req_path, const std::stri
     if (method != "DELETE" && CheckForCgi(req_path, srv_locations))
         return ;
     std::string current_resource_path;//    will be setted by 'locationMatched' each time a route is validated and is longer than prev value
-    if (srv_locations.find("/") != srv_locations.end() && access((srv_locations.at("/").getRoot() + "/" + req_path).c_str(), F_OK))
-        loc_config = &srv_locations.at("/");//   if the path matches with the '/' location the full path will be used (it may be changed later in the code)
-    for (LOCATIONS::const_iterator it = srv_locations.begin(); it != srv_locations.end();it++)
+    if (srv_locations.find("/") != srv_locations.end()
+            && access((srv_locations.at("/").getRoot() + "/" + req_path).c_str(), F_OK) == 0)
     {
-        std::cout << "log: checking "+ it->first << std::endl;
+        loc_config = &srv_locations.at("/");
+        resource_path = srv_locations.at("/").getRoot() + "/" + req_path;
+    }
+        for (LOCATIONS::const_iterator it = srv_locations.begin(); it != srv_locations.end();it++)
+    {
         if (locationMatched(req_path, it->second, current_resource_path, method) &&
             (!loc_config || loc_config->getPath().size() < it->second.getPath().size())){
-            std::cout << "log: matched with " + it->first << std::endl;
             loc_config = &it->second;//     update if the new route is longer
             resource_path = current_resource_path;
         }
