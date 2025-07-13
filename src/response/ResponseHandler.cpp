@@ -120,5 +120,5 @@ void ResponseHandler::ProccessHttpDELETE()
 }
 
 ResponseHandler::~ResponseHandler(){
-    delete target_file;
+    // delete target_file;
 }

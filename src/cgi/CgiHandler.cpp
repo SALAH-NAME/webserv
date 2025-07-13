@@ -89,7 +89,7 @@ CgiHandler::~CgiHandler()
 {
 	close(output_pipe[0]);
 	close(input_pipe[1]);
-	delete[] output_pipe;
-	delete[] input_pipe;
+	// delete[] output_pipe;
+	// delete[] input_pipe;
 	env.clear();
 }
