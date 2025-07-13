@@ -6,7 +6,7 @@
 /*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/07/12 08:54:25 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/13 11:18:18 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ void    ServerManager::sendClientsResponse(int serverIndex) {
 
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
 		if (it->second.getResponseInFlight())
-			transmitResponse(clients[it->first], serverIndex);
+			transmitResponse(it->second, serverIndex);
 	}
 	_servers[serverIndex].eraseMarked();
 }

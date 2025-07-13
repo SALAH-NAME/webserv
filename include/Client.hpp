@@ -6,7 +6,7 @@
 /*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/12 08:50:14 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/13 12:01:04 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 #include "HttpRequest.hpp"
 #include "ConfigManager.hpp"
 #include "ServerManager.hpp"
-#include "Socket.hpp"
+// #include "Socket.hpp"
 
 class Client {
 	private:
@@ -31,19 +31,18 @@ class Client {
 		std::string			_responseHolder;
 		time_t				_timeOut;
 		HttpRequest			_requestInfos;
-		const ServerConfig*	_serverInfo;
 		bool				_incomingDataDetected;
 		bool				_responseInFlight;
 		size_t				_sentBytes;
 		bool				_isKeepAlive;
 		int					_availableResponseBytes;
 		int					_responseSize;
+		bool				_generateInProcess;
 
-		bool					_generateInProcess;
+		// ResponseHandler		_responseHandler;
 
 	public:
-							Client(void);
-							Client(Socket, int);
+							Client(Socket, int, const ServerConfig&);
 							
 		size_t				getReadBytes(void);
 		Socket&				getSocket(); //

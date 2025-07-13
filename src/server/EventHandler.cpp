@@ -6,7 +6,7 @@
 /*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/12 08:53:57 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/13 12:00:52 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,11 +31,6 @@ void throwIfSocketError(const std::string& context) {
 	}
 }
 
-
-std::vector<int>::iterator	getIterator(int	client_socket, std::vector<int>& sockets) {
-	return std::find(sockets.begin(), sockets.end(), client_socket);
-}
-
 void	Server::incomingConnection(int NewEvent_fd) {
 	struct epoll_event	clientEvent;
 	ssize_t				clientEventLen = sizeof(clientEvent);
@@ -57,7 +52,8 @@ void	Server::incomingConnection(int NewEvent_fd) {
 					clientEvent.data.fd = clientSocketFD;
 					if (epoll_ctl(_epfd, EPOLL_CTL_ADD, clientSocketFD, &clientEvent) == -1)
 						throw std::runtime_error(std::string("epoll_ctl() failed: ") + strerror(errno));
-					_clients[clientEvent.data.fd] = Client(sock, NewEvent_fd); // create a new object where to store the request
+					Client newClient(sock, NewEvent_fd, _serverConfig); // create a new object where to store the request
+					_clients.insert(std::make_pair(clientSocketFD, newClient));
 				}
 				catch (const char *errorMssg) {
 					break ; // no more pending connections
@@ -88,9 +84,9 @@ void	ServerManager::processEvent(int serverIndex) {
 				server.closeConnection(_events[i].data.fd);
 				continue ;
 			}
-			server.getClients()[clientSocket].setIncomingDataFlag(INCOMING_DATA_ON);
-			server.getClients()[clientSocket].setEvent(_epfd, _events[i]);
-		}
+			std::map<int, Client>::iterator clientIterator = server.getClients().find(clientSocket);
+			clientIterator->second.setIncomingDataFlag(INCOMING_DATA_ON);
+			clientIterator->second.setEvent(_epfd, _events[i]);		}
 	}
 	server.eraseMarked();
 }

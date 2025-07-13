@@ -6,7 +6,7 @@
 /*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/12 08:55:24 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/13 12:01:34 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,8 +53,8 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();
 
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++){
-		if (clients[it->first].getIncomingDataDetected() == INCOMING_DATA_ON)
-			collectRequestData(clients[it->first], serverIndex);
+		if (it->second.getIncomingDataDetected() == INCOMING_DATA_ON)
+			collectRequestData(it->second, serverIndex);
 	}
 	_servers[serverIndex].eraseMarked();
 }

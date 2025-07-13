@@ -38,6 +38,7 @@
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
 #include "Socket.hpp"
+#include "ResponseHandler.hpp"
 
 class Server;
 class Client;
