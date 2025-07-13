@@ -70,7 +70,7 @@ void ResponseHandler::GenerateRedirection(HttpRequest &req)
     std::string location;
 
     if (IsDir(resource_path.c_str()))
-        location = "Location: http://" + req.getHeaders()["Host"] + '/' + req.getPath() + '/';
+        location = "Location: http://" + req.getHeaders()["Host"] + req.getPath() + '/';
     else {
         location = "Location: " + loc_config->getRedirect().url;
         status_code = NumtoString(loc_config->getRedirect().status_code);

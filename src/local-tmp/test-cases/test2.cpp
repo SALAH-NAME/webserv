@@ -10,7 +10,9 @@ std::string test2()
 	req.setMethod("GET");
 	req.setPath("/");
 	req.setVersion("HTTP/1.1");
-	req.getHeaders()["Host"] = "127.0.0.1";
+		std::map<std::string, std::string> headers;
+	headers["Host"] = "127.0.0.1";
+	req.setHeaders(headers);
 	std::string config_file = "test-cases/tests-conf/test2.conf";
 	ConfigManager config_manager(config_file);
 	if (!config_manager.load())

@@ -1,7 +1,7 @@
 === RESPONSE HEADER ===
 HTTP/1.1 200 OK
 server: Ed, Edd n Eddy/1.0
-Date: Sat, 12 Jul 2025 18:29:26 GMT
+Date: Sun, 13 Jul 2025 18:13:56 GMT
 Content-Type: text/html
 Content-Length: 384
 
@@ -11,7 +11,7 @@ Content-Length: 384
 	<body>
 		<h1>Index of /kapouet/pouic/toto/pouet/</h1><hr>
 		<pre>
-<a href="..">..</a>                                                 12-Jul-2025 18:26                4096
-<a href="noice.txt">noice.txt</a>                                          12-Jul-2025 18:28                   7</pre><hr>
+<a href="..">..</a>                                                 13-Jul-2025 16:22                4096
+<a href="noice.txt">noice.txt</a>                                          13-Jul-2025 16:22                   7</pre><hr>
 	</body>
 </html>
