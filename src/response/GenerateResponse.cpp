@@ -1,4 +1,5 @@
 #include "ResponseHandler.hpp"
+#include <dirent.h>
 
 std::string GetFormattedEntryInfo(std::string name, const std::string &time_stamp, const std::string &size)
 {
@@ -61,7 +62,7 @@ void    ResponseHandler::GenerateDirListing(HttpRequest &req)
     }
     response_body += "</pre><hr>\n\t</body>\n</html>";
     SetResponseHeader("HTTP/1.1 200 OK", response_body.size(), false);
-    free(dir); 
+    closedir(dir); 
 }
 
 void ResponseHandler::GenerateRedirection(HttpRequest &req)
