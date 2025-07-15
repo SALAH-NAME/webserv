@@ -15,7 +15,7 @@ SRCS := main.cpp \
 		server/ServerManager.cpp server/Server.cpp server/EventHandler.cpp \
 		server/ReceiveRequests.cpp server/Client.cpp \
 		server/SendResponse.cpp server/HttpRequest.cpp \
-		raii/Socket.cpp \
+		raii/Socket.cpp raii/File.cpp raii/Pipe.cpp \
 		cgi/CgiHandler.cpp cgi/Environment.cpp \
 		response/ResponseHandler.cpp response/GenerateResponse.cpp \
 		response/ResponseUtils.cpp response/HttpErrors.cpp \
@@ -32,7 +32,8 @@ UNIT_SRCS := $(filter-out server/main.cpp main.cpp, $(SRCS))
 
 TEST_SRCS := unit_test.cpp \
 						 testTokenizer.cpp testConfigPrint.cpp \
-						 testSharedPtr.cpp testSocket.cpp testHttpRequestParse.cpp
+						 testSharedPtr.cpp testSocket.cpp testFile.cpp testPipe.cpp \
+						 testHttpRequestParse.cpp
 
 UNIT_OBJS := $(addprefix $(OBJ_DIR)/, $(UNIT_SRCS:.cpp=.o)) $(addprefix $(OBJ_DIR)/, $(TEST_SRCS:.cpp=.o))
 UNIT_DEPS := $(UNIT_OBJS:.o=.d)

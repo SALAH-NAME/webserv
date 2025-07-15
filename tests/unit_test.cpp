@@ -8,6 +8,8 @@ void testAllTokenizer();
 void testConfigPrint();
 void testSharedPtr();
 void testSocket();
+void testFile();
+void testPipe();
 void testHttpRequestParse();
 
 typedef void (*TestFunction)();
@@ -49,6 +51,8 @@ std::vector<Test> buildTests()
 	addTest(tests, "testConfigPrint", testConfigPrint);
 	addTest(tests, "testSharedPtr", testSharedPtr);
 	addTest(tests, "testSocket", testSocket);
+	addTest(tests, "testFile", testFile);
+	addTest(tests, "testPipe", testPipe);
 	addTest(tests, "testHttpRequestParse", testHttpRequestParse);
 
 	return tests;
