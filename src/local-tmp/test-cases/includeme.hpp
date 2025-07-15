@@ -11,5 +11,6 @@ std::string test4();
 std::string test5();
 std::string test6();
 std::string test7();
-
+std::string test8();
+std::string test9();
 

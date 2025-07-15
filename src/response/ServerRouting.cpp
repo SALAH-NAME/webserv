@@ -71,6 +71,17 @@ bool PathPartExtractor(const std::string &full_path, int current_pos, std::strin
 	return (found);
 }
 
+std::string GetPostFilePath(const std::string &path)
+{
+    int i = path.size() - 1;
+    while( i >= 0 && path[i] == '/')
+        i--;
+    for (;i >= 0; i--)
+        if (path[i] == '/')
+            return (path.substr(0, i) + '/');
+    return "";
+}
+
 bool locationMatched(const std::string &req_path, const LocationConfig &locationConf,
         std::string &current_path, const std::string &method)
 {
@@ -89,7 +100,7 @@ bool locationMatched(const std::string &req_path, const LocationConfig &location
     if (loc_part.empty() && !PathPartExtractor(req_path, pos, req_part) && locationConf.hasRedirect())
         return true;
     req_part = GetRestOfPath(req_path, pos);
-    testing_path = locationConf.getRoot() + "/" + (method != "POST" ? req_part : ""); // appending the req_part to the config root if not POST
+    testing_path = locationConf.getRoot() + "/" + (method != "POST" ? req_part : GetPostFilePath(req_part)); // appending the req_part to the config root if not POST
     if (access(testing_path.c_str(), F_OK) == 0){// checks if the resulting path exists
         current_path = locationConf.getRoot() + "/" + req_part;
         return true;
