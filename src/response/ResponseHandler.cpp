@@ -24,6 +24,8 @@ int *ResponseHandler::GetCgiOutPipe(){return (CgiObj.GetOutPipe());}
 
 pid_t ResponseHandler::GetCgiChildPid(){return (CgiObj.GetChildPid());}
 
+std::string ResponseHandler::GetResourcePath() {return resource_path;}
+
 void ResponseHandler::Run(HttpRequest &req)
 {
     response_header = "";
@@ -113,9 +115,9 @@ void ResponseHandler::ProccessHttpPOST(HttpRequest &req)
 void ResponseHandler::ProccessHttpDELETE()
 {
     if (access(resource_path.c_str(), R_OK) != 0 || IsDir(resource_path.c_str()))
-        throw("HTTP/1.1 403 Forbidden");
+        throw(ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
     if (std::remove(resource_path.c_str()) == -1)
-        throw("HTTP/1.1 500 Internal Server Error");
+        throw(ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
     SetResponseHeader("HTTP/1.1 200 OK", -1, false);
 }
 

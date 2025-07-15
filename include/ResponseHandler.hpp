@@ -61,6 +61,7 @@ class ResponseHandler
 		int				*GetCgiInPipe();
 		int				*GetCgiOutPipe();
 		std::string		GetResponseHeader();
+		std::string		GetResourcePath();
 		std::string 	GetResponseBody();
 		std::fstream	*GetTargetFilePtr();
 		pid_t			GetCgiChildPid();

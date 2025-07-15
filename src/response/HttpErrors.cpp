@@ -2,9 +2,11 @@
 
 void ResponseHandler::CheckForInitialErrors(HttpRequest &req)
 {
+	std::map <std::string, std::string> headers = req.getHeaders();
+
 	if (req.getVersion() != "HTTP/1.1")// using a different http version
         throw (ResponseHandlerError("HTTP/1.1 505 HTTP Version Not Supported", 505));
-    if (req.getHeaders().find("Host") == req.getHeaders().end())// a request with no host header
+    if (headers.find("Host") == headers.end())// a request with no host header
         throw (ResponseHandlerError("HTTP/1.1 400 Bad Request", 400));
     try {stringToHttpMethod(req.getMethod());}
     catch (std::invalid_argument &ex){//    using a method other than GET, POST and DELETE 

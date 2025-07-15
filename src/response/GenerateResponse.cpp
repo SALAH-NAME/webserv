@@ -69,17 +69,19 @@ void ResponseHandler::GenerateRedirection(HttpRequest &req)
 {
     std::string status_code = NumtoString(301);
     std::string location;
-
-    if (IsDir(resource_path.c_str()))
-        location = "Location: http://" + req.getHeaders()["Host"] + '/' + req.getPath() + '/';
+    std::string http_message = " Moved Permanently";
+    if (IsDir(resource_path.c_str()) && !loc_config->hasRedirect())
+        location = "Location: http://" + req.getHeaders()["Host"] + req.getPath() + '/';
     else {
         location = "Location: " + loc_config->getRedirect().url;
         status_code = NumtoString(loc_config->getRedirect().status_code);
     }
+    if (status_code == "302" || status_code == "307")
+        http_message = " Moved Temporary";
     response_body = 
-        "<html>\n<head><title>" + status_code + " Moved Permanently"
-        "</title></head>\n<body>\n<center><h1>" + status_code + " Moved Permanently"
-        "</h1></center>\n<hr><center>" + std::string(SRV_NAME) + " (Ubuntu)</center>\n"
+        "<html>\n<head><title>" + status_code + http_message +
+        "</title></head>\n<body>\n<center><h1>" + status_code + http_message +
+        "</h1></center>\n<hr><center>" + std::string(SRV_NAME) + "</center>\n"
         "</body>\n</html>";
-    SetResponseHeader("HTTP/1.1 " + status_code + " Moved Permanently", response_body.size(), false,location);
+    SetResponseHeader("HTTP/1.1 " + status_code + http_message, response_body.size(), false, location);
 }
