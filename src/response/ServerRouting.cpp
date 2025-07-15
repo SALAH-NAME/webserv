@@ -2,8 +2,8 @@
 
 bool ResponseHandler::NeedToRedirect(HttpRequest &req){
     return ((IsDir(resource_path.c_str()) &&
-        req.getPath()[req.getPath().size()-1] != '/')||
-            loc_config->getRedirect().isValid());
+        req.getPath()[req.getPath().size()-1] != '/') ||
+            loc_config->hasRedirect());
 }
 
 bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations)
@@ -86,6 +86,8 @@ bool locationMatched(const std::string &req_path, const LocationConfig &location
             return false;//route didn't match with the request path
         pos++;
     }
+    if (loc_part.empty() && !PathPartExtractor(req_path, pos, req_part) && locationConf.hasRedirect())
+        return true;
     req_part = GetRestOfPath(req_path, pos);
     testing_path = locationConf.getRoot() + "/" + (method != "POST" ? req_part : ""); // appending the req_part to the config root if not POST
     if (access(testing_path.c_str(), F_OK) == 0){// checks if the resulting path exists

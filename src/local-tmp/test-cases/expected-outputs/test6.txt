@@ -1,10 +1,10 @@
 === RESPONSE HEADER ===
 HTTP/1.1 301 Moved Permanently
 server: Ed, Edd n Eddy/1.0
-Date: Mon, 14 Jul 2025 21:31:51 GMT
+Date: Tue, 15 Jul 2025 13:35:15 GMT
 Content-Type: text/html
 Content-Length: 167
-Location: http://127.0.0.1/visuals/
+Location: /media
 
 
 <html>

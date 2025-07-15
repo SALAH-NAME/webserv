@@ -24,6 +24,8 @@ int *ResponseHandler::GetCgiOutPipe(){return (CgiObj.GetOutPipe());}
 
 pid_t ResponseHandler::GetCgiChildPid(){return (CgiObj.GetChildPid());}
 
+std::string ResponseHandler::GetResourcePath() {return resource_path;}
+
 void ResponseHandler::Run(HttpRequest &req)
 {
     response_header = "";

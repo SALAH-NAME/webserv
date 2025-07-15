@@ -9,5 +9,7 @@ std::string test2();
 std::string test3();
 std::string test4();
 std::string test5();
+std::string test6();
+std::string test7();
 
 
