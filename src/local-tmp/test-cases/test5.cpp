@@ -25,7 +25,7 @@ std::string test5()
 	testObj.Run(req);
 	ss << "=== RESPONSE HEADER ===" << '\n';
 	ss << testObj.GetResponseHeader() << '\n';
-	if (testObj.GetTargetFilePtr()->is_open())
+	if (testObj.GetTargetFilePtr() && testObj.GetTargetFilePtr()->is_open())
 		ss << "ERROR: target file should not be open" << std::endl;
 	else
 		ss << testObj.GetResponseBody() << std::endl;

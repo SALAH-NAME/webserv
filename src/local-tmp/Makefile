@@ -2,7 +2,7 @@ CONF_SRC=$(shell find ../config -name "*.cpp")
 CGI_SRC=$(shell find ../cgi -name "*.cpp")
 RES_SRC=$(shell find ../response -name "*.cpp")
 Test_SRC=$(shell find test-cases -name "*.cpp")
-CPP_FLAGS = -Wall -Wextra -Werror -I ../../include/
+CPP_FLAGS = -fsanitize=address -g3 -Wall -Wextra -Werror -I ../../include/
 
 OBJ_DIR = ../../obj
 ALL_SRCS = $(CONF_SRC) $(CGI_SRC) $(RES_SRC) $(Test_SRC) ../server/HttpRequest.cpp main.cpp

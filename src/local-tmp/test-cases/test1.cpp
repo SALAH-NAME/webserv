@@ -22,7 +22,7 @@ std::string test1()
 	testObj.Run(req);
 	ss << "=== RESPONSE HEADER ===" << '\n';
 	ss << testObj.GetResponseHeader() << '\n';
-	if (testObj.GetTargetFilePtr()->is_open())
+	if (testObj.GetTargetFilePtr() && testObj.GetTargetFilePtr()->is_open())
 	{
 		ss << "=== FILE CONTENT ===" << std::endl;
 		std::fstream* filePtr = testObj.GetTargetFilePtr();		

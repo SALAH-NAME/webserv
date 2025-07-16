@@ -22,7 +22,7 @@ std::string test8()
 	testObj.Run(req);
 	ss << "=== RESPONSE HEADER ===" << '\n';
 	ss << testObj.GetResponseHeader() << '\n';
-	if (!testObj.GetTargetFilePtr()->is_open())
+	if (!testObj.GetTargetFilePtr() && testObj.GetTargetFilePtr()->is_open())
 		ss << "ERROR: target file is not open" << std::endl;
 	else if (access(testObj.GetResourcePath().c_str(), W_OK) != 0) 
 		ss << "ERROR: target file is open but can't be used for writing" << std::endl;
