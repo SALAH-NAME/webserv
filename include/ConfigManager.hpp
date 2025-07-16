@@ -14,7 +14,7 @@ private:
 	bool											parseConfigFile();
 
 public:
-	ConfigManager(const std::string& config_file = "webserv.conf");
+	ConfigManager(const std::string& config_file = "conf/default.conf");
 	bool														 load();
 	const GlobalConfig&							 getGlobalConfig() const;
 	const std::vector<ServerConfig>& getServers() const;

@@ -2,6 +2,7 @@
 #define ENVIRONMENT_HPP
 
 #include <vector>
+#include <string>
 #include <map>
 #include <sstream>
 #include <iostream>

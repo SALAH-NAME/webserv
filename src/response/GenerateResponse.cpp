@@ -1,4 +1,5 @@
 #include "ResponseHandler.hpp"
+#include <dirent.h>
 
 std::string GetFormattedEntryInfo(std::string name, const std::string &time_stamp, const std::string &size)
 {
@@ -16,22 +17,22 @@ std::string GetFormattedEntryInfo(std::string name, const std::string &time_stam
     return (ss.str());
 }
 
-void ResponseHandler::SetResponseHeader(Request &req, const std::string &status_line, int len,
-        std::string location = "")
+void ResponseHandler::SetResponseHeader(const std::string &status_line, int len,
+        bool is_static, std::string location)
 {
-    struct stat path_info;
-
-    if (stat(resource_path.c_str(), &path_info) != 0)//if it failed -> server error because file does exist with the right permissions
-        throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
-    len = (len == -1) ? path_info.st_size : len;
     response_header = status_line + CRLF + "server: " + SRV_NAME + CRLF + "Date: " +
         GenerateTimeStamp() + CRLF ;
-    response_header += (req.getMethod() == "GET") ? GenerateContentType(ExtractFileExtension(resource_path))
-        + CRLF + "Content-Length: " + NumtoString(len) : "";
-    response_header += location + std::string(CRLF) + std::string(CRLF);
+    if (len != -1)
+    {
+        response_header += is_static ? GenerateContentType(resource_path) : "Content-Type: text/html";
+        response_header += CRLF + std::string("Content-Length: ") + NumtoString(len) + CRLF;
+    }
+    if (!location.empty())
+        response_header += location + CRLF;
+    response_header += CRLF;
 }
 
-void    ResponseHandler::GenerateDirListing(Request &req)
+void    ResponseHandler::GenerateDirListing(HttpRequest &req)
 {
     DIR                         *dir;
     std::vector<std::string>    dir_entries;
@@ -47,37 +48,40 @@ void    ResponseHandler::GenerateDirListing(Request &req)
         if (static_cast <std::string>(dir_iter->d_name) != ".")
             dir_entries.push_back(dir_iter->d_name);
     std::sort(dir_entries.begin(), dir_entries.end());
-    response_body = "<html>\n\t<head><title>Index of /" + req.getPath() + "/</title></head>\n\t<body>\n";
-    response_body += "\t\t<h1>Index of /" + req.getPath() + "/</h1><hr>\n\t\t<pre>";
+    response_body = "<html>\n\t<head><title>Index of " + req.getPath() + "</title></head>\n\t<body>\n";
+    response_body += "\t\t<h1>Index of " + req.getPath() + "</h1><hr>\n\t\t<pre>";
     for (std::vector<std::string>::iterator it = dir_entries.begin(); it != dir_entries.end(); it++)
     {
-        if (stat((resource_path + "/" + *it).c_str(), &file_stat))
+        if (stat((resource_path + *it).c_str(), &file_stat) == 0)
         {
             element_last_mod_date = formatDate("%d-%b-%Y %R", file_stat.st_atim.tv_sec, 17);
             element_size_in_bytes = NumtoString(file_stat.st_size); 
             response_body += "\n<a href=\"" + *it + "\">";
-            response_body + GetFormattedEntryInfo(*it, element_last_mod_date, element_size_in_bytes);
+            response_body += GetFormattedEntryInfo(*it, element_last_mod_date, element_size_in_bytes);
         }
     }
     response_body += "</pre><hr>\n\t</body>\n</html>";
-    SetResponseHeader(req, "HTTP/1.1 200 OK", response_body.size());
+    SetResponseHeader("HTTP/1.1 200 OK", response_body.size(), false);
+    closedir(dir); 
 }
 
-void ResponseHandler::GenerateRedirection(Request &req)
+void ResponseHandler::GenerateRedirection(HttpRequest &req)
 {
     std::string status_code = NumtoString(301);
     std::string location;
-
-    if (IsDir(resource_path.c_str()))
-        location = "Location: http://" + req.getHeaders()["Host"] + '/' + req.getPath() + '/';
+    std::string http_message = " Moved Permanently";
+    if (IsDir(resource_path.c_str()) && !loc_config->hasRedirect())
+        location = "Location: http://" + req.getHeaders()["Host"] + req.getPath() + '/';
     else {
         location = "Location: " + loc_config->getRedirect().url;
         status_code = NumtoString(loc_config->getRedirect().status_code);
     }
+    if (status_code == "302" || status_code == "307")
+        http_message = " Moved Temporary";
     response_body = 
-        "<html>\n<head><title>" + status_code + " Moved Permanently"
-        "</title></head>\n<body>\n<center><h1>" + status_code + "Moved Permanently"
-        "</h1></center>\n<hr><center>" + std::string(SRV_NAME) + " (Ubuntu)</center>\n"
+        "<html>\n<head><title>" + status_code + http_message +
+        "</title></head>\n<body>\n<center><h1>" + status_code + http_message +
+        "</h1></center>\n<hr><center>" + std::string(SRV_NAME) + "</center>\n"
         "</body>\n</html>";
-    SetResponseHeader(req, "HTTP/1.1 " + status_code + " Moved Permanently", response_body.size(), location);
+    SetResponseHeader("HTTP/1.1 " + status_code + http_message, response_body.size(), false, location);
 }

@@ -1,5 +1,4 @@
 #include "CgiHandler.hpp"
-#include "Request.hpp"
 
 std::string NumtoString(int num){
 	std::stringstream ss;
@@ -17,7 +16,7 @@ void	CgiHandler::SetCgiChildFileDescriptors()
 	}
 }
 
-void	CgiHandler::SetCgiEnvironment(Request	&http_req, ServerConfig &conf)//adding data fetched from the request into the env object
+void	CgiHandler::SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &conf)//adding data fetched from the request into the env object
 {
 	env.Add("GATEWAY_INTERFACE=", "CGI/1.1");
 	env.Add("REQUEST_METHOD=", http_req.getMethod());
@@ -56,7 +55,7 @@ Pipe&	CgiHandler::GetOutPipe(){return output_pipe;}
 
 Pipe&	CgiHandler::GetInPipe(){return input_pipe;}
 
-void CgiHandler::RunCgi(Request &current_req, ServerConfig &conf,
+void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 				const LocationConfig &cgi_conf, std::string &script_path)
 {
 	int 	id;
@@ -75,7 +74,7 @@ void CgiHandler::RunCgi(Request &current_req, ServerConfig &conf,
 		SetCgiChildFileDescriptors();
 		SetCgiEnvironment(current_req, conf);
 		execve(cgi_conf.getCgiPass().c_str(), argv, this->env.GetRawEnv());
-		exit(1);
+		_exit(1);
 	}
 	this->exec_t0 = time(NULL);
 	this->child_pid = id;

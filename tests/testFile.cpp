@@ -6,6 +6,7 @@
 #include <ostream>
 #include <string>
 #include <unistd.h>
+#include <cstdio>
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
@@ -35,7 +36,7 @@ static void testFileBasicOperations()
 		bool passed = false;
 		try
 		{
-			File f("deleteme/test_file.txt", O_CREAT | O_WRONLY | O_TRUNC, 0644);
+			File f("./test_file.txt", O_CREAT | O_WRONLY | O_TRUNC, 0644);
 			std::string data = "Hello, World!";
 			ssize_t written = f.write(data.c_str(), data.length());
 			passed = (written == static_cast<ssize_t>(data.length()) && f.isOpen());
@@ -50,7 +51,7 @@ static void testFileBasicOperations()
 		bool passed = false;
 		try
 		{
-			File f("deleteme/test_file.txt", O_RDONLY);
+			File f("./test_file.txt", O_RDONLY);
 			char buffer[100] = {0};
 			ssize_t bytesRead = f.read(buffer, sizeof(buffer) - 1);
 			passed = (bytesRead > 0 && std::string(buffer) == "Hello, World!");
@@ -65,8 +66,8 @@ static void testFileBasicOperations()
 		bool passed = false;
 		try
 		{
-			File f("deleteme/test_file.txt", O_RDONLY);
-			passed = (f.getPath() == "deleteme/test_file.txt" && f.access(R_OK));
+			File f("./test_file.txt", O_RDONLY);
+			passed = (f.getPath() == "./test_file.txt" && f.access(R_OK));
 		} catch (const std::exception& e)
 		{
 			std::cout << "Exception: " << e.what() << std::endl;
@@ -78,7 +79,7 @@ static void testFileBasicOperations()
 		bool passed = false;
 		try
 		{
-			File f("deleteme/test_file.txt", O_RDONLY);
+			File f("./test_file.txt", O_RDONLY);
 			passed = (f == f.getFd() && f >= 0);
 		} catch ( const std::exception& e)
 		{
@@ -96,7 +97,7 @@ static void testFileRAII()
 	{
 		int fdBefore = -1;
 		{
-			File f("deleteme/test_raii.txt", O_CREAT | O_CREAT, 0644);
+			File f("./test_raii.txt", O_CREAT | O_CREAT, 0644);
 			fdBefore = f.getFd();
 		}
 
@@ -105,7 +106,7 @@ static void testFileRAII()
 	}
 
 	{
-		File f("deleteme/test_raii.txt", O_WRONLY);
+		File f("./test_raii.txt", O_WRONLY);
 		int fd = f.getFd();
 		f.close();
 		bool passed = (!f.isOpen() && f.getFd() == -1 && fd >= 0);
@@ -113,7 +114,7 @@ static void testFileRAII()
 	}
 
 	{
-		int fd = open("deleteme/test_raii.txt", O_RDONLY);
+		int fd = open("./test_raii.txt", O_RDONLY);
 		bool passed = false;
 		if (fd >= 0)
 		{
@@ -138,7 +139,7 @@ static void testFileDuplication()
 		bool passed = false;
 		try
 		{
-			File f1("deleteme/test_dup.txt", O_CREAT | O_WRONLY, 0644);
+			File f1("./test_dup.txt", O_CREAT | O_WRONLY, 0644);
 			File f2 = f1.duplicate();
 
 			std::string data = "duplicate test";
@@ -157,7 +158,7 @@ static void testFileDuplication()
 		bool passed = false;
 		try
 		{
-			File f1("deleteme/test_dup.txt", O_WRONLY);
+			File f1("./test_dup.txt", O_WRONLY);
 			int originalFd = f1.getFd();
 
 			int tempFd = open("/dev/null", O_WRONLY);
@@ -227,5 +228,7 @@ void testFile()
 	testFileRAII();
 	testFileDuplication();
 	testFileErrorHandling();
-	/*unlink("deleteme/test_file.txt"), unlink("deleteme/test_raii.txt"), unlink("deleteme/test_dup.txt");*/
+	std::remove("./test_file.txt");
+	std::remove("./test_raii.txt");
+	std::remove("./test_dup.txt");
 }

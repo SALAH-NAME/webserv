@@ -40,7 +40,7 @@ std::string ExtractFileExtension(const std::string &path)
             return "";
         result = path[i] + result;
         if (path[i] == '.')
-            return ("." + result);
+            return (result);
     }
     return "";
 }

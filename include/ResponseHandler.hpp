@@ -9,11 +9,11 @@
 #include <algorithm>
 #include <sstream>
 #include <dirent.h>
-#include "Request.hpp"
+#include "Pipe.hpp"
+#include "HttpRequest.hpp"
 #include "CgiHandler.hpp"
 #include "GlobalConfig.hpp"
 #include "ServerConfig.hpp"
-#include "File.hpp"
 
 typedef const std::map<std::string, LocationConfig> LOCATIONS;
 typedef std::map<std::string, std::vector<std::string> > STRINGS_MAP;
@@ -24,8 +24,7 @@ typedef std::map<std::string, std::vector<std::string> > STRINGS_MAP;
 class ResponseHandler 
 {
 	private:
-		int						socket_fd;
-		ServerConfig			&conf;
+		const ServerConfig		&conf;
 		std::string				response_header;
 		std::string 			resource_path;
 		bool					require_cgi;
@@ -34,37 +33,39 @@ class ResponseHandler
 		STRINGS_MAP				content_types;
 		std::string				response_body;
 		LocationConfig const	*loc_config;
-		File					*target_file;//use streams instead
+		std::fstream			*target_file;
 	
-		void		CheckForInitialErrors(Request &req);
-		void		ProccessRequest(Request &req);
+		void		CheckForInitialErrors(HttpRequest &req);
+		void		ProccessRequest(HttpRequest &req);
 		void 		RouteResolver(const std::string &path, const std::string &method);
 		bool 		CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations);
 		void 		InitializeStandardContentTypes();
-		void 		ProccessHttpGET(Request &req);
-		void 		ProccessHttpPOST(Request &req);
-		void 		ProccessHttpDELETE(Request &req);
+		void	    HandleDirRequest(HttpRequest &req);
+		void 		ProccessHttpGET(HttpRequest &req);
+		void 		ProccessHttpPOST(HttpRequest &req);
+		void 		ProccessHttpDELETE();
 		std::string GenerateContentType(const std::string file_extension);
-		void		LoadStaticFile(Request &req, const std::string &file_path);
-		void 		GenerateDirListing(Request &req);
-		bool 		NeedToRedirect(Request &req);
-		void 		GenerateRedirection(Request &Req);
-		void		GenerateErrorPage(const std::string &status_line, Request &req);
-		void 		SetResponseHeader(Request &req, const std::string &status_line, int len,
-			std::string location = "");
+		void		LoadStaticFile(const std::string &file_path,
+						const std::string &status_line = "HTTP/1.1 200 OK");
+		void 		GenerateDirListing(HttpRequest &req);
+		bool 		NeedToRedirect(HttpRequest &req);
+		void 		GenerateRedirection(HttpRequest &req);
+		void		GenerateErrorPage(const std::string &status_line);
+		void 		SetResponseHeader(const std::string &status_line, int len,
+						bool is_static, std::string location = "");
 			
 	public:
-		ResponseHandler(int sockfd, ServerConfig &server_conf);
-		void		LoadErrorPage(const std::string &status_line, int status_code, Request &req);
-		void 		Run(Request &req);
-		bool		IsPost();		
-		void 		Run(Request &req);			
-		Pipe 		&GetCgiInPipe();
-		Pipe 		&GetCgiOutPipe();
-		std::string	GetResponseHeader();
-		std::string GetResponseBody();
-		File		*GetTargetFilePtr();
-		pid_t		GetCgiChildPid();
+		ResponseHandler(const ServerConfig &server_conf);
+		void			LoadErrorPage(const std::string &status_line, int status_code);
+		void 			Run(HttpRequest &req);
+		bool			IsPost();		
+		Pipe			&GetCgiInPipe();
+		Pipe			&GetCgiOutPipe();
+		std::string		GetResponseHeader();
+		std::string		GetResourcePath();
+		std::string 	GetResponseBody();
+		std::fstream	*GetTargetFilePtr();
+		pid_t			GetCgiChildPid();
 		~ResponseHandler();
 
 		class ResponseHandlerError : std::exception
@@ -76,6 +77,7 @@ class ResponseHandler
 				int getStatusCode();
 				ResponseHandlerError(const std::string &Errmsg, int statusCode);
 				const char *what() throw();
+				~ResponseHandlerError() throw();
 		};
 };
 

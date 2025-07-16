@@ -5,8 +5,8 @@
 #include <sys/wait.h>
 #include <ctime>
 #include "Pipe.hpp"
-#include "Request.hpp"
 #include "Environment.hpp"
+#include "HttpRequest.hpp"
 #include "ServerConfig.hpp"
 
 // Max header name length: 256 bytes
@@ -25,11 +25,11 @@ class CgiHandler{
 		int			child_pid;
 		std::time_t	exec_t0;
 		void	SetCgiChildFileDescriptors();
-		void	SetCgiEnvironment(Request	&http_req, ServerConfig &conf);
+		void	SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &conf);
 
 	public:
 		CgiHandler();
-		void RunCgi(Request &current_req, ServerConfig &conf,
+		void RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 					const LocationConfig &cgi_conf, std::string &script_path);
 		pid_t 	GetChildPid();
 		Pipe 	&GetInPipe();
