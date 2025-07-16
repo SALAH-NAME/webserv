@@ -12,9 +12,8 @@
 #define INCOMING_DATA_OFF false
 #define CONNECTION_ERROR (EPOLLIN | EPOLLERR | EPOLLHUP)
 
-
-// #define INCOMING_DATA_ON true
-// #define INCOMING_DATA_OFF false
+#define GENERATE_RESPONSE_ON true
+#define GENERATE_RESPONSE_OFF false
 
 #include <netinet/in.h> // For sockaddr_in
 #include <unistd.h>     // For close()
@@ -39,6 +38,7 @@
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
 #include "Socket.hpp"
+#include "ResponseHandler.hpp"
 
 class Server;
 class Client;
@@ -64,6 +64,7 @@ class ServerManager {
 
 		void								processEvent(int);
 		void								receiveClientsData(int);
+		void								generatResponses(int);
 		void								sendClientsResponse(int);
 
 	public:

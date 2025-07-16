@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
+/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/08 10:51:32 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/13 11:57:47 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,14 +16,14 @@
 #include <ctime>
 #include "HttpRequest.hpp"
 
-Client::Client(void) {}
-
-Client::Client(Socket sock, int serverFD) : _socket(sock), _serverSocketFD(serverFD),
+Client::Client(Socket sock, int serverFD, const ServerConfig& conf) : _socket(sock), _serverSocketFD(serverFD),
 											_readBytes(0), _timeOut(std::time(NULL)),
 											_incomingDataDetected(INCOMING_DATA_OFF),
 											_responseInFlight(false), _sentBytes(0),
 											_isKeepAlive(true),
-											_availableResponseBytes(RESPONSESIZE)
+											_availableResponseBytes(RESPONSESIZE),
+											_generateInProcess(GENERATE_RESPONSE_OFF)
+											, _responseHandler(new ResponseHandler(conf))
 {}
 
 Socket&			Client::getSocket() {
@@ -67,6 +67,10 @@ int	Client::getBytesToSendNow(void) {
 	if (_availableResponseBytes >= BYTES_TO_SEND)
 		return BYTES_TO_SEND;
 	return _availableResponseBytes;
+}
+
+bool	Client::getGenerateInProcess(void) {
+	return _generateInProcess;
 }
 
 void	Client::setReadBytes(size_t bytes) {
@@ -118,6 +122,10 @@ void	Client::resetSendBytes(void) {
 
 void	Client::setIncomingDataDetected(int mode) {
 	_incomingDataDetected = mode;
+}
+
+void	Client::setGenerateInProcess(bool value) {
+	_generateInProcess = value;
 }
 
 void	Client::clearRequestHolder(void) {

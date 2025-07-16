@@ -109,7 +109,7 @@ void ResponseHandler::ProccessHttpPOST(HttpRequest &req)
         throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
     SetResponseHeader("HTTP/1.1 200 OK", -1, false);
     target_file = new std::fstream(resource_path.c_str(), std::ios::out);
-    if (!target_file->is_open())
+    if (!target_file || !target_file->is_open())
         throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
     is_post = true;
 }

@@ -45,6 +45,6 @@ void	ResponseHandler::LoadStaticFile(const std::string &file_path, const std::st
 		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
 	SetResponseHeader(status_line, path_info.st_size, true);
 	target_file = new std::fstream(resource_path.c_str(), std::ios::in);
-    if (!target_file->is_open())
+    if (!target_file || !target_file->is_open())
         throw(ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
 }
