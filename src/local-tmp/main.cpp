@@ -4,7 +4,7 @@
 #include "test-cases/includeme.hpp"
 #include <ostream>
 
-#define TESTS_NB 9
+#define TESTS_NB 10
 
 bool quick_pars(int &chosen_test, char **av, int ac)
 {
@@ -87,7 +87,7 @@ int main(int ac, char **av)
 	int chosen_test = 0;
 	bool compair_output = quick_pars(chosen_test, av, ac);
 	std::string (*tests[])() = {test1, test2, test3, test4, test5, test6,
-			test7, test8, test9};
+			test7, test8, test9, test10};
 	if (!compair_output){
 		std::cout << tests[chosen_test-1]();
 		return 0;

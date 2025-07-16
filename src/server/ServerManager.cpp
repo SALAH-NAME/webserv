@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerManager.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
+/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/08 11:15:51 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/13 11:19:28 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,10 +14,8 @@
 
 void ServerManager::checkTimeOut(void)
 {
-
 	for (size_t x = 0; x < _servers.size(); x++)
 	{
-
 		std::map<int, Client>& clients = _servers[x].getClients();
 		for (std::map<int, Client>::iterator it = clients.begin();
 				 it != clients.end(); it++)
