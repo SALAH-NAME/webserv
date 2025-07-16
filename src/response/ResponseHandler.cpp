@@ -1,13 +1,12 @@
 #include "ResponseHandler.hpp"
 
-ResponseHandler::ResponseHandler(const ServerConfig &server_conf) : conf(server_conf)
+ResponseHandler::ResponseHandler(const ServerConfig &server_conf) : conf(server_conf), target_file(NULL)
 {
     InitializeStandardContentTypes();
     loc_config = NULL;
     resource_path = "";
     require_cgi = false;
     is_post = false;
-    target_file = new std::fstream();
 }
 
 std::string	ResponseHandler::GetResponseHeader(){return response_header;}
@@ -34,8 +33,11 @@ void ResponseHandler::Run(HttpRequest &req)
     require_cgi = false;
     is_post = false;
     loc_config = NULL;
-    delete target_file;
-    target_file = new std::fstream();
+    if (target_file) {
+        target_file->close();
+        delete target_file;
+        target_file = NULL;
+    }
     try {
         ProccessRequest(req);
     }
@@ -106,7 +108,7 @@ void ResponseHandler::ProccessHttpPOST(HttpRequest &req)
     if (req.getPath()[req.getPath().size() - 1] == '/')
         throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
     SetResponseHeader("HTTP/1.1 200 OK", -1, false);
-    target_file->open(resource_path.c_str(), std::ios::out);
+    target_file = new std::fstream(resource_path.c_str(), std::ios::out);
     if (!target_file->is_open())
         throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
     is_post = true;
@@ -122,5 +124,9 @@ void ResponseHandler::ProccessHttpDELETE()
 }
 
 ResponseHandler::~ResponseHandler(){
-    delete target_file;
+	if (target_file) {
+		target_file->close();
+		delete target_file;
+		target_file = NULL;
+	}
 }
