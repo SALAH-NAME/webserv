@@ -77,7 +77,7 @@ void    ResponseHandler::HandleDirRequest(HttpRequest &req)
         return (GenerateDirListing(req));
     for (unsigned int i=0;i<indexes.size();i++)
     {
-        current_path = loc_config->getRoot() + '/' + indexes[i];
+        current_path = resource_path + '/' + indexes[i];
         if (access(current_path.c_str(), R_OK) == 0)
             return (LoadStaticFile(current_path));
     }

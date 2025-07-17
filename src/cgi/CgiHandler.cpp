@@ -29,7 +29,7 @@ void	CgiHandler::SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &co
 	env.Add("CONTENT_TYPE=", "non");
 	env.Add("QUERY_STRING=", http_req.getQueryString());
 	env.Add("PATH_INFO=", http_req.getPathInfo());
-	//env.Add("REMOTE_ADDR=", http_req.getClientAddrs()); still need to add client addrs to the environment
+	//env.Add("REMOTE_ADDR=", http_req.getClientAddrs()); still need to add client ip addrs to the environment
 	for (std::map<std::string, std::string>::iterator it = http_req.getHeaders().begin(); it != http_req.getHeaders().end(); it++)
 		env.Add("HTTP_" + it->first + "=", it->second);
 }
