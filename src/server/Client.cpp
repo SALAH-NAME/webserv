@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 13:35:55 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/19 18:35:00 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include "HttpRequest.hpp"
 
 Client::Client(Socket sock, int serverFD, const ServerConfig& conf) : _socket(sock), _serverSocketFD(serverFD),
-											_readBytes(0), _timeOut(std::time(NULL)),
+											_readBytes(0), _lastTimeConnection(std::time(NULL)),
 											_incomingDataDetected(INCOMING_DATA_OFF),
 											_responseInFlight(false), _sentBytes(0),
 											_isKeepAlive(true),
@@ -41,7 +41,7 @@ int		Client::getServerSocketFD(void) {
 }
 
 time_t		Client::getLastConnectionTime(void){
-	return _timeOut;
+	return _lastTimeConnection;
 }
 
 bool	Client::getIncomingDataDetected(void) {
@@ -71,11 +71,11 @@ HttpRequest&	Client::getHttpRequest(void) {
 }
 
 std::string&	Client::getHeaderPart(void) {
-	return	_responseHeaderPart;
+	return	_requestHeaderPart;
 }
 
 std::string&	Client::getBodyPart(void) {
-	return	_responseBodyPart;
+	return	_requestBodyPart;
 }
 
 size_t	Client::getAvailableResponseBytes(void) {
@@ -99,11 +99,11 @@ size_t	Client::getResponseSize(void) {
 }
 
 void		Client::appendToHeaderPart(const std::string& headerData) {
-	_responseHeaderPart += headerData;
+	_requestHeaderPart += headerData;
 }
 
 void		Client::appendToBodyPart(const std::string& bodyData) {
-	_responseBodyPart += bodyData;
+	_requestBodyPart += bodyData;
 }
 
 void	Client::setEvent(int _epfd, struct epoll_event& event) {
@@ -120,7 +120,7 @@ void	Client::setIncomingDataFlag(bool flag) {
 }
 
 void	Client::resetLastConnectionTime(void){
-	_timeOut = std::time(NULL);
+	_lastTimeConnection = std::time(NULL);
 }
 
 void	Client::setSentBytes(size_t bytes) {
@@ -150,11 +150,11 @@ void	Client::setAvailableResponseBytes(size_t value) {
 }
 
 void	Client::clearRequestHolder(void) {
-	_responseHeaderPart.clear();
+	_requestHeaderPart.clear();
 }
 
 bool		Client::parseRequest() {
-	return _httpRequest.parse(_responseHeaderPart);
+	return _httpRequest.parse(_requestHeaderPart);
 }
 
 void	Client::prinfRequestinfos(void) {

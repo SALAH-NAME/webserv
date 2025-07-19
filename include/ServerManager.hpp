@@ -3,8 +3,8 @@
 
 #define EPOLLTIMEOUT 100
 #define MAX_EVENTS 100
-#define BYTES_TO_READ 1000
-#define BYTES_TO_SEND 1000
+#define BYTES_TO_READ 1023
+#define BYTES_TO_SEND 1023
 #define BUFFERSIZE 1024
 #define RESPONSESIZE 746 // Fix size for the temp response
 
@@ -14,6 +14,8 @@
 
 #define GENERATE_RESPONSE_ON true
 #define GENERATE_RESPONSE_OFF false
+
+#define _2CRLF "\r\n\r\n"
 
 #include <netinet/in.h> // For sockaddr_in
 #include <unistd.h> 
@@ -53,10 +55,6 @@ class ServerManager {
 		struct epoll_event					_event;
 		struct epoll_event					_events[MAX_EVENTS];
 		char								_buffer[BUFFERSIZE];
-		std::string							_2CRLF;
-
-		std::fstream						out_1;
-		std::fstream						out_2;
 
 		void								createEpoll(void);
 		void								setUpServers(void);
@@ -72,8 +70,8 @@ class ServerManager {
 
 	public:
 
-											ServerManager(const std::vector<ServerConfig> &);
-											~ServerManager(void);
+		/**/								ServerManager(const std::vector<ServerConfig> &);
+		/**/								~ServerManager(void);
 		void								waitingForEvents(void);
 
 

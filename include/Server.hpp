@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 13:35:08 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/19 18:28:41 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,6 @@ class Server {
 		int						_nMaxBacklog;
 		int 					_epfd;
 		bool					_isKeepAlive;
-		char					_buffer[1024];
-		size_t					_bufferSize;
 		int						_timeOut;
 		std::map<int, Client>	_clients;
 		std::vector<int>		_markedForEraseClients;
@@ -38,8 +36,8 @@ class Server {
 		void					initAttributes(int);
 		void					setEventStatus(struct epoll_event&, int);
 	public:
-								Server(const ServerConfig&, size_t);
-								~Server(void);
+		/**/					Server(const ServerConfig&, size_t);
+		/**/					~Server(void);
 
 		int						getID(void);
 		std::vector<Socket>&	getListeningSockets(void);

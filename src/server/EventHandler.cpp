@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 13:45:14 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/19 18:29:22 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 	ssize_t				clientEventLen = sizeof(clientEvent);
 	int					clientSocketFD;
 		
-	memset(&clientEvent, 0, clientEventLen);
+	std::memset(&clientEvent, 0, clientEventLen); // use std::
 	clientEvent.events = EPOLLIN | EPOLLET; // make the client socket Edge-Triggered
 	
 	for (size_t i = 0; i < _listeningSockets.size(); i++) {
@@ -48,7 +48,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 				try {
 					Socket sock = _listeningSockets[i].accept();
 					clientSocketFD = sock.getFd();
-					// std::cout << "accept : " << clientSocketFD << "\n";
+					// std::cout << "  ======>>> accept : " << clientSocketFD << " <<====== \n";
 					clientEvent.data.fd = clientSocketFD;
 					if (epoll_ctl(_epfd, EPOLL_CTL_ADD, clientSocketFD, &clientEvent) == -1)
 						throw std::runtime_error(std::string("epoll_ctl() failed: ") + strerror(errno));
@@ -93,7 +93,6 @@ void	ServerManager::processEvent(int serverIndex) {
 }
 
 void    ServerManager::waitingForEvents(void) {
-	int i = 0;
 	while (true) {
 		_nfds = epoll_wait(_epfd, _events, MAX_EVENTS, EPOLLTIMEOUT);
 		if (_nfds < 0)
@@ -110,6 +109,5 @@ void    ServerManager::waitingForEvents(void) {
 			generatResponses(x);
 			sendClientsResponse(x);
 		}
-		i++;
 	}
 }

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/07/17 18:03:40 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/19 18:27:22 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serv
 			// fixed this problem ==>  the OS keeps the port in a "cool-down" period (TIME_WAIT)
 			// ==> It’s mainly for quick restart development or for binding during graceful restarts.
 			
-			memset(&_Address, 0, sizeof(_Address));
+			std::memset(&_Address, 0, sizeof(_Address));
 			_Address.sin_family = _domin;
 			_Address.sin_port = htons(_ports[i]);
 			
@@ -48,10 +48,7 @@ Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serv
 				throw std::runtime_error(std::string("Invalid IP address: ") + strerror(errno));
 
 			struct sockaddr addr;
-			memcpy(&addr, &_Address, sizeof(_Address));
-		
-			_bufferSize = sizeof(_buffer);
-			memset(_buffer, 0, _bufferSize);
+			std::memcpy(&addr, &_Address, sizeof(_Address));
 
 			_listeningSockets[_listeningSockets.size() - 1].bind(&addr, sizeof(_Address));
 			_listeningSockets[_listeningSockets.size() - 1].listen();
