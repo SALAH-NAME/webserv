@@ -17,12 +17,6 @@ std::fstream *ResponseHandler::GetTargetFilePtr(){return target_file;}
 
 bool ResponseHandler::IsPost(){return is_post;}
 
-Pipe &ResponseHandler::GetCgiInPipe(){return (CgiObj.GetInPipe());}
-
-Pipe &ResponseHandler::GetCgiOutPipe(){return (CgiObj.GetOutPipe());}
-
-pid_t ResponseHandler::GetCgiChildPid(){return (CgiObj.GetChildPid());}
-
 std::string ResponseHandler::GetResourcePath() {return resource_path;}
 
 void ResponseHandler::Run(HttpRequest &req)
@@ -77,7 +71,7 @@ void    ResponseHandler::HandleDirRequest(HttpRequest &req)
         return (GenerateDirListing(req));
     for (unsigned int i=0;i<indexes.size();i++)
     {
-        current_path = loc_config->getRoot() + '/' + indexes[i];
+        current_path = resource_path + '/' + indexes[i];
         if (access(current_path.c_str(), R_OK) == 0)
             return (LoadStaticFile(current_path));
     }
@@ -107,9 +101,9 @@ void ResponseHandler::ProccessHttpPOST(HttpRequest &req)
         throw (ResponseHandlerError("HTTP/1.1 409 Conflict", 409));
     if (req.getPath()[req.getPath().size() - 1] == '/')
         throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
-    SetResponseHeader("HTTP/1.1 200 OK", -1, false);
+    SetResponseHeader("HTTP/1.1 201 Created", -1, false);
     target_file = new std::fstream(resource_path.c_str(), std::ios::out);
-    if (!target_file->is_open())
+    if (!target_file || !target_file->is_open())
         throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
     is_post = true;
 }

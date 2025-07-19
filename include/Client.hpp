@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
+/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/08 14:34:55 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/13 12:01:04 by alaktari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@
 #include "HttpRequest.hpp"
 #include "ConfigManager.hpp"
 #include "ServerManager.hpp"
-#include "Socket.hpp"
+// #include "Socket.hpp"
 
 class Client {
 	private:
@@ -31,18 +31,18 @@ class Client {
 		std::string			_responseHolder;
 		time_t				_timeOut;
 		HttpRequest			_requestInfos;
-		const ServerConfig*	_serverInfo;
 		bool				_incomingDataDetected;
 		bool				_responseInFlight;
 		size_t				_sentBytes;
 		bool				_isKeepAlive;
 		int					_availableResponseBytes;
 		int					_responseSize;
+		bool				_generateInProcess;
+		ResponseHandler*	_responseHandler;
 
 	public:
-							Client(void);
-							Client(Socket, int);
-							
+							Client(Socket, int, const ServerConfig&);
+							// ~Client();
 		size_t				getReadBytes(void);
 		Socket&				getSocket(); //
 		std::string			getRequest(void);
@@ -54,6 +54,7 @@ class Client {
 		bool				getIsKeepAlive(void);
 		size_t				getSentBytes(void);
 		int					getBytesToSendNow(void);
+		bool				getGenerateInProcess(void); //
 
 		void				setReadBytes(size_t);
 		void				appendToRequest(const std::string& requestData);
@@ -66,6 +67,7 @@ class Client {
 		void				setSentBytes(size_t bytes);
 		void				resetSendBytes(void);
 		void				setIncomingDataDetected(int mode);
+		void				setGenerateInProcess(bool); //
 
 		void				clearRequestHolder(void);
 		bool				parseRequest(void);

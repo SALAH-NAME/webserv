@@ -1,7 +1,7 @@
 NAME := webserv
 
 CXX	:= c++
-CXXFLAGS := -Wall -Wextra -Werror -std=c++98 #-fsanitize=address -g3
+CXXFLAGS := -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g3
 INCFLAGS := -I./include/
 DEPFLAGS := -MMD -MP
 
@@ -13,10 +13,11 @@ SRCS := main.cpp \
 		config/GlobalConfig.cpp config/LocationConfig.cpp config/ServerConfig.cpp \
 		config/ConfigManager.cpp config/ConfigParser.cpp config/ConfigPrinter.cpp \
 		server/ServerManager.cpp server/Server.cpp server/EventHandler.cpp \
-		server/ReceiveRequests.cpp server/Client.cpp 
+		server/ReceiveRequests.cpp server/Client.cpp server/ResponseProcess.cpp \
 		server/SendResponse.cpp server/HttpRequest.cpp \
 		raii/Socket.cpp raii/File.cpp raii/Pipe.cpp \
-		cgi/CgiHandler.cpp cgi/Environment.cpp \
+		cgi/CgiHandler.cpp cgi/Environment.cpp cgi/CgiOutputParser.cpp \
+		cgi/CgiParsingHelpers response/CgiIntegration.cpp \
 		response/ResponseHandler.cpp response/GenerateResponse.cpp \
 		response/ResponseUtils.cpp response/HttpErrors.cpp \
 		response/ServerRouting.cpp response/StaticFiles.cpp

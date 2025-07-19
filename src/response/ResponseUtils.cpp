@@ -25,7 +25,7 @@ std::string formatDate(const char *format, time_t time, int len)
 std::string GenerateTimeStamp()
 {
     time_t current_time;
-    time(&current_time);
+    std::time(&current_time);
 
     return (formatDate("%a, %d %b %Y %H:%M:%S GMT", current_time, 29));
 }

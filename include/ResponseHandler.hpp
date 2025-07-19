@@ -24,22 +24,24 @@ typedef std::map<std::string, std::vector<std::string> > STRINGS_MAP;
 class ResponseHandler 
 {
 	private:
-		const ServerConfig		&conf;
-		std::string				response_header;
-		std::string 			resource_path;
-		bool					require_cgi;
-		bool					is_post;//true in case of POST but does not require cgi
-		CgiHandler				CgiObj;
-		STRINGS_MAP				content_types;
-		std::string				response_body;
-		LocationConfig const	*loc_config;
-		std::fstream			*target_file;
+		const ServerConfig			&conf;
+		std::string					response_header;
+		std::string 				resource_path;
+		bool						require_cgi;
+		bool						is_post;
+		CgiHandler					CgiObj;
+		STRINGS_MAP					content_types;
+		std::map<int, std::string>	status_phrases;
+		std::string					response_body;
+		LocationConfig const		*loc_config;
+		std::fstream				*target_file;
 	
 		void		CheckForInitialErrors(HttpRequest &req);
 		void		ProccessRequest(HttpRequest &req);
 		void 		RouteResolver(const std::string &path, const std::string &method);
 		bool 		CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations);
 		void 		InitializeStandardContentTypes();
+		void		InitializeStatusPhrases();
 		void	    HandleDirRequest(HttpRequest &req);
 		void 		ProccessHttpGET(HttpRequest &req);
 		void 		ProccessHttpPOST(HttpRequest &req);
@@ -51,6 +53,7 @@ class ResponseHandler
 		bool 		NeedToRedirect(HttpRequest &req);
 		void 		GenerateRedirection(HttpRequest &req);
 		void		GenerateErrorPage(const std::string &status_line);
+		std::string GenerateCgiStatusLine();
 		void 		SetResponseHeader(const std::string &status_line, int len,
 						bool is_static, std::string location = "");
 			
@@ -66,6 +69,9 @@ class ResponseHandler
 		std::string 	GetResponseBody();
 		std::fstream	*GetTargetFilePtr();
 		pid_t			GetCgiChildPid();
+		bool			checkCgiTimeOut();
+		void			AppendToCgiOutput(const std::string &buffer);
+		void			GenerateHeaderFromCgiData();
 		~ResponseHandler();
 
 		class ResponseHandlerError : std::exception
@@ -87,5 +93,4 @@ std::string	ExtractFileExtension(const std::string &path);
 std::string	GenerateTimeStamp();
 std::string	NumtoString(int num);
 std::string	formatDate(const char *format, time_t time, int len);
-
 #endif
