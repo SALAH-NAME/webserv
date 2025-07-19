@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 13:39:42 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/19 18:29:47 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,23 +33,22 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 	ssize_t readbytes;
 	size_t headerEnd;
 
-	memset(_buffer, 0, sizeof(_buffer));
+	std::memset(_buffer, 0, sizeof(_buffer)); // use std
 
 	try {
 		readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ);
 		// std::cout << "read bytes ==> " << readbytes << " from : " << client.getSocket().getFd() << "\n";
 		
 		if (readbytes > 0) {
+			// printRequestAndResponse("Header", std::string(_buffer, readbytes));
 			client.resetLastConnectionTime();
 			if ((headerEnd = (std::string(_buffer, readbytes)).find(_2CRLF)) != std::string::npos) {
 				// std::cout << "   ====>> request is completed <<=====\n";
 				isolateAndRecordBody(client, std::string(_buffer, readbytes), headerEnd);
 				// printRequestAndResponse("Header", client.getHeaderPart());
 				// printRequestAndResponse("Body", client.getBodyPart());
-				// exit(0);
 				if (client.parseRequest()) {
 					// client.prinfRequestinfos();
-					// exit(0);
 					client.setIncomingDataDetected(INCOMING_DATA_OFF);
 					client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 				}

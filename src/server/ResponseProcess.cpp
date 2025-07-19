@@ -40,45 +40,45 @@ void	Client::buildResponse() {
 	// std::cout << "       ====>>> default Response <<<=====\n";
 		
 	std::pair<std::string, std::string> response = getResponseString();
-	_responseHeaderPart = response.first;
-	_responseBodyPart = response.second;
-	_responseSize = _responseHeaderPart.size() + _responseBodyPart.size();
+	_requestHeaderPart = response.first;
+	_requestBodyPart = response.second;
+	_responseSize = _requestHeaderPart.size() + _requestBodyPart.size();
 	_availableResponseBytes = _responseSize;
-	// printRequestAndResponse("RESPONSE", _responseHeaderPart + _responseBodyPart);
+	// printRequestAndResponse("RESPONSE", _requestHeaderPart + _requestBodyPart);
 }
 
 // void	Client::buildResponse() {
-// 	// _responseHandler->Run(_httpRequest);
+// 	_responseHandler->Run(_httpRequest);
 
 
-// 	// if (!_responseHandler->GetTargetFilePtr()) {
-// 	// 	std::cout << "     =====>>>  Build Response (1) <<<===== \n";
-// 	// 	_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
-// 	// 	std::cout << "response has been created\n";
-// 	// 	_responseSize = _responseHolder.size();
-// 	// 	// _availableResponseBytes == _responseHolder.size();
-// 	// 	setAvailableResponseBytes(_responseSize);
-// 	// 	// std::cout << "size ==> " << _responseHolder.size() << "\n";
-// 	// 	// exit(0);
-// 	// }
-// 	// else {
-// 	// 	if (_responseHandler->IsPost()) {
-// 	// 		std::cout << "     =====>>>  write body to target file <<<===== \n";
-// 	// 		exit(0);
+// 	if (!_responseHandler->GetTargetFilePtr()) {
+// 		std::cout << "     =====>>>  Build Response (1) <<<===== \n";
+// 		_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
+// 		std::cout << "response has been created\n";
+// 		_responseSize = _responseHolder.size();
+// 		// _availableResponseBytes == _responseHolder.size();
+// 		setAvailableResponseBytes(_responseSize);
+// 		// std::cout << "size ==> " << _responseHolder.size() << "\n";
+// 		// exit(0);
+// 	}
+// 	else {
+// 		if (_responseHandler->IsPost()) {
+// 			std::cout << "     =====>>>  write body to target file <<<===== \n";
+// 			exit(0);
 			
-// 	// 	}
-// 	// 	else {
+// 		}
+// 		else {
 
 // 			// std::cout << "       ====>>> default Response <<<=====\n";
 			
 // 			std::pair<std::string, std::string> response = getResponseString();
-// 			_responseHeaderPart = response.first;
-// 			_responseBodyPart = response.second;
-// 			_responseSize = _responseHeaderPart.size() + _responseBodyPart.size();
+// 			_requestHeaderPart = response.first;
+// 			_requestBodyPart = response.second;
+// 			_responseSize = _requestHeaderPart.size() + _requestBodyPart.size();
 // 			_availableResponseBytes = _responseSize;
 
 // 			// std::cout << ":";
-// 			printRequestAndResponse("RESPONSE", _responseHeaderPart + _responseBodyPart);
-// 	// 	}
-// 	// }
+// 			printRequestAndResponse("RESPONSE", _requestHeaderPart + _requestBodyPart);
+// 		}
+// 	}
 // }

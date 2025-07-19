@@ -8,8 +8,7 @@ ServerConfig::ServerConfig()
 		: BaseConfig(), _listen(DefaultConfig::LISTEN), _host(DefaultConfig::HOST),
 			_session_enable(DefaultConfig::SESION_ENABLE),
 			_session_timeout(DefaultConfig::SESSION_TIMEOUT)
-{
-}
+{}
 
 void ServerConfig::setListen(unsigned int port) { _listen = port; }
 

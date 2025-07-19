@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 13:34:39 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/19 18:28:28 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,10 @@ class Client {
 		Socket				_socket;
 		int					_serverSocketFD;
 		size_t				_readBytes;
-		std::string			_responseHeaderPart;
-		std::string			_responseBodyPart;
+		std::string			_requestHeaderPart;
+		std::string			_requestBodyPart;
 		size_t				_responseSize;
-		time_t				_timeOut;
+		time_t				_lastTimeConnection;
 		HttpRequest			_httpRequest;
 		bool				_incomingDataDetected;
 		bool				_responseInFlight;
@@ -40,8 +40,8 @@ class Client {
 		ResponseHandler*	_responseHandler;
 
 	public:
-							Client(Socket, int, const ServerConfig&);
-							~Client();
+		/**/				Client(Socket, int, const ServerConfig&);
+		/**/				~Client();
 		size_t				getReadBytes(void);
 		Socket&				getSocket();
 		int					getServerSocketFD(void);
@@ -51,7 +51,7 @@ class Client {
 		bool				getIsKeepAlive(void);
 		size_t				getSentBytes(void);
 		int					getBytesToSendNow(void);
-		bool				getGenerateInProcess(void); //
+		bool				getGenerateInProcess(void);
 		HttpRequest&		getHttpRequest(void);
 		std::string&		getHeaderPart(void);
 		std::string&		getBodyPart(void);
@@ -69,7 +69,7 @@ class Client {
 		void				setSentBytes(size_t bytes);
 		void				resetSendBytes(void);
 		void				setIncomingDataDetected(int mode);
-		void				setGenerateResponseInProcess(bool); //
+		void				setGenerateResponseInProcess(bool);
 		void				setResponseSize(size_t);
 		void				setAvailableResponseBytes(size_t);
 

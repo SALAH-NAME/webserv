@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 13:13:07 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/19 18:27:43 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,6 @@ void	ServerManager::generatResponses(int serverIndex) {
 		client.setGenerateResponseInProcess(GENERATE_RESPONSE_OFF);
 		// client.prinfRequestinfos();exit(0);
 	}
-
 }
 
 void ServerManager::checkTimeOut(void)
@@ -78,10 +77,9 @@ void ServerManager::addToEpollSet(void)
 
 		for (size_t x = 0; x < listeningSockets.size(); x++)
 		{
-			memset(&_event, 0, sizeof(_event));
+			std::memset(&_event, 0, sizeof(_event)); // std
 			_event.data.fd = listeningSockets[x].getFd();
-			_event.events =
-					EPOLLIN | EPOLLET; // make the listening socket Edge-triggered
+			_event.events = EPOLLIN | EPOLLET; // make the listening socket Edge-triggered
 
 			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, listeningSockets[x].getFd(),
 										&_event) == -1)
@@ -103,7 +101,7 @@ void ServerManager::addToEpollSet(void)
 void ServerManager::createEpoll()
 {
 	std::cout << "----------------- Create Epoll ----------------------\n";
-	_epfd = epoll_create1(0);
+	_epfd = epoll_create(1);
 	if (_epfd == -1)
 		throw("epoll create1 failed");
 	std::cout << "an epoll instance for the servers sockets created(" << _epfd
@@ -111,7 +109,7 @@ void ServerManager::createEpoll()
 }
 
 ServerManager::ServerManager(const std::vector<ServerConfig>& serversInfo)
-		: _serversConfig(serversInfo), _2CRLF("\r\n\r\n")
+		: _serversConfig(serversInfo)
 {
 	createEpoll();
 	setUpServers();
