@@ -3,14 +3,30 @@
 /*                                                        :::      ::::::::   */
 /*   ServerManager.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/13 11:19:28 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/19 13:13:07 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServerManager.hpp"
+
+void	ServerManager::generatResponses(int serverIndex) {
+	std::map<int, Client>& clients = _servers[serverIndex].getClients();
+	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+		Client& client = it->second;
+		if (client.getGenerateInProcess() == GENERATE_RESPONSE_OFF)
+			continue ;
+
+		it->second.buildResponse();
+
+		client.setResponseInFlight(true);
+		client.setGenerateResponseInProcess(GENERATE_RESPONSE_OFF);
+		// client.prinfRequestinfos();exit(0);
+	}
+
+}
 
 void ServerManager::checkTimeOut(void)
 {

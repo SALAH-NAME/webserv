@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   EventHandler.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/13 12:00:52 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/19 13:45:14 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,12 +86,14 @@ void	ServerManager::processEvent(int serverIndex) {
 			}
 			std::map<int, Client>::iterator clientIterator = server.getClients().find(clientSocket);
 			clientIterator->second.setIncomingDataFlag(INCOMING_DATA_ON);
-			clientIterator->second.setEvent(_epfd, _events[i]);		}
+			clientIterator->second.setEvent(_epfd, _events[i]);
+		}
 	}
 	server.eraseMarked();
 }
 
 void    ServerManager::waitingForEvents(void) {
+	int i = 0;
 	while (true) {
 		_nfds = epoll_wait(_epfd, _events, MAX_EVENTS, EPOLLTIMEOUT);
 		if (_nfds < 0)
@@ -108,5 +110,6 @@ void    ServerManager::waitingForEvents(void) {
 			generatResponses(x);
 			sendClientsResponse(x);
 		}
+		i++;
 	}
 }

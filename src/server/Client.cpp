@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/13 11:57:47 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/19 13:35:55 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,10 +21,12 @@ Client::Client(Socket sock, int serverFD, const ServerConfig& conf) : _socket(so
 											_incomingDataDetected(INCOMING_DATA_OFF),
 											_responseInFlight(false), _sentBytes(0),
 											_isKeepAlive(true),
-											_availableResponseBytes(RESPONSESIZE),
+											_availableResponseBytes(0),
 											_generateInProcess(GENERATE_RESPONSE_OFF)
 											, _responseHandler(new ResponseHandler(conf))
 {}
+
+Client::~Client() {}
 
 Socket&			Client::getSocket() {
 	return _socket;
@@ -34,18 +36,9 @@ size_t	Client::getReadBytes(void) {
 	return _readBytes;
 }
 
-std::string	Client::getRequest(void) {
-	return _requestHolder;
-}
-
 int		Client::getServerSocketFD(void) {
 	return _serverSocketFD;
 }
-
-std::string &Client::getResponse(void) {
-	return _responseHolder;
-}
-
 
 time_t		Client::getLastConnectionTime(void){
 	return _timeOut;
@@ -73,6 +66,22 @@ bool	Client::getGenerateInProcess(void) {
 	return _generateInProcess;
 }
 
+HttpRequest&	Client::getHttpRequest(void) {
+	return _httpRequest;
+}
+
+std::string&	Client::getHeaderPart(void) {
+	return	_responseHeaderPart;
+}
+
+std::string&	Client::getBodyPart(void) {
+	return	_responseBodyPart;
+}
+
+size_t	Client::getAvailableResponseBytes(void) {
+	return _availableResponseBytes;
+}
+
 void	Client::setReadBytes(size_t bytes) {
 	_readBytes += bytes;
 }
@@ -85,8 +94,16 @@ bool	Client::getResponseInFlight(void) {
 	return _responseInFlight;
 }
 
-void		Client::appendToRequest(const std::string& requestData) {
-	_requestHolder += requestData;
+size_t	Client::getResponseSize(void) {
+	return _responseSize;
+}
+
+void		Client::appendToHeaderPart(const std::string& headerData) {
+	_responseHeaderPart += headerData;
+}
+
+void		Client::appendToBodyPart(const std::string& bodyData) {
+	_responseBodyPart += bodyData;
 }
 
 void	Client::setEvent(int _epfd, struct epoll_event& event) {
@@ -96,10 +113,6 @@ void	Client::setEvent(int _epfd, struct epoll_event& event) {
 
 void    Client::setServerSocketFD(int s_fd) {
 	_serverSocketFD = s_fd;
-}
-
-void		 Client::setResponse(std::string response) {
-	_responseHolder += response;	
 }
 
 void	Client::setIncomingDataFlag(bool flag) {
@@ -117,25 +130,33 @@ void	Client::setSentBytes(size_t bytes) {
 
 void	Client::resetSendBytes(void) {
 	_sentBytes = 0;
-	_availableResponseBytes = RESPONSESIZE;
+	_availableResponseBytes = 0;
 }
 
 void	Client::setIncomingDataDetected(int mode) {
 	_incomingDataDetected = mode;
 }
 
-void	Client::setGenerateInProcess(bool value) {
+void	Client::setGenerateResponseInProcess(bool value) {
 	_generateInProcess = value;
 }
 
+void	Client::setResponseSize(size_t size) {
+	_responseSize = size;
+}
+
+void	Client::setAvailableResponseBytes(size_t value) {
+	_availableResponseBytes = value;
+}
+
 void	Client::clearRequestHolder(void) {
-	_requestHolder.clear();
+	_responseHeaderPart.clear();
 }
 
 bool		Client::parseRequest() {
-	return _requestInfos.parse(_requestHolder);
+	return _httpRequest.parse(_responseHeaderPart);
 }
 
 void	Client::prinfRequestinfos(void) {
-	_requestInfos.printInfos();
+	_httpRequest.printInfos();
 }

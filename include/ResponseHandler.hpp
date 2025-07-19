@@ -33,7 +33,7 @@ class ResponseHandler
 		STRINGS_MAP				content_types;
 		std::string				response_body;
 		LocationConfig const	*loc_config;
-		std::fstream			*target_file;
+		std::fstream			*target_file; // if null ==> 
 	
 		void		CheckForInitialErrors(HttpRequest &req);
 		void		ProccessRequest(HttpRequest &req);

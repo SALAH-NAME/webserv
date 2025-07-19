@@ -16,7 +16,7 @@
 #define GENERATE_RESPONSE_OFF false
 
 #include <netinet/in.h> // For sockaddr_in
-#include <unistd.h>     // For close()
+#include <unistd.h> 
 #include <iostream>
 #include <string>
 #include <vector>
@@ -28,7 +28,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <ctime>
-#include <cerrno> // should be removed
+#include <cerrno>
 #include <map>
 #include <sstream>
 #include <algorithm>
@@ -54,6 +54,9 @@ class ServerManager {
 		struct epoll_event					_events[MAX_EVENTS];
 		char								_buffer[BUFFERSIZE];
 		std::string							_2CRLF;
+
+		std::fstream						out_1;
+		std::fstream						out_2;
 
 		void								createEpoll(void);
 		void								setUpServers(void);

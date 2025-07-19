@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/07/12 08:54:38 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/17 18:03:40 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,8 @@ Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serv
 	initAttributes(id);
 
 	// Add temp ports
-	_ports.push_back(2323);
-	_ports.push_back(4545);
+	// _ports.push_back(2323);
+	// _ports.push_back(4545);
 
 	for (size_t i = 0; i < _ports.size(); i++) {
 		

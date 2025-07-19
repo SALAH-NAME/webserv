@@ -6,21 +6,23 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:24:40 by karim             #+#    #+#             */
-/*   Updated: 2025/07/06 10:44:12 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/19 13:18:08 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServerManager.hpp"
 
-void    printRequet(std::string requet) {
-	for (size_t i = 0; i < requet.size(); i++) {
-		if (requet[i] == '\r')
+void    printRequestAndResponse(std::string str, std::string request) {
+	std::cout << "\n********************  " << str << "  *********************\n";
+	for (size_t i = 0; i < request.size(); i++) {
+		if (request[i] == '\r')
 			std::cout << "\\r";
-		else if (requet[i] == '\n')
+		else if (request[i] == '\n')
 			std::cout << "\\n\n";
 		else
-			std::cout << requet[i];
+			std::cout << request[i];
 	}
+	std::cout << "\n*****************************************\n\n";
 }
 
 int main(int argc, char** argv)

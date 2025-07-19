@@ -3,19 +3,35 @@
 /*                                                        :::      ::::::::   */
 /*   ReceiveRequests.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/13 12:01:34 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/19 13:39:42 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include "ServerManager.hpp"
 
+void	isolateAndRecordBody(Client& client, std::string tempBuffer, size_t headerEnd) {
+	if (tempBuffer.size() == headerEnd + 4) {
+		// no body-data received after header ==> no need to save
+		client.appendToHeaderPart(tempBuffer);
+		client.setReadBytes(tempBuffer.size());
+		return ;
+	}
+	
+	// some body-data received after header-data ==> it needs to be saved and removed from header part
+	client.appendToHeaderPart(tempBuffer.substr(0, headerEnd + 4));
+	client.setReadBytes(headerEnd + 4);
+	client.appendToBodyPart(tempBuffer.substr(headerEnd + 4)); // here we save the body
+	
+}
+
 void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 	int clientSocket = client.getSocket().getFd();
 	ssize_t readbytes;
+	size_t headerEnd;
 
 	memset(_buffer, 0, sizeof(_buffer));
 
@@ -24,20 +40,25 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 		// std::cout << "read bytes ==> " << readbytes << " from : " << client.getSocket().getFd() << "\n";
 		
 		if (readbytes > 0) {
-			client.appendToRequest(std::string(_buffer, readbytes));
-			client.setReadBytes(readbytes);
 			client.resetLastConnectionTime();
-
-			if (client.getRequest().find(_2CRLF) != std::string::npos) {
-				// std::cout << "   ====>> request is comleted <<=====\n";
-				// printRequet(client.getRequest());exit(0);
+			if ((headerEnd = (std::string(_buffer, readbytes)).find(_2CRLF)) != std::string::npos) {
+				// std::cout << "   ====>> request is completed <<=====\n";
+				isolateAndRecordBody(client, std::string(_buffer, readbytes), headerEnd);
+				// printRequestAndResponse("Header", client.getHeaderPart());
+				// printRequestAndResponse("Body", client.getBodyPart());
+				// exit(0);
 				if (client.parseRequest()) {
-					// client.prinfRequestinfos();exit(0);
+					// client.prinfRequestinfos();
+					// exit(0);
 					client.setIncomingDataDetected(INCOMING_DATA_OFF);
-					client.setGenerateInProcess(GENERATE_RESPONSE_ON);
+					client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 				}
 				else
 					_servers[serverIndex].closeConnection(clientSocket);
+			}
+			else {
+				client.appendToHeaderPart(std::string(_buffer, readbytes));
+				client.setReadBytes(readbytes);
 			}
 		}
 		else

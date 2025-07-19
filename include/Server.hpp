@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/11 20:14:04 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/19 13:35:08 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,8 @@ class Server {
 		int						_domin;
 		int						_type;
 		int						_protocol;
-		int						_nMaxBacklog; // this parameter is for listen()
-		int 					_epfd; // epoll fd
+		int						_nMaxBacklog;
+		int 					_epfd;
 		bool					_isKeepAlive;
 		char					_buffer[1024];
 		size_t					_bufferSize;
@@ -60,6 +60,6 @@ class Server {
 };
 
 std::vector<int>::iterator		getIterator(int, std::vector<int>&);
-void							printRequet(std::string);
+void							printRequestAndResponse(std::string, std::string);
 
 #endif

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/13 12:01:04 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/19 13:34:39 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,34 +20,31 @@
 #include "HttpRequest.hpp"
 #include "ConfigManager.hpp"
 #include "ServerManager.hpp"
-// #include "Socket.hpp"
 
 class Client {
 	private:
-		Socket				_socket; //
+		Socket				_socket;
 		int					_serverSocketFD;
 		size_t				_readBytes;
-		std::string			_requestHolder;
-		std::string			_responseHolder;
+		std::string			_responseHeaderPart;
+		std::string			_responseBodyPart;
+		size_t				_responseSize;
 		time_t				_timeOut;
-		HttpRequest			_requestInfos;
+		HttpRequest			_httpRequest;
 		bool				_incomingDataDetected;
 		bool				_responseInFlight;
 		size_t				_sentBytes;
 		bool				_isKeepAlive;
-		int					_availableResponseBytes;
-		int					_responseSize;
+		size_t				_availableResponseBytes;
 		bool				_generateInProcess;
 		ResponseHandler*	_responseHandler;
 
 	public:
 							Client(Socket, int, const ServerConfig&);
-							// ~Client();
+							~Client();
 		size_t				getReadBytes(void);
-		Socket&				getSocket(); //
-		std::string			getRequest(void);
+		Socket&				getSocket();
 		int					getServerSocketFD(void);
-		std::string&		getResponse(void);
 		time_t				getLastConnectionTime(void);
 		bool				getIncomingDataDetected(void);
 		bool				getResponseInFlight(void);
@@ -55,11 +52,16 @@ class Client {
 		size_t				getSentBytes(void);
 		int					getBytesToSendNow(void);
 		bool				getGenerateInProcess(void); //
+		HttpRequest&		getHttpRequest(void);
+		std::string&		getHeaderPart(void);
+		std::string&		getBodyPart(void);
+		size_t				getResponseSize(void);
+		size_t				getAvailableResponseBytes(void);
 
 		void				setReadBytes(size_t);
-		void				appendToRequest(const std::string& requestData);
+		void				appendToHeaderPart(const std::string& requestData);
+		void				appendToBodyPart(const std::string& requestData);
 		void				setServerSocketFD(int);
-		void				setResponse(std::string );
 		void				setIncomingDataFlag(bool flag);
 		void				resetLastConnectionTime(void);
 		void				setEvent(int _epfd, struct epoll_event& event);
@@ -67,11 +69,15 @@ class Client {
 		void				setSentBytes(size_t bytes);
 		void				resetSendBytes(void);
 		void				setIncomingDataDetected(int mode);
-		void				setGenerateInProcess(bool); //
+		void				setGenerateResponseInProcess(bool); //
+		void				setResponseSize(size_t);
+		void				setAvailableResponseBytes(size_t);
 
 		void				clearRequestHolder(void);
 		bool				parseRequest(void);
 		void				prinfRequestinfos(void);
+
+		void				buildResponse();
 };
 
 #endif
