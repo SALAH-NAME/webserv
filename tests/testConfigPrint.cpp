@@ -20,6 +20,7 @@ void testConfigPrint()
 	allowed.insert(HTTP_GET);
 	allowed.insert(HTTP_POST);
 	server1.setAllowedMethods(allowed);
+	server1.setConnectionTimeout(103);
 
 	LocationConfig loc1;
 	loc1.setPath("/api", false);

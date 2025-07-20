@@ -91,6 +91,13 @@ void ConfigPrinter::printServerConfig(std::ostream&				out,
 		out << ";\n";
 	}
 
+	if (server.getConnectionTimeout())
+	{
+		printIndent(out, 1);
+		out << "connection_timeout ";
+		out << server.getConnectionTimeout() << ";\n";
+	}
+
 	if (server.getSessionEnable())
 	{
 		printIndent(out, 1);

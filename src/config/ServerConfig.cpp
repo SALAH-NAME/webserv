@@ -4,10 +4,11 @@
 #include <ctime>
 #include <vector>
 
-ServerConfig::ServerConfig()
-		: BaseConfig(), _listen(DefaultConfig::LISTEN), _host(DefaultConfig::HOST),
-			_session_enable(DefaultConfig::SESION_ENABLE),
-			_session_timeout(DefaultConfig::SESSION_TIMEOUT)
+ServerConfig::ServerConfig(unsigned int connection_timeout)
+    : BaseConfig(), _listen(DefaultConfig::LISTEN), _host(DefaultConfig::HOST),
+      _session_enable(DefaultConfig::SESION_ENABLE),
+      _session_timeout(DefaultConfig::SESSION_TIMEOUT),
+      _connection_timeout(connection_timeout)
 {}
 
 void ServerConfig::addListen(unsigned int port) { _listen.push_back(port); }
@@ -88,4 +89,14 @@ const std::map<std::string, LocationConfig>&
 ServerConfig::getRegexLocation() const
 {
 	return _regex_locations;
+}
+
+unsigned int ServerConfig::getConnectionTimeout() const
+{
+	return _connection_timeout;
+}
+
+void ServerConfig::setConnectionTimeout(unsigned int timeout)
+{
+	_connection_timeout = timeout;
 }
