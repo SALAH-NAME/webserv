@@ -189,7 +189,7 @@ ServerConfig ConfigParser::parseServerBlock()
 										 _tokenizer.front().line, _tokenizer.front().column);
 	}
 
-	if (!server.getListen())
+	if (server.getListens().empty())
 	{
 		throw ParseError("Server block must specify a listen directive",
 										 _tokenizer.front().line, _tokenizer.front().column);
@@ -537,7 +537,7 @@ void ConfigParser::parseListen(ServerConfig& server)
 										 _tokenizer.front().line, _tokenizer.front().column);
 	}
 
-	server.setListen(port);
+	server.addListen(port);
 	expectSemicolon("Expected semicolon after listen directive");
 }
 

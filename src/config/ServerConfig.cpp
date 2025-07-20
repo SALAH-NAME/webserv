@@ -10,7 +10,7 @@ ServerConfig::ServerConfig()
 			_session_timeout(DefaultConfig::SESSION_TIMEOUT)
 {}
 
-void ServerConfig::setListen(unsigned int port) { _listen = port; }
+void ServerConfig::addListen(unsigned int port) { _listen.push_back(port); }
 
 void ServerConfig::setHost(const std::string& host) { _host = host; }
 
@@ -53,7 +53,7 @@ void ServerConfig::addRegexLocation(const std::string&		regex,
 	_regex_locations[regex] = location;
 }
 
-unsigned int ServerConfig::getListen() const { return _listen; }
+std::vector<unsigned int> ServerConfig::getListens() const { return _listen; }
 
 const std::string& ServerConfig::getHost() const { return _host; }
 
