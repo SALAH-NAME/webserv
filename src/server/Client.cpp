@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 18:35:00 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/22 13:21:11 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,9 @@ Client::Client(Socket sock, int serverFD, const ServerConfig& conf) : _socket(so
 											_availableResponseBytes(0),
 											_generateInProcess(GENERATE_RESPONSE_OFF)
 											, _responseHandler(new ResponseHandler(conf))
+											, _shouldTransferBody(TRANSFER_BODY_OFF)
+											, _bodySize(0), _contentLength(0)
+											, _bodyDataPreloaded(BODY_DATA_PRELOADED_OFF)
 {}
 
 Client::~Client() {}
@@ -44,7 +47,7 @@ time_t		Client::getLastConnectionTime(void){
 	return _lastTimeConnection;
 }
 
-bool	Client::getIncomingDataDetected(void) {
+bool	Client::getIncomingDataDetectedFlag(void) {
 	return _incomingDataDetected;
 }
 
@@ -82,6 +85,10 @@ size_t	Client::getAvailableResponseBytes(void) {
 	return _availableResponseBytes;
 }
 
+bool	Client::getShouldTransferBody(void) {
+	return _shouldTransferBody;
+}
+
 void	Client::setReadBytes(size_t bytes) {
 	_readBytes += bytes;
 }
@@ -98,12 +105,29 @@ size_t	Client::getResponseSize(void) {
 	return _responseSize;
 }
 
+std::string&	Client::getResponseHolder(void) {
+	return _responseHolder;
+}
+
+size_t	Client::getBodySize(void) {
+	return _bodySize;
+}
+
+bool	Client::getBodyDataPreloaded(void) {
+	return _bodyDataPreloaded;
+}
+
+size_t	Client::getContentLength(void) {
+	return _contentLength;
+}
+
 void		Client::appendToHeaderPart(const std::string& headerData) {
 	_requestHeaderPart += headerData;
 }
 
 void		Client::appendToBodyPart(const std::string& bodyData) {
 	_requestBodyPart += bodyData;
+	_bodySize += bodyData.size();
 }
 
 void	Client::setEvent(int _epfd, struct epoll_event& event) {
@@ -113,10 +137,6 @@ void	Client::setEvent(int _epfd, struct epoll_event& event) {
 
 void    Client::setServerSocketFD(int s_fd) {
 	_serverSocketFD = s_fd;
-}
-
-void	Client::setIncomingDataFlag(bool flag) {
-	_incomingDataDetected = flag;
 }
 
 void	Client::resetLastConnectionTime(void){
@@ -133,7 +153,7 @@ void	Client::resetSendBytes(void) {
 	_availableResponseBytes = 0;
 }
 
-void	Client::setIncomingDataDetected(int mode) {
+void	Client::setIncomingDataDetectedFlag(int mode) {
 	_incomingDataDetected = mode;
 }
 
@@ -149,6 +169,31 @@ void	Client::setAvailableResponseBytes(size_t value) {
 	_availableResponseBytes = value;
 }
 
+void	Client::setBodyDataPreloaded(bool value) {
+	_bodyDataPreloaded = value;
+}
+
+void	Client::setRequestBodyPart(std::string bodyData) {
+	_requestBodyPart = bodyData;
+	_bodySize = bodyData.size();
+}
+
+void Client::resetBodySize(void) {
+	_bodySize = 0;
+}
+
+void	Client::setContentLength(int length) {
+	_contentLength = length;
+}
+
+void	Client::resetContentLength(void) {
+	_contentLength = 0;
+}
+
+void	Client::setShouldTransferBody(bool value) {
+	_shouldTransferBody = value;
+}
+
 void	Client::clearRequestHolder(void) {
 	_requestHeaderPart.clear();
 }
@@ -159,4 +204,30 @@ bool		Client::parseRequest() {
 
 void	Client::prinfRequestinfos(void) {
 	_httpRequest.printInfos();
+}
+
+void	Client::trimBufferedBodyToContentLength(void) {
+	if (_requestBodyPart.size() < _contentLength) {
+		_bodyDataPreloaded = BODY_DATA_PRELOADED_OFF;
+	}
+	else if (_requestBodyPart.size() == _contentLength) {
+		_shouldTransferBody = TRANSFER_BODY_OFF;
+		_responseInFlight = true;
+	}
+	else {
+
+		_requestBodyPart = _requestBodyPart.substr(0, _contentLength);
+		_bodyDataPreloaded = BODY_DATA_PRELOADED_OFF;
+		if (_requestBodyPart.size() == _contentLength) {
+			_shouldTransferBody = TRANSFER_BODY_OFF;
+			_responseInFlight = true;
+		}
+	}
+	writeToTargetFile(_requestBodyPart);
+}
+
+void	Client::writeToTargetFile(const std::string& data) {
+	std::fstream *targetFile = _responseHandler->GetTargetFilePtr();
+	targetFile->write(data.c_str(), data.size());
+	targetFile->flush();
 }

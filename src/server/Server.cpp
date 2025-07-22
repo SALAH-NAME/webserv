@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 18:27:22 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/21 22:23:32 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,6 @@ void	Server::initAttributes(int id) {
 
 Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serverConfig), _id(id), _transferSocket() {
 	initAttributes(id);
-
-	// Add temp ports
-	// _ports.push_back(2323);
-	// _ports.push_back(4545);
 
 	for (size_t i = 0; i < _ports.size(); i++) {
 		
@@ -108,7 +104,6 @@ void	Server::eraseMarked() {
 	for (size_t i = 0; i < _markedForEraseClients.size(); i++) {
 		close(_markedForEraseClients[i]);
 		_clients.erase(_markedForEraseClients[i]);
-		// std::cout << "close the connection : " << _markedForEraseClients[i] << "\n";
 	}
 	_markedForEraseClients.clear();
 }

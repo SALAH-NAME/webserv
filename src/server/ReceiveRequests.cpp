@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 18:29:47 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/22 13:26:31 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,9 @@ void	isolateAndRecordBody(Client& client, std::string tempBuffer, size_t headerE
 	
 	// some body-data received after header-data ==> it needs to be saved and removed from header part
 	client.appendToHeaderPart(tempBuffer.substr(0, headerEnd + 4));
-	client.setReadBytes(headerEnd + 4);
-	client.appendToBodyPart(tempBuffer.substr(headerEnd + 4)); // here we save the body
-	
+	client.setReadBytes(headerEnd + 4); 
+	client.setRequestBodyPart(tempBuffer.substr(headerEnd + 4)); // here we save the body
+	client.setBodyDataPreloaded(BODY_DATA_PRELOADED_ON);
 }
 
 void    ServerManager::collectRequestData(Client& client, int serverIndex) {
@@ -33,14 +33,12 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 	ssize_t readbytes;
 	size_t headerEnd;
 
-	std::memset(_buffer, 0, sizeof(_buffer)); // use std
-
+	std::memset(_buffer, 0, sizeof(_buffer));
 	try {
 		readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ);
 		// std::cout << "read bytes ==> " << readbytes << " from : " << client.getSocket().getFd() << "\n";
 		
 		if (readbytes > 0) {
-			// printRequestAndResponse("Header", std::string(_buffer, readbytes));
 			client.resetLastConnectionTime();
 			if ((headerEnd = (std::string(_buffer, readbytes)).find(_2CRLF)) != std::string::npos) {
 				// std::cout << "   ====>> request is completed <<=====\n";
@@ -49,7 +47,7 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 				// printRequestAndResponse("Body", client.getBodyPart());
 				if (client.parseRequest()) {
 					// client.prinfRequestinfos();
-					client.setIncomingDataDetected(INCOMING_DATA_OFF);
+					client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
 					client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 				}
 				else
@@ -57,15 +55,45 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			}
 			else {
 				client.appendToHeaderPart(std::string(_buffer, readbytes));
-				client.setReadBytes(readbytes);
+				client.setReadBytes(readbytes);	
 			}
 		}
 		else
 			throwIfSocketError("recv()");
-			// _servers[serverIndex].closeConnection(clientSocket);
 	} catch (const std::runtime_error& e) {
 		perror(e.what());
 		_servers[serverIndex].closeConnection(clientSocket);
+	}
+}
+
+void	ServerManager::transferBodyToFile(Client& client, int serverIndex) {
+	if (client.getBodyDataPreloaded() == BODY_DATA_PRELOADED_ON) {
+		client.trimBufferedBodyToContentLength();
+		if (client.getShouldTransferBody() == TRANSFER_BODY_OFF)
+			return ;
+	}
+	
+
+	std::memset(_buffer, 0, sizeof(_buffer));
+	try {
+		size_t	readBytes = client.getSocket().recv(_buffer, BYTES_TO_READ);
+		// std::cout << " ===> read bytes from Body ==> " << readBytes << "\n";
+		if (readBytes > 0) {
+			if ((client.getBodySize() + readBytes) >= client.getContentLength()) {
+				readBytes = client.getContentLength() - client.getBodySize();
+				client.setShouldTransferBody(TRANSFER_BODY_OFF);
+				client.setResponseInFlight(true);
+			}
+			std::string bodyData(std::string(_buffer, readBytes));
+			client.appendToBodyPart(bodyData);
+			client.writeToTargetFile(bodyData);
+		}
+		else
+			throwIfSocketError("recv()");
+		
+	} catch (const std::runtime_error& e) {
+		perror(e.what());
+		_servers[serverIndex].closeConnection(client.getSocket().getFd());
 	}
 }
 
@@ -73,8 +101,14 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();
 
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++){
-		if (it->second.getIncomingDataDetected() == INCOMING_DATA_ON)
+		if (it->second.getIncomingDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
+			// std::cout << " ***** incoming data from : " << it->second.getSocket().getFd() << "  ****\n";
 			collectRequestData(it->second, serverIndex);
+		}
+		else if (it->second.getShouldTransferBody() == TRANSFER_BODY_ON) {
+			// std::cout << "   **** transfer body from: " << it->second.getSocket().getFd() << "  **** \n";	
+			transferBodyToFile(it->second, serverIndex);
+		}
 	}
 	_servers[serverIndex].eraseMarked();
 }
