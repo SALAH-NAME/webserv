@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:24:40 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 13:18:08 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/22 22:50:11 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ void    printRequestAndResponse(std::string str, std::string request) {
 		else
 			std::cout << request[i];
 	}
-	std::cout << "\n*****************************************\n\n";
+	std::cout << "*****************************************\n\n";
 }
 
 int main(int argc, char** argv)

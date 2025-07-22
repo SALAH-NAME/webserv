@@ -15,11 +15,12 @@ void testConfigPrint()
 
 	std::vector<ServerConfig>& servers = const_cast<std::vector<ServerConfig>&>(config.getServers());
 	ServerConfig server1;
-	server1.setListen(80);
+	server1.addListen(80);
 	server1.setHost("127.0.0.1");
 	allowed.insert(HTTP_GET);
 	allowed.insert(HTTP_POST);
 	server1.setAllowedMethods(allowed);
+	server1.setConnectionTimeout(103);
 
 	LocationConfig loc1;
 	loc1.setPath("/api", false);

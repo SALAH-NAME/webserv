@@ -105,7 +105,7 @@ void ConfigParser::parseGlobalDirectives()
 
 ServerConfig ConfigParser::parseServerBlock()
 {
-	ServerConfig server;
+    ServerConfig server(_global_config.getConnectionTimeout());
 
 	_tokenizer.pop();
 
@@ -189,7 +189,7 @@ ServerConfig ConfigParser::parseServerBlock()
 										 _tokenizer.front().line, _tokenizer.front().column);
 	}
 
-	if (!server.getListen())
+	if (server.getListens().empty())
 	{
 		throw ParseError("Server block must specify a listen directive",
 										 _tokenizer.front().line, _tokenizer.front().column);
@@ -313,6 +313,10 @@ void ConfigParser::parseDirective(BaseConfig& config, bool is_server,
 			else if (directive == "session_timeout")
 			{
 				parseSessionTimeout(server);
+			}
+			else if (directive == "connection_timeout")
+			{
+				parseConnectionTimeout(server);
 			}
 			else
 			{
@@ -537,7 +541,7 @@ void ConfigParser::parseListen(ServerConfig& server)
 										 _tokenizer.front().line, _tokenizer.front().column);
 	}
 
-	server.setListen(port);
+	server.addListen(port);
 	expectSemicolon("Expected semicolon after listen directive");
 }
 
@@ -715,6 +719,15 @@ void ConfigParser::parseConnectionTimeout(GlobalConfig& global)
 
 	global.setConnectionTimeout(timeout);
 	expectSemicolon("Expected semicolon after connection_timeout directive");
+}
+
+void ConfigParser::parseConnectionTimeout(ServerConfig& server) {
+    int timeout = expectNumber("Expected timeout value for connection_timeout directive");
+    if (!isValidTimeout(timeout)) {
+        throw ParseError("Invalid timeout value: " + to_string(timeout), _tokenizer.front().line, _tokenizer.front().column);
+    }
+    server.setConnectionTimeout(timeout);
+    expectSemicolon("Expected semicolon after connection_timeout directive");
 }
 
 void ConfigParser::parseErrorLog(GlobalConfig& global)

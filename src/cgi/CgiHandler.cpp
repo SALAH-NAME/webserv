@@ -22,7 +22,7 @@ void	CgiHandler::SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &co
 	env.Add("REQUEST_METHOD=", http_req.getMethod());
 	env.Add("SCRIPT_NAME=", http_req.getPath());
 	env.Add("SERVER_NAME=", conf.getSessionName());
-	env.Add("SERVER_PORT=", NumtoString(conf.getListen()));
+	env.Add("SERVER_PORT=", NumtoString(conf.getListens()[0])); // TODO: edite Listen has multiple ports
 	env.Add("SERVER_PROTOCOL=", "HTTP/1.1");
 	env.Add("SERVER_SOFTWARE=", "Ed Edd n Eddy/1.0");
 	env.Add("CONTENT_LENGTH=", "non");

@@ -39,6 +39,7 @@ private:
 	void parseSessionName(ServerConfig& server);
 	void parseSessionPath(ServerConfig& server);
 	void parseSessionTimeout(ServerConfig& server);
+	void parseConnectionTimeout(ServerConfig& server);
 
 	void parseRedirect(LocationConfig& location);
 	void parseCgiPass(LocationConfig& location);

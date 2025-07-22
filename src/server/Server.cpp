@@ -16,8 +16,8 @@ void	Server::initAttributes(int id) {
 	_domin = AF_INET;
 	_type = SOCK_STREAM | SOCK_NONBLOCK;
 	_protocol = 0;
-	_ports.push_back(_serverConfig.getListen());
-	_timeOut = _serverConfig.getSessionTimeout();
+	_ports.push_back(_serverConfig.getListens()[0]); // TODO: here need to support multiple ports
+	_timeOut = _serverConfig.getConnectionTimeout();
 	_id = id;
 }
 

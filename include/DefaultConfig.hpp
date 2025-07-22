@@ -27,13 +27,13 @@ const std::string	 ERROR_LOG;
 const std::string	 ACCESS_LOG;
 
 // SERVER
-const unsigned int						 LISTEN(0);
-const std::string							 HOST("");
-const std::vector<std::string> SERVER_NAMES(1, "");
-const int											 SESION_ENABLE(false);
-const std::string							 SESSION_NAME;
-const std::string							 SESSION_PATH;
-const unsigned int						 SESSION_TIMEOUT(1800);
+const std::vector<unsigned int>	LISTEN(0);
+const std::string								HOST("");
+const std::vector<std::string>	SERVER_NAMES(1, "");
+const int												SESION_ENABLE(false);
+const std::string								SESSION_NAME;
+const std::string								SESSION_PATH;
+const unsigned int							SESSION_TIMEOUT(1800);
 
 // LOCATION
 const RedirectInfo REDIRECT;

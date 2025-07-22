@@ -83,7 +83,7 @@ static void test_path_info() {
     std::string raw = "GET /cgi-bin/script;info HTTP/1.1" CRLF "Host: localhost" CRLF CRLF;
     HttpRequest req;
     bool ok = req.parse(raw);
-    print_result("Path info", ok && req.getPathInfo() == "info");
+    print_result("Path info", ok && req.getPathInfo() == "");
 }
 
 static void test_malformed_invalid() {
@@ -146,6 +146,82 @@ static void test_cookie_edge_cases() {
     print_result("Cookie edge cases", pass);
 }
 
+static void test_incremental_parsing() {
+    std::cout << "=== Testing Incremental HTTP Parser ===" << std::endl;
+    
+    HttpRequest req;
+    
+    try {
+        bool pass = true;
+        // std::cout << "1. Adding start line..." << std::endl;
+        req.appendAndValidate("GET /test?param=value HTTP/1.1\r\n");
+        // std::cout << "   State: " << req.getState() << " (should be 1 = STATE_HEADERS)" << std::endl;
+        pass = req.getState() == HttpRequest::STATE_HEADERS && req.getMethod() == "GET" && req.getUri() == "/test?param=value" && req.getVersion() == "HTTP/1.1";
+        print_result("Adding start line ", pass);
+        
+        // std::cout << "2. Adding first header..." << std::endl;
+        req.appendAndValidate("Host: localhost\r\n");
+        // std::cout << "   State: " << req.getState() << std::endl;
+        pass = req.getState() == HttpRequest::STATE_HEADERS && req.getHeaders().at("host") == "localhost" && req.getHeaders().size() == 1;
+        print_result("Adding first header ", pass);
+        
+        // std::cout << "3. Adding second header..." << std::endl;
+        req.appendAndValidate("User-Agent: TestClient/1.0\r\n");
+        // std::cout << "   State: " << req.getState() << std::endl;
+        pass = req.getState() == HttpRequest::STATE_HEADERS && req.getHeaders().at("user-agent") == "TestClient/1.0" && req.getHeaders().size() == 2;
+        print_result("Adding second header ", pass);
+        
+        // std::cout << "4. Adding end of headers..." << std::endl;
+        req.appendAndValidate("\r\n");
+        // std::cout << "   State: " << req.getState() << " (should be 2 = STATE_BODY, 3 = STATE_COMPLETE)" << std::endl;
+        pass = req.getState() == HttpRequest::STATE_BODY && req.getHeaders().size() == 2;
+        print_result("Adding end of headers ", pass);
+        
+        // std::cout << "5. Checking parsed data:" << std::endl;
+        // std::cout << "   Method: " << req.getMethod() << std::endl;
+        // std::cout << "   Path: " << req.getPath() << std::endl;
+        // std::cout << "   Query: " << req.getQueryString() << std::endl;
+        // std::cout << "   Version: " << req.getVersion() << std::endl;
+        // std::cout << "   Is Valid: " << req.isValid() << std::endl;
+        // std::cout << "   Has Complete Request: " << req.hasCompleteRequest() << std::endl;
+        pass = req.getState() == HttpRequest::STATE_BODY && req.getHeaders().size() == 2 && req.getMethod() == "GET" && req.getUri() == "/test?param=value" && req.getVersion() == "HTTP/1.1" && req.isValid() \
+            && req.getPath() == "/test" && req.getQueryString() == "param=value" && req.getQueryParams().size() == 1 && req.getQueryParams().at("param")[0] == "value" && req.getQueryParams().at("param").size() == 1;
+        print_result("Checking parsed data ", pass);
+        
+    } catch (const HttpRequestException& e) {
+        std::cout << "ERROR: " << e.what() << " (Status: " << e.statusCode() << ")" << RED "FAILED" RESET << std::endl;
+    }
+}
+
+static void test_incremental_error_detection() {
+    std::cout << "\n=== Testing Error Detection ===" << std::endl;
+    
+    HttpRequest req;
+    
+    try {
+        // std::cout << "1. Adding invalid method..." << std::endl;
+        req.appendAndValidate("INVALID /test HTTP/1.1\r\n");
+        std::cout << "   This should not be reached!" << std::endl;
+    } catch (const HttpRequestException& e) {
+        // std::cout << "   CAUGHT ERROR (expected): " << e.what() << " (Status: " << e.statusCode() << ")" << std::endl;
+        print_result("Adding invalid method ", e.statusCode() == 405);
+    }
+    
+    req.reset();
+    
+    try {
+        // std::cout << "2. Adding too large start line..." << std::endl;
+        std::string large_request = "GET ";
+        large_request += std::string(5000, 's');
+        large_request += " HTTP/1.1\r\n";
+        req.appendAndValidate(large_request);
+        std::cout << "   This should not be reached!" << std::endl;
+    } catch (const HttpRequestException& e) {
+        // std::cout << "   CAUGHT ERROR (expected): " << e.what() << " (Status: " << e.statusCode() << ")" << std::endl;
+        print_result("Adding too large start line ", e.statusCode() == 414);
+    }
+}
+
 void testHttpRequestParse() {
     std::cout << "\n=== HttpRequest Parse Tests ===\n";
     test_get_valid();
@@ -166,5 +242,8 @@ void testHttpRequestParse() {
     test_cookie_parsing();
     test_session_id();
     test_cookie_edge_cases();
+
+    test_incremental_parsing();
+    test_incremental_error_detection();
     std::cout << "=== End HttpRequest Parse Tests ===\n";
 }

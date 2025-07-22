@@ -8,6 +8,7 @@
 
 #include "ConfigPrinter.hpp"
 #include <sstream>
+#include <vector>
 
 ConfigPrinter::ConfigPrinter(const ConfigManager& config_manager)
 		: _config_manager(config_manager)
@@ -68,9 +69,13 @@ void ConfigPrinter::printServerConfig(std::ostream&				out,
 	out << "# Server Configuration\n";
 	out << "server {\n";
 
+	std::vector<unsigned int> ports = server.getListens();
 	printIndent(out, 1);
-	out << "listen " << server.getListen() << ";\n";
-	printIndent(out, 1);
+	for (unsigned int i = 0 ; i < ports.size(); ++i)
+	{
+		out << "listen " << ports[i] << ";\n";
+		printIndent(out, 1);
+	}
 	out << "host " << server.getHost() << ";\n";
 
 	const std::vector<std::string>& server_names = server.getServerNames();
@@ -84,6 +89,13 @@ void ConfigPrinter::printServerConfig(std::ostream&				out,
 			out << " " << *it;
 		}
 		out << ";\n";
+	}
+
+	if (server.getConnectionTimeout())
+	{
+		printIndent(out, 1);
+		out << "connection_timeout ";
+		out << server.getConnectionTimeout() << ";\n";
 	}
 
 	if (server.getSessionEnable())

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/22 13:26:31 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/22 22:49:18 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,23 +45,37 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 				isolateAndRecordBody(client, std::string(_buffer, readbytes), headerEnd);
 				// printRequestAndResponse("Header", client.getHeaderPart());
 				// printRequestAndResponse("Body", client.getBodyPart());
-				if (client.parseRequest()) {
-					// client.prinfRequestinfos();
-					client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
-					client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-				}
-				else
-					_servers[serverIndex].closeConnection(clientSocket);
+				
+				client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
+				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 			}
 			else {
 				client.appendToHeaderPart(std::string(_buffer, readbytes));
 				client.setReadBytes(readbytes);	
 			}
+			// std::cout << "To validate {" << client.getLastReceivedHeaderData() << "}\n";
+			printRequestAndResponse("To validate", client.getLastReceivedHeaderData());
+			HttpRequest &req = client.getHttpRequest();
+			req.appendAndValidate(std::string(client.getLastReceivedHeaderData(), readbytes));
+			// client.prinfRequestinfos();
 		}
 		else
 			throwIfSocketError("recv()");
-	} catch (const std::runtime_error& e) {
+	}
+	catch (const HttpRequestException &e) {
+		std::string error_msg = "HTTP Request Error: ";
+		error_msg += e.what();
+		std::cerr << error_msg << std::endl;
+		_servers[serverIndex].closeConnection(clientSocket);
+	}
+	catch (const std::runtime_error& e) {
 		perror(e.what());
+		_servers[serverIndex].closeConnection(clientSocket);
+	}
+	catch (const std::exception &e) {
+		std::string error_msg = "Parsing error: ";
+		error_msg += e.what();
+		std::cerr << error_msg << std::endl;
 		_servers[serverIndex].closeConnection(clientSocket);
 	}
 }

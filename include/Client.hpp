@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/22 11:12:44 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/22 22:43:37 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,8 @@ class Client {
 		size_t				_contentLength;
 		bool				_bodyDataPreloaded;
 
+		std::string			_lastReceivedHeaderData;
+
 	public:
 		/**/				Client(Socket, int, const ServerConfig&);
 		/**/				~Client();
@@ -67,6 +69,7 @@ class Client {
 		size_t				getBodySize(void);
 		bool				getBodyDataPreloaded(void);
 		size_t				getContentLength(void);
+		std::string			getLastReceivedHeaderData(void);
 
 		void				setReadBytes(size_t);
 		void				appendToHeaderPart(const std::string& requestData);
