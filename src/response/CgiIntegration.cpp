@@ -108,7 +108,7 @@ void ResponseHandler::SetTargetFileForCgi(int count)
 		delete target_file;
 	int fd = open(filename.c_str(), O_CREAT, 0644);
 	close(fd);
-	target_file = new std::fstream(filename, std::ios::out | std::ios::in | std::ios::trunc | std::ios::binary);
+	target_file = new std::fstream(filename.c_str(), std::ios::out | std::ios::in | std::ios::trunc | std::ios::binary);
 	if (!target_file || fd == -1 || !target_file->is_open()) {
 		std::cout << "Failed to open file: " << filename << ", error: " << std::strerror(errno) << std::endl;//logger
 		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
