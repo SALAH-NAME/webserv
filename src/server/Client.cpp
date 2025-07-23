@@ -22,7 +22,9 @@ Client::Client(Socket sock, int serverFD, const ServerConfig &conf) : _socket(so
 																	  _responseInFlight(false), _sentBytes(0),
 																	  _isKeepAlive(true),
 																	  _availableResponseBytes(0),
-																	  _generateInProcess(GENERATE_RESPONSE_OFF), _responseHandler(new ResponseHandler(conf))
+																	  _generateInProcess(GENERATE_RESPONSE_OFF),
+																	  _responseHandler(new ResponseHandler("0.0.0.0", conf))//should pass the client ip addrs
+																	
 {
 }
 
