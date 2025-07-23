@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/22 22:46:43 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/23 11:56:46 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -221,6 +221,10 @@ void	Client::resetContentLength(void) {
 
 void	Client::setShouldTransferBody(bool value) {
 	_shouldTransferBody = value;
+}
+
+void	Client::setHeaderPart(std::string HeaderData) {
+	_requestHeaderPart = HeaderData;
 }
 
 void	Client::clearRequestHolder(void) {

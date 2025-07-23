@@ -6,25 +6,26 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/22 22:49:18 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/23 13:23:49 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 #include "ServerManager.hpp"
 
-void	isolateAndRecordBody(Client& client, std::string tempBuffer, size_t headerEnd) {
-	if (tempBuffer.size() == headerEnd + 4) {
+void	isolateAndRecordBody(Client& client, size_t headerEnd) {
+	std::string& headerPart = client.getHeaderPart();
+
+	if (headerPart.size() == headerEnd + 4) {
 		// no body-data received after header ==> no need to save
-		client.appendToHeaderPart(tempBuffer);
-		client.setReadBytes(tempBuffer.size());
+		client.setReadBytes(headerPart.size());
 		return ;
 	}
 	
 	// some body-data received after header-data ==> it needs to be saved and removed from header part
-	client.appendToHeaderPart(tempBuffer.substr(0, headerEnd + 4));
-	client.setReadBytes(headerEnd + 4); 
-	client.setRequestBodyPart(tempBuffer.substr(headerEnd + 4)); // here we save the body
+	client.setRequestBodyPart(headerPart.substr(headerEnd + 4)); // here we save the body
+	client.setHeaderPart(headerPart.substr(0, headerEnd + 4));
+
 	client.setBodyDataPreloaded(BODY_DATA_PRELOADED_ON);
 }
 
@@ -40,23 +41,28 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 		
 		if (readbytes > 0) {
 			client.resetLastConnectionTime();
-			if ((headerEnd = (std::string(_buffer, readbytes)).find(_2CRLF)) != std::string::npos) {
+			client.appendToHeaderPart(std::string(_buffer, readbytes)); // !! Append buffer to header-Part even if it contains Body-data  // READ THIS!!
+			
+			if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
 				// std::cout << "   ====>> request is completed <<=====\n";
-				isolateAndRecordBody(client, std::string(_buffer, readbytes), headerEnd);
+				
+				isolateAndRecordBody(client, headerEnd); // !! here we handle if Header-Part contains some of Body-data // READ THIS!!
+				// !! Now we have Header-Part contains only Header-Data // READ THIS !!
+				// !! And save the body-data in Body-Part if received // READ THIS !!
+				
 				// printRequestAndResponse("Header", client.getHeaderPart());
 				// printRequestAndResponse("Body", client.getBodyPart());
 				
 				client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 			}
-			else {
-				client.appendToHeaderPart(std::string(_buffer, readbytes));
-				client.setReadBytes(readbytes);	
-			}
 			// std::cout << "To validate {" << client.getLastReceivedHeaderData() << "}\n";
-			printRequestAndResponse("To validate", client.getLastReceivedHeaderData());
+			// printRequestAndResponse("To validate", client.getLastReceivedHeaderData());
+			
 			HttpRequest &req = client.getHttpRequest();
 			req.appendAndValidate(std::string(client.getLastReceivedHeaderData(), readbytes));
+			// !! the string passed here is the last data received and appended to the Header-Part // READ THIS !!
+			
 			// client.prinfRequestinfos();
 		}
 		else

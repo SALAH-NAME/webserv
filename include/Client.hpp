@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/22 22:43:37 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/23 11:55:52 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,6 +90,8 @@ class Client {
 		void				resetBodySize(void);
 		void				setContentLength(int);
 		void				resetContentLength(void);
+
+		void				setHeaderPart(std::string);
 	
 
 		void				clearRequestHolder(void);

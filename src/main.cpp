@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:24:40 by karim             #+#    #+#             */
-/*   Updated: 2025/07/22 22:50:11 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/23 12:15:41 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,18 @@
 
 void    printRequestAndResponse(std::string str, std::string request) {
 	std::cout << "\n********************  " << str << "  *********************\n";
+	char lastChar;
 	for (size_t i = 0; i < request.size(); i++) {
 		if (request[i] == '\r')
 			std::cout << "\\r";
 		else if (request[i] == '\n')
-			std::cout << "\\n\n";
+			std::cout << "\\n" << std::endl;
 		else
 			std::cout << request[i];
+		lastChar = request[i];
 	}
+	if (lastChar != '\n')
+		std::cout << std::endl;
 	std::cout << "*****************************************\n\n";
 }
 
