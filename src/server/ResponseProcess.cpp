@@ -1,8 +1,8 @@
 #include "ServerManager.hpp"
 
-static std::pair<std::string, std::string> getResponseString(void) {
+static std::string getResponseString(void) {
 
-	std::pair<std::string, std::string> response;
+	std::string response;
 
 	std::string responseBody =
 			"<!DOCTYPE html>\n"
@@ -29,56 +29,41 @@ static std::pair<std::string, std::string> getResponseString(void) {
 			"Content-Length: " + contentLength + "\r\n"
 			"\r\n";
 
-		response.first = responseHeader;
-		response.second = responseBody;
+		response = responseHeader + responseBody;
 
 		return response;
 }
 
-
 void	Client::buildResponse() {
-	// std::cout << "       ====>>> default Response <<<=====\n";
-		
-	std::pair<std::string, std::string> response = getResponseString();
-	_requestHeaderPart = response.first;
-	_requestBodyPart = response.second;
-	_responseSize = _requestHeaderPart.size() + _requestBodyPart.size();
-	_availableResponseBytes = _responseSize;
-	// printRequestAndResponse("RESPONSE", _requestHeaderPart + _requestBodyPart);
+	// std::cout << "RUN" << std::endl;
+	_responseHandler->Run(_httpRequest);
+
+	if (!_responseHandler->GetTargetFilePtr()) {
+		// std::cout << "     =====>>>  Build Response for : {" << _socket.getFd() << "} <<<===== \n";
+		_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
+		_responseSize = _responseHolder.size();
+		setAvailableResponseBytes(_responseSize);
+		setResponseInFlight(true);
+	}
+	else {
+		if (_responseHandler->IsPost()) {
+			// std::cout << "     =====>>>  write body to target file <<<===== \n";
+			_shouldTransferBody = TRANSFER_BODY_ON;
+			_responseHolder = _responseHandler->GetResponseHeader();
+			_responseSize = _responseHolder.size();
+			setAvailableResponseBytes(_responseSize);
+			// printRequestAndResponse("Response", _responseHolder);exit(0);
+			std::stringstream ss(_httpRequest.getHeaders()["Content-Length"]);
+			ss >> _contentLength;
+			// std::cout << "Body Content-Length ==> " << _contentLength << "\n";
+		}
+		else {
+			// std::cout << "       ====>>> default Response for : {" << _socket.getFd() << "} <<<=====\n";
+			_responseHolder = getResponseString();
+			_responseSize = _responseHolder.size();
+			_availableResponseBytes = _responseSize;
+			// printRequestAndResponse("RESPONSE", _requestHeaderPart + _requestBodyPart);
+			setResponseInFlight(true);
+		}
+	}
 }
-
-// void	Client::buildResponse() {
-// 	_responseHandler->Run(_httpRequest);
-
-
-// 	if (!_responseHandler->GetTargetFilePtr()) {
-// 		std::cout << "     =====>>>  Build Response (1) <<<===== \n";
-// 		_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
-// 		std::cout << "response has been created\n";
-// 		_responseSize = _responseHolder.size();
-// 		// _availableResponseBytes == _responseHolder.size();
-// 		setAvailableResponseBytes(_responseSize);
-// 		// std::cout << "size ==> " << _responseHolder.size() << "\n";
-// 		// exit(0);
-// 	}
-// 	else {
-// 		if (_responseHandler->IsPost()) {
-// 			std::cout << "     =====>>>  write body to target file <<<===== \n";
-// 			exit(0);
-			
-// 		}
-// 		else {
-
-// 			// std::cout << "       ====>>> default Response <<<=====\n";
-			
-// 			std::pair<std::string, std::string> response = getResponseString();
-// 			_requestHeaderPart = response.first;
-// 			_requestBodyPart = response.second;
-// 			_responseSize = _requestHeaderPart.size() + _requestBodyPart.size();
-// 			_availableResponseBytes = _responseSize;
-
-// 			// std::cout << ":";
-// 			printRequestAndResponse("RESPONSE", _requestHeaderPart + _requestBodyPart);
-// 		}
-// 	}
-// }

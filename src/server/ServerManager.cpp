@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 18:27:43 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/22 11:14:57 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,14 +16,12 @@ void	ServerManager::generatResponses(int serverIndex) {
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
 		Client& client = it->second;
+
 		if (client.getGenerateInProcess() == GENERATE_RESPONSE_OFF)
 			continue ;
 
 		it->second.buildResponse();
-
-		client.setResponseInFlight(true);
 		client.setGenerateResponseInProcess(GENERATE_RESPONSE_OFF);
-		// client.prinfRequestinfos();exit(0);
 	}
 }
 

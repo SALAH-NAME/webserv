@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 18:29:22 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/21 22:12:54 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ void	ServerManager::processEvent(int serverIndex) {
 				continue ;
 			}
 			std::map<int, Client>::iterator clientIterator = server.getClients().find(clientSocket);
-			clientIterator->second.setIncomingDataFlag(INCOMING_DATA_ON);
+			clientIterator->second.setIncomingDataDetectedFlag(INCOMING_HEADER_DATA_ON);
 			clientIterator->second.setEvent(_epfd, _events[i]);
 		}
 	}
