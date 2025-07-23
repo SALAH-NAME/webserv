@@ -16,7 +16,7 @@ bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_lo
         if (it->second.isCgi() && it->second.getPath() == extension)
         {
             //the requested file extension matched with a cgi location
-            if (!access((it->second.getRoot() + req_path).c_str(), F_OK))
+            if (access((it->second.getRoot() + req_path).c_str(), F_OK) != 0)
                 return (false);
             if (IsDir((it->second.getRoot()+req_path).c_str()))//if the path exist but as a directory
                 throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
@@ -117,7 +117,7 @@ void ResponseHandler::RouteResolver(const std::string &req_path, const std::stri
         loc_config = &srv_locations.at("/");
         return;
     }
-    if (method != "DELETE" && CheckForCgi(req_path, srv_locations))
+    if (method != "DELETE" && CheckForCgi(req_path, conf.getRegexLocation()))
         return ;
     std::string current_resource_path;//    will be setted by 'locationMatched' each time a route is validated and is longer than prev value
     if (srv_locations.find("/") != srv_locations.end()

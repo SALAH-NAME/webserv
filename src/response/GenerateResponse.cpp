@@ -2,23 +2,23 @@
 
 void ResponseHandler::InitializeStatusPhrases()
 {
-    status_phrases[200] = "OK";
-    status_phrases[302] = "Found";
-    status_phrases[403] = "Forbidden";
-    status_phrases[401] = "Unauthorized";
-    status_phrases[201] = "Created";
-    status_phrases[204] = "No Content";
-    status_phrases[301] = "Moved Permanently";
-    status_phrases[304] = "Not Modified";
-    status_phrases[400] = "Bad Request";
-    status_phrases[404] = "Not Found";
-    status_phrases[501] = "Not Implemented";
-    status_phrases[502] = "Bad Gateway";
-    status_phrases[503] = "Service Unavailable";
-    status_phrases[504] = "Gateway Timeout"    ;
-    status_phrases[413] = "Payload Too Large";
-    status_phrases[500] = "Internal Server Error";
-    status_phrases[405] = "Method Not Allowed";
+    status_phrases[200] = std::string("OK");
+    status_phrases[302] = std::string("Found");
+    status_phrases[403] = std::string("Forbidden");
+    status_phrases[401] = std::string("Unauthorized");
+    status_phrases[201] = std::string("Created");
+    status_phrases[204] = std::string("No Content");
+    status_phrases[301] = std::string("Moved Permanently");
+    status_phrases[304] = std::string("Not Modified");
+    status_phrases[400] = std::string("Bad Request");
+    status_phrases[404] = std::string("Not Found");
+    status_phrases[501] = std::string("Not Implemented");
+    status_phrases[502] = std::string("Bad Gateway");
+    status_phrases[503] = std::string("Service Unavailable");
+    status_phrases[504] = std::string("Gateway Timeout")    ;
+    status_phrases[413] = std::string("Payload Too Large");
+    status_phrases[500] = std::string("Internal Server Error");
+    status_phrases[405] = std::string("Method Not Allowed");
 }
 
 std::string GetFormattedEntryInfo(std::string name, const std::string &time_stamp, const std::string &size)

@@ -2,9 +2,10 @@
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
 #include "test-cases/includeme.hpp"
+#include <fstream>
 #include <ostream>
 
-#define TESTS_NB 10
+#define TESTS_NB 15
 
 bool quick_pars(int &chosen_test, char **av, int ac)
 {
@@ -35,7 +36,6 @@ bool quick_pars(int &chosen_test, char **av, int ac)
 	return false;
 }
 
-#include <fstream>
 
 void compairOutputs(std::string current_output, int test_nb)
 {
@@ -87,7 +87,7 @@ int main(int ac, char **av)
 	int chosen_test = 0;
 	bool compair_output = quick_pars(chosen_test, av, ac);
 	std::string (*tests[])() = {test1, test2, test3, test4, test5, test6,
-			test7, test8, test9, test10};
+			test7, test8, test9, test10, test11, test12, test13, test14, test15};
 	if (!compair_output){
 		std::cout << tests[chosen_test-1]();
 		return 0;

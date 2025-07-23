@@ -2,26 +2,30 @@
 
 bool isAllDigit(std::string &str)
 {
-	for (int i=0;i<str.size();i++)
-		if (!std::isalpha(str[i]))
+	for (unsigned int i=0;i<str.size();i++)
+		if (!std::isdigit(str[i]))
 			return false; 
 	return true;
 }
 
 void	TrimSpaces(std::string &str)
 {
-	int start = 0, end = str.size()-1;
-	while (std::isspace(str[start]))
+	if (str.empty())
+		return;
+	unsigned int start = 0, end = str.size() - 1;
+	while (start < str.size() && std::isspace(static_cast<unsigned char>(str[start])))
 		start++;
-	while (std::isspace(str[end]))
+	while (end > start && std::isspace(static_cast<unsigned char>(str[end])))
 		end--;
-	str.substr(start, end);
+	str = str.substr(start, end - start + 1);
 }
 
-void	SyntaxErrorsCheck(const std::string &buff, int i, bool key_phase)
+void	SyntaxErrorsCheck(const std::string &buff, unsigned int i, bool key_phase)
 {
-	if (!std::isprint(buff[i]) || (std::isspace(buff[i]) && key_phase)  
-		|| (buff[i] == '\n' && buff[i-1] != '\r'))
+	char prev_char = (i > 0) ? buff[i - 1] : 0;
+	char next_char = (i < buff.size() - 2) ? buff[i + 1] : 0;
+	if ((!std::isprint(buff[i]) && buff[i] != '\r') || (std::isspace(buff[i]) && key_phase)  
+		|| (buff[i] == '\n' && prev_char != '\r') || (buff[i] == '\r' && next_char != '\n'))
 			throw (CgiHandler::BadCgiOutput("syntax error"));
 }
 

@@ -56,10 +56,10 @@ void	AppendCharToValue(std::string &value, char c)
 
 void	CgiHandler::PreBodyPhraseChecks()
 {
-	if (output_headers.find("Content-Type") != output_headers.end())
+	if (output_headers.find("Content-Type") == output_headers.end())
 		throw (BadCgiOutput("Content-Type header not found"));
 	else if (output_headers.find("Content-Length") != output_headers.end() 
-			&& std::atoi(output_headers["Content-Length"].c_str()) < preserved_body.size())
+			&& content_length < (signed)preserved_body.size())
 		throw (BadCgiOutput("Content-Length value smaller than body size"));
 }
 
@@ -82,7 +82,7 @@ void	CgiHandler::ParseOutputBuffer(const std::string &cgi_output_buff)
 			i += 2;
 			key_phase = true;
 			if (Crlf_check(cgi_output_buff, i)){//end of header
-				preserved_body = cgi_output_buff.substr(i);
+				preserved_body = cgi_output_buff.substr(i+2);
 				PreBodyPhraseChecks();
 				Body_phase = true;
 				return ;

@@ -2,8 +2,8 @@ Created a tmp file:
 /home/midbella/Desktop/webserv/src/local-tmp/www/pouic/toto/delete_me.txt
 === RESPONSE HEADER ===
 HTTP/1.1 200 OK
-server: Ed, Edd n Eddy/1.0
-Date: Tue, 15 Jul 2025 20:02:02 GMT
+Server: Ed, Edd n Eddy/1.0
+Date: Mon, 21 Jul 2025 15:42:30 GMT
 
 
 Successfully deleted the file

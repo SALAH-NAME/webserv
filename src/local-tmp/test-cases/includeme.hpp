@@ -14,3 +14,8 @@ std::string test7();
 std::string test8();
 std::string test9();
 std::string test10();
+std::string test11();//dir listing on invalid permissions
+std::string test12();//post to a dir with invalid permissions
+std::string test13();
+std::string test14();
+std::string test15();

@@ -3,6 +3,7 @@
 
 #include <unistd.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include <ctime>
 #include <cstring>
 #include <algorithm>
@@ -46,7 +47,8 @@ class CgiHandler
 		bool	ReachedMaxHeadersNumber();
 		void	HandleDuplicates();
 		void	SetCgiChildFileDescriptors();
-		void	SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &conf);
+		void	SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &conf,
+						const std::string &remote_address);
 		void	StatusValidator();
 		void	AddNewHeader();
 		void	ClearData();
@@ -56,7 +58,8 @@ class CgiHandler
 	public:
 		CgiHandler();
 		void								RunCgi(HttpRequest &current_req, const ServerConfig &conf,
-													const	LocationConfig &cgi_conf, std::string &script_path);
+													const	LocationConfig &cgi_conf, std::string &script_path,
+														const std::string &remote_address);
 		pid_t 								GetChildPid();
 		void								ParseOutputBuffer(const std::string &new_buff);
 		Pipe& 								GetInPipe();
@@ -67,6 +70,8 @@ class CgiHandler
 		std::map<std::string, std::string>&	GetOutputHeaders();
 		int									GetStatusCode();
 		std::string							GetReasonPhrase();
+		int									GetContentLength();
+		void								KillChild();
 		~CgiHandler();
 	
 		class BadCgiOutput : public std::exception
@@ -84,7 +89,7 @@ class CgiHandler
 std::string		NumtoString(int num);
 bool			isAllDigit(std::string &str);
 bool			Crlf_check(const std::string &str, unsigned int index);
-void			SyntaxErrorsCheck(const std::string &buff, int i, bool key_phase);
+void			SyntaxErrorsCheck(const std::string &buff, unsigned int i, bool key_phase);
 void			TrimSpaces(std::string &str);
 
 #endif

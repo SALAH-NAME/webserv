@@ -1,19 +1,20 @@
 #include 	"includeme.hpp"
 
-std::string test4()
+std::string test11()
 {
 	/*
-		GET with path '/visuals' (should redir to /visuals/)
+		dir listing a resource in a route that allows GET and auto-index 
+		but in the dir does not have the required permissions
 	*/
 	std::stringstream ss;
 	HttpRequest req;
 	req.setMethod("GET");
-	req.setPath("/visuals");
+	req.setPath("/invalid-dir/");
 	req.setVersion("HTTP/1.1");
 	std::map<std::string, std::string> headers;
 	headers["Host"] = "127.0.0.1";
 	req.setHeaders(headers);
-	std::string config_file = "test-cases/tests-conf/test4.conf";
+	std::string config_file = "test-cases/tests-conf/test11.conf";
 	ConfigManager config_manager(config_file);
 	if (!config_manager.load())
 		return "";
@@ -23,8 +24,18 @@ std::string test4()
 	ss << "=== RESPONSE HEADER ===" << '\n';
 	ss << testObj.GetResponseHeader() << '\n';
 	if (testObj.GetTargetFilePtr() && testObj.GetTargetFilePtr()->is_open())
-		ss << "ERROR: target file should not be open" << std::endl;
-	else
-		ss << testObj.GetResponseBody() << std::endl;
+	{
+		ss << "=== FILE CONTENT ===" << std::endl;
+		std::fstream* filePtr = testObj.GetTargetFilePtr();		
+		filePtr->clear();
+		std::string line;
+		while (std::getline(*filePtr, line))
+			ss << line << '\n';
+	}
+	else{
+		ss << "ERROR: Target file is not open!" << std::endl;
+		ss << testObj.GetResponseBody();
+	}
 	return ss.str();
 }
+

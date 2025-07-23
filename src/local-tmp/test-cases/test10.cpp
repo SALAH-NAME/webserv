@@ -19,7 +19,7 @@ std::string test10()
 	if (!config_manager.load())
 		return "";
 	ServerConfig srv_conf = *config_manager.getServers().begin();
-	ResponseHandler testObj(srv_conf);
+	ResponseHandler testObj("0.0.0.0", srv_conf);
 	testObj.Run(req);
 	ss << "=== RESPONSE HEADER ===" << '\n';
 	ss << testObj.GetResponseHeader() << '\n';

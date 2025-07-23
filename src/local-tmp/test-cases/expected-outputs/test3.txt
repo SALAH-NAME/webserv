@@ -1,9 +1,9 @@
 === RESPONSE HEADER ===
 HTTP/1.1 200 OK
-server: Ed, Edd n Eddy/1.0
-Date: Sun, 13 Jul 2025 18:12:06 GMT
+Server: Ed, Edd n Eddy/1.0
+Date: Wed, 23 Jul 2025 19:37:57 GMT
 Content-Type: text/html
-Content-Length: 850
+Content-Length: 1068
 
 
 <html>
@@ -11,11 +11,13 @@ Content-Length: 850
 	<body>
 		<h1>Index of /</h1><hr>
 		<pre>
-<a href="..">..</a>                                                 13-Jul-2025 18:10                4096
-<a href="error">error</a>                                              13-Jul-2025 16:22                4096
-<a href="index.htm">index.htm</a>                                          13-Jul-2025 16:22                 144
-<a href="media">media</a>                                              13-Jul-2025 16:22                4096
-<a href="modmodamodmodmodmodmodmodmodmodmodfsfgfgdfgdfgsfksjgjhfgsjgfjgfjghsdfkjghsfjksghdf">modmodamodmodmodmodmodmodmodmodmodfsfgfgdfgdfgs..&gt;</a> 13-Jul-2025 16:28                   0
-<a href="pouic">pouic</a>                                              13-Jul-2025 16:22                4096</pre><hr>
+<a href="..">..</a>                                                 23-Jul-2025 19:35                4096
+<a href="cgi">cgi</a>                                                23-Jul-2025 19:14                4096
+<a href="error">error</a>                                              23-Jul-2025 19:15                4096
+<a href="index.htm">index.htm</a>                                          22-Jul-2025 21:25                 144
+<a href="invalid">invalid</a>                                            21-Jul-2025 15:23                4096
+<a href="media">media</a>                                              23-Jul-2025 19:15                4096
+<a href="modmodamodmodmodmodmodmodmodmodmodfsfgfgdfgdfgsfksjgjhfgsjgfjgfjghsdfkjghsfjksghdf">modmodamodmodmodmodmodmodmodmodmodfsfgfgdfgdfgs..&gt;</a> 22-Jul-2025 21:25                   0
+<a href="pouic">pouic</a>                                              23-Jul-2025 19:15                4096</pre><hr>
 	</body>
 </html>
