@@ -33,7 +33,9 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 	int clientSocket = client.getSocket().getFd();
 	ssize_t readbytes;
 	size_t headerEnd;
+	(void)serverIndex, (void)clientSocket;
 
+	
 	std::memset(_buffer, 0, sizeof(_buffer));
 	try {
 		readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ);
@@ -42,8 +44,13 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 		if (readbytes > 0) {
 			client.resetLastConnectionTime();
 			client.appendToHeaderPart(std::string(_buffer, readbytes)); // !! Append buffer to header-Part even if it contains Body-data  // READ THIS!!
-			
-			if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
+			if (std::string(_buffer, readbytes) == "\r\n")
+			{
+				client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
+				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);	
+			}
+			// if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
+			else if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
 				// std::cout << "   ====>> request is completed <<=====\n";
 				
 				isolateAndRecordBody(client, headerEnd); // !! here we handle if Header-Part contains some of Body-data // READ THIS!!
@@ -52,15 +59,26 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 				
 				// printRequestAndResponse("Header", client.getHeaderPart());
 				// printRequestAndResponse("Body", client.getBodyPart());
-				
 				client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 			}
 			// std::cout << "To validate {" << client.getLastReceivedHeaderData() << "}\n";
 			// printRequestAndResponse("To validate", client.getLastReceivedHeaderData());
 			
-			HttpRequest &req = client.getHttpRequest();
-			req.appendAndValidate(std::string(client.getLastReceivedHeaderData(), readbytes));
+			
+			std::cout << "==== THIS LAST RECEIVED HEADER ====" << std::endl; // debug
+			std::cout << client.getHeaderPart() << std::endl; // debug
+			HttpRequest &req = client.getHttpRequest(); // 
+			req.appendAndValidate(client.getHeaderPart()); // Append and validate the headers
+			if (req.getState() == HttpRequest::STATE_ERROR)
+			{
+				client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
+				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+				return; // Return instead of throwing to allow response generation
+			}
+			std::cout << "==== THIS INFO ====" << std::endl; // debug
+			req.printInfos(); // debug
+			std::cout << "==== THIS INFO ====" << std::endl; // debug
 			// !! the string passed here is the last data received and appended to the Header-Part // READ THIS !!
 			
 			// client.prinfRequestinfos();
@@ -72,17 +90,26 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 		std::string error_msg = "HTTP Request Error: ";
 		error_msg += e.what();
 		std::cerr << error_msg << std::endl;
-		_servers[serverIndex].closeConnection(clientSocket);
+		client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
+		client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+		// _servers[serverIndex].closeConnection(clientSocket); // 
 	}
 	catch (const std::runtime_error& e) {
-		perror(e.what());
-		_servers[serverIndex].closeConnection(clientSocket);
+		std::string error_msg = "HTTP parsing error: ";
+		error_msg += e.what();
+		std::cerr << error_msg << std::endl;
+		client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
+		client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+		// perror(e.what());
+		// _servers[serverIndex].closeConnection(clientSocket); //
 	}
 	catch (const std::exception &e) {
 		std::string error_msg = "Parsing error: ";
 		error_msg += e.what();
 		std::cerr << error_msg << std::endl;
-		_servers[serverIndex].closeConnection(clientSocket);
+		client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
+		client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+		// _servers[serverIndex].closeConnection(clientSocket); //
 	}
 }
 

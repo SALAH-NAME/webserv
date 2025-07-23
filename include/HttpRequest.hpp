@@ -53,7 +53,6 @@ private:
     int status_code;
     std::string error_msg;
 
-    std::string _parsing_buffer;
     size_t _start_line_size;
     size_t _headers_size;
     bool _start_line_parsed;
@@ -77,8 +76,7 @@ private:
 public:
     HttpRequest();
 
-    void validateHeaderBuffer(const std::string &buffer);
-    void appendAndValidate(const std::string &data);
+    void appendAndValidate(std::string& _parsing_buffer);
     bool hasCompleteRequest() const;
 
     State getState() const;

@@ -72,66 +72,6 @@ bool HttpRequest::isValidVersion(const std::string &version) const
     return version == "HTTP/1.1";
 }
 
-void HttpRequest::validateHeaderBuffer(const std::string &buffer)
-{
-    _parsing_buffer += buffer;
-
-    std::string::size_type pos = 0;
-    std::string::size_type line_end;
-
-    // Process complete lines (ending with \r\n)
-    while ((line_end = _parsing_buffer.find("\r\n", pos)) != std::string::npos)
-    {
-        std::string line = _parsing_buffer.substr(pos, line_end - pos);
-
-        try
-        {
-            if (state == STATE_START_LINE)
-            {
-                if (!_start_line_parsed)
-                {
-                    validateStartLine(line);
-                    parseStartLine(line);
-                    _start_line_parsed = true;
-                    state = STATE_HEADERS;
-                }
-            }
-            else if (state == STATE_HEADERS)
-            {
-                if (line.empty())
-                {
-                    // Empty line so end of headers
-                    state = STATE_BODY; //  STATE_COMPLETE
-                    valid = true;
-                    status_code = 200;
-                    break;
-                }
-                else
-                {
-                    validateHeaderLine(line);
-                    parseHeaderLine(line);
-                }
-            }
-        }
-        catch (const HttpRequestException &e)
-        {
-            state = STATE_ERROR;
-            valid = false;
-            status_code = e.statusCode();
-            error_msg = e.what();
-            throw;
-        }
-
-        pos = line_end + 2; // Skip \r\n
-    }
-
-    // Remove processed lines from buffer
-    if (pos > 0)
-    {
-        _parsing_buffer = _parsing_buffer.substr(pos);
-    }
-}
-
 void HttpRequest::validateHeaderLine(const std::string &line)
 {
     _headers_size += line.length() + 2; // +2 for \r\n
@@ -285,12 +225,65 @@ void HttpRequest::parseHeaderLine(const std::string &line)
     headers[header_name] = header_value;
 }
 
-void HttpRequest::appendAndValidate(const std::string &data)
+void HttpRequest::appendAndValidate(std::string& _parsing_buffer)
 {
     if (state == STATE_ERROR || state == STATE_COMPLETE)
         return;
 
-    validateHeaderBuffer(data);
+    std::string::size_type pos = 0;
+    std::string::size_type line_end;
+
+    // Process complete lines (ending with \r\n)
+    while ((line_end = _parsing_buffer.find("\r\n", pos)) != std::string::npos)
+    {
+        std::string line = _parsing_buffer.substr(pos, line_end - pos);
+
+        try
+        {
+            if (state == STATE_START_LINE)
+            {
+                if (!_start_line_parsed)
+                {
+                    validateStartLine(line);
+                    parseStartLine(line);
+                    _start_line_parsed = true;
+                    state = STATE_HEADERS;
+                }
+            }
+            else if (state == STATE_HEADERS)
+            {
+                if (line.empty())
+                {
+                    // Empty line so end of headers
+                    state = STATE_BODY; //  STATE_COMPLETE
+                    valid = true;
+                    status_code = 200;
+                    break;
+                }
+                else
+                {
+                    validateHeaderLine(line);
+                    parseHeaderLine(line);
+                }
+            }
+        }
+        catch (const HttpRequestException &e)
+        {
+            state = STATE_ERROR;
+            valid = false;
+            status_code = e.statusCode();
+            error_msg = e.what();
+            throw;
+        }
+
+        pos = line_end + 2; // Skip \r\n
+    }
+
+    // Remove processed lines from buffer
+    if (pos > 0)
+    {
+        _parsing_buffer = _parsing_buffer.substr(pos);
+    }
 }
 
 bool HttpRequest::hasCompleteRequest() const
@@ -315,7 +308,7 @@ void HttpRequest::reset()
     path_info.clear();
     query_params.clear();
 
-    _parsing_buffer.clear();
+    // _parsing_buffer.clear();
     _start_line_size = 0;
     _headers_size = 0;
     _start_line_parsed = false;
