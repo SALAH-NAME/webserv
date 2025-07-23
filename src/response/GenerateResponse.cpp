@@ -1,5 +1,25 @@
 #include "ResponseHandler.hpp"
-#include <dirent.h>
+
+void ResponseHandler::InitializeStatusPhrases()
+{
+    status_phrases[200] = std::string("OK");
+    status_phrases[302] = std::string("Found");
+    status_phrases[403] = std::string("Forbidden");
+    status_phrases[401] = std::string("Unauthorized");
+    status_phrases[201] = std::string("Created");
+    status_phrases[204] = std::string("No Content");
+    status_phrases[301] = std::string("Moved Permanently");
+    status_phrases[304] = std::string("Not Modified");
+    status_phrases[400] = std::string("Bad Request");
+    status_phrases[404] = std::string("Not Found");
+    status_phrases[501] = std::string("Not Implemented");
+    status_phrases[502] = std::string("Bad Gateway");
+    status_phrases[503] = std::string("Service Unavailable");
+    status_phrases[504] = std::string("Gateway Timeout")    ;
+    status_phrases[413] = std::string("Payload Too Large");
+    status_phrases[500] = std::string("Internal Server Error");
+    status_phrases[405] = std::string("Method Not Allowed");
+}
 
 std::string GetFormattedEntryInfo(std::string name, const std::string &time_stamp, const std::string &size)
 {
@@ -20,7 +40,7 @@ std::string GetFormattedEntryInfo(std::string name, const std::string &time_stam
 void ResponseHandler::SetResponseHeader(const std::string &status_line, int len,
         bool is_static, std::string location)
 {
-    response_header = status_line + CRLF + "server: " + SRV_NAME + CRLF + "Date: " +
+    response_header = status_line + CRLF + "Server: " + SRV_NAME + CRLF + "Date: " +
         GenerateTimeStamp() + CRLF ;
     if (len != -1)
     {

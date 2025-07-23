@@ -23,7 +23,7 @@ Client::Client(Socket sock, int serverFD, const ServerConfig& conf) : _socket(so
 											_isKeepAlive(true),
 											_availableResponseBytes(0),
 											_generateInProcess(GENERATE_RESPONSE_OFF)
-											, _responseHandler(new ResponseHandler(conf))
+											, _responseHandler(new ResponseHandler("0.0.0.0", conf))
 											, _shouldTransferBody(TRANSFER_BODY_OFF)
 											, _bodySize(0), _contentLength(0)
 											, _bodyDataPreloaded(BODY_DATA_PRELOADED_OFF)

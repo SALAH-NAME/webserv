@@ -37,7 +37,7 @@ ResponseHandler::ResponseHandlerError::ResponseHandlerError(const std::string &E
 	status_code =statusCode;
 }
 
-const char *ResponseHandler::ResponseHandlerError::what()throw() {return error.c_str();}
+const char *ResponseHandler::ResponseHandlerError::what()const throw() {return error.c_str();}
 
 int ResponseHandler::ResponseHandlerError::getStatusCode(){return status_code;}
 
