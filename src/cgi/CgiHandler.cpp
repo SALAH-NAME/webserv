@@ -123,7 +123,7 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 	id = fork();
 	if (id == -1)
 		throw (std::runtime_error("failed to spawn child"));
-	if (id == 0)//child
+	if (id == 0)
 	{
 		SetCgiChildFileDescriptors();
 		execve(cgi_conf.getCgiPass().c_str(), argv, this->env.GetRawEnv());
