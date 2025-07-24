@@ -3,20 +3,28 @@
 
 #define EPOLLTIMEOUT 100
 #define MAX_EVENTS 100
-#define BYTES_TO_READ 1000
-#define BYTES_TO_SEND 1000
+#define BYTES_TO_READ 1023
+#define BYTES_TO_SEND 1023
 #define BUFFERSIZE 1024
 #define RESPONSESIZE 746 // Fix size for the temp response
 
-#define INCOMING_DATA_ON true
+#define INCOMING_HEADER_DATA_ON true
 #define INCOMING_DATA_OFF false
 #define CONNECTION_ERROR (EPOLLIN | EPOLLERR | EPOLLHUP)
 
 #define GENERATE_RESPONSE_ON true
 #define GENERATE_RESPONSE_OFF false
 
+#define TRANSFER_BODY_ON true
+#define TRANSFER_BODY_OFF false
+
+#define BODY_DATA_PRELOADED_ON true
+#define BODY_DATA_PRELOADED_OFF false
+
+#define _2CRLF "\r\n\r\n"
+
 #include <netinet/in.h> // For sockaddr_in
-#include <unistd.h>     // For close()
+#include <unistd.h> 
 #include <iostream>
 #include <string>
 #include <vector>
@@ -28,7 +36,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <ctime>
-#include <cerrno> // should be removed
+#include <cerrno>
 #include <map>
 #include <sstream>
 #include <algorithm>
@@ -53,7 +61,6 @@ class ServerManager {
 		struct epoll_event					_event;
 		struct epoll_event					_events[MAX_EVENTS];
 		char								_buffer[BUFFERSIZE];
-		std::string							_2CRLF;
 
 		void								createEpoll(void);
 		void								setUpServers(void);
@@ -61,6 +68,7 @@ class ServerManager {
 		void								checkTimeOut(void);
 		void								collectRequestData(Client&, int);
 		void								transmitResponse(Client&, int);
+		void								transferBodyToFile(Client&, int);
 
 		void								processEvent(int);
 		void								receiveClientsData(int);
@@ -69,8 +77,8 @@ class ServerManager {
 
 	public:
 
-											ServerManager(const std::vector<ServerConfig> &);
-											~ServerManager(void);
+		/**/								ServerManager(const std::vector<ServerConfig> &);
+		/**/								~ServerManager(void);
 		void								waitingForEvents(void);
 
 

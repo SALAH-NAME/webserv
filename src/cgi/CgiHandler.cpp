@@ -32,7 +32,7 @@ void	CgiHandler::SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &co
 	env.Add("REQUEST_METHOD", http_req.getMethod());
 	env.Add("SCRIPT_NAME", http_req.getPath());
 	env.Add("SERVER_NAME", conf.getHost());
-	env.Add("SERVER_PORT", NumtoString(conf.getListen()));
+	env.Add("SERVER_PORT", NumtoString(conf.getListens()[0]));//this needs to be changed
 	env.Add("SERVER_PROTOCOL", "HTTP/1.1");
 	env.Add("SERVER_SOFTWARE", "Ed Edd n Eddy/1.0");	
 	if (http_headers.find("Content-Length") != http_headers.end())
@@ -123,7 +123,7 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 	id = fork();
 	if (id == -1)
 		throw (std::runtime_error("failed to spawn child"));
-	if (id == 0)//child
+	if (id == 0)
 	{
 		SetCgiChildFileDescriptors();
 		execve(cgi_conf.getCgiPass().c_str(), argv, this->env.GetRawEnv());

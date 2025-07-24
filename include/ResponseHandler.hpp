@@ -40,7 +40,7 @@ class ResponseHandler
 		std::fstream				*target_file;
 		unsigned int				cgi_buffer_size;
 
-		void		CheckForInitialErrors(HttpRequest &req);
+		void		InitialRequestCheck(HttpRequest &req);
 		void		ProccessRequest(HttpRequest &req);
 		void 		RouteResolver(const std::string &path, const std::string &method);
 		bool 		CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/07/12 08:54:38 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/21 22:23:32 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,17 +16,13 @@ void	Server::initAttributes(int id) {
 	_domin = AF_INET;
 	_type = SOCK_STREAM | SOCK_NONBLOCK;
 	_protocol = 0;
-	_ports.push_back(_serverConfig.getListen());
-	_timeOut = _serverConfig.getSessionTimeout();
+	_ports.push_back(_serverConfig.getListens()[0]); // TODO: here need to support multiple ports
+	_timeOut = _serverConfig.getConnectionTimeout();
 	_id = id;
 }
 
 Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serverConfig), _id(id), _transferSocket() {
 	initAttributes(id);
-
-	// Add temp ports
-	_ports.push_back(2323);
-	_ports.push_back(4545);
 
 	for (size_t i = 0; i < _ports.size(); i++) {
 		
@@ -40,7 +36,7 @@ Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serv
 			// fixed this problem ==>  the OS keeps the port in a "cool-down" period (TIME_WAIT)
 			// ==> It’s mainly for quick restart development or for binding during graceful restarts.
 			
-			memset(&_Address, 0, sizeof(_Address));
+			std::memset(&_Address, 0, sizeof(_Address));
 			_Address.sin_family = _domin;
 			_Address.sin_port = htons(_ports[i]);
 			
@@ -48,10 +44,7 @@ Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serv
 				throw std::runtime_error(std::string("Invalid IP address: ") + strerror(errno));
 
 			struct sockaddr addr;
-			memcpy(&addr, &_Address, sizeof(_Address));
-		
-			_bufferSize = sizeof(_buffer);
-			memset(_buffer, 0, _bufferSize);
+			std::memcpy(&addr, &_Address, sizeof(_Address));
 
 			_listeningSockets[_listeningSockets.size() - 1].bind(&addr, sizeof(_Address));
 			_listeningSockets[_listeningSockets.size() - 1].listen();
@@ -111,7 +104,6 @@ void	Server::eraseMarked() {
 	for (size_t i = 0; i < _markedForEraseClients.size(); i++) {
 		close(_markedForEraseClients[i]);
 		_clients.erase(_markedForEraseClients[i]);
-		// std::cout << "close the connection : " << _markedForEraseClients[i] << "\n";
 	}
 	_markedForEraseClients.clear();
 }

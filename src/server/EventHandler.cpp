@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   EventHandler.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/13 12:00:52 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/21 22:12:54 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 	ssize_t				clientEventLen = sizeof(clientEvent);
 	int					clientSocketFD;
 		
-	memset(&clientEvent, 0, clientEventLen);
+	std::memset(&clientEvent, 0, clientEventLen); // use std::
 	clientEvent.events = EPOLLIN | EPOLLET; // make the client socket Edge-Triggered
 	
 	for (size_t i = 0; i < _listeningSockets.size(); i++) {
@@ -48,7 +48,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 				try {
 					Socket sock = _listeningSockets[i].accept();
 					clientSocketFD = sock.getFd();
-					// std::cout << "accept : " << clientSocketFD << "\n";
+					// std::cout << "  ======>>> accept : " << clientSocketFD << " <<====== \n";
 					clientEvent.data.fd = clientSocketFD;
 					if (epoll_ctl(_epfd, EPOLL_CTL_ADD, clientSocketFD, &clientEvent) == -1)
 						throw std::runtime_error(std::string("epoll_ctl() failed: ") + strerror(errno));
@@ -85,8 +85,9 @@ void	ServerManager::processEvent(int serverIndex) {
 				continue ;
 			}
 			std::map<int, Client>::iterator clientIterator = server.getClients().find(clientSocket);
-			clientIterator->second.setIncomingDataFlag(INCOMING_DATA_ON);
-			clientIterator->second.setEvent(_epfd, _events[i]);		}
+			clientIterator->second.setIncomingDataDetectedFlag(INCOMING_HEADER_DATA_ON);
+			clientIterator->second.setEvent(_epfd, _events[i]);
+		}
 	}
 	server.eraseMarked();
 }

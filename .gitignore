@@ -13,3 +13,5 @@ intra_test/
 .vscode
 deleteme/
 ./*.txt
+build/
+*.log

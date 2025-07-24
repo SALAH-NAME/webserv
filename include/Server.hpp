@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/11 20:14:04 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/19 18:28:41 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,11 +24,9 @@ class Server {
 		int						_domin;
 		int						_type;
 		int						_protocol;
-		int						_nMaxBacklog; // this parameter is for listen()
-		int 					_epfd; // epoll fd
+		int						_nMaxBacklog;
+		int 					_epfd;
 		bool					_isKeepAlive;
-		char					_buffer[1024];
-		size_t					_bufferSize;
 		int						_timeOut;
 		std::map<int, Client>	_clients;
 		std::vector<int>		_markedForEraseClients;
@@ -38,8 +36,8 @@ class Server {
 		void					initAttributes(int);
 		void					setEventStatus(struct epoll_event&, int);
 	public:
-								Server(const ServerConfig&, size_t);
-								~Server(void);
+		/**/					Server(const ServerConfig&, size_t);
+		/**/					~Server(void);
 
 		int						getID(void);
 		std::vector<Socket>&	getListeningSockets(void);
@@ -60,6 +58,6 @@ class Server {
 };
 
 std::vector<int>::iterator		getIterator(int, std::vector<int>&);
-void							printRequet(std::string);
+void							printRequestAndResponse(std::string, std::string);
 
 #endif

@@ -3,14 +3,27 @@
 /*                                                        :::      ::::::::   */
 /*   ServerManager.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: alaktari <alaktari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/13 11:19:28 by alaktari         ###   ########.fr       */
+/*   Updated: 2025/07/22 11:14:57 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServerManager.hpp"
+
+void	ServerManager::generatResponses(int serverIndex) {
+	std::map<int, Client>& clients = _servers[serverIndex].getClients();
+	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+		Client& client = it->second;
+
+		if (client.getGenerateInProcess() == GENERATE_RESPONSE_OFF)
+			continue ;
+
+		it->second.buildResponse();
+		client.setGenerateResponseInProcess(GENERATE_RESPONSE_OFF);
+	}
+}
 
 void ServerManager::checkTimeOut(void)
 {
@@ -62,10 +75,9 @@ void ServerManager::addToEpollSet(void)
 
 		for (size_t x = 0; x < listeningSockets.size(); x++)
 		{
-			memset(&_event, 0, sizeof(_event));
+			std::memset(&_event, 0, sizeof(_event)); // std
 			_event.data.fd = listeningSockets[x].getFd();
-			_event.events =
-					EPOLLIN | EPOLLET; // make the listening socket Edge-triggered
+			_event.events = EPOLLIN | EPOLLET; // make the listening socket Edge-triggered
 
 			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, listeningSockets[x].getFd(),
 										&_event) == -1)
@@ -87,7 +99,7 @@ void ServerManager::addToEpollSet(void)
 void ServerManager::createEpoll()
 {
 	std::cout << "----------------- Create Epoll ----------------------\n";
-	_epfd = epoll_create1(0);
+	_epfd = epoll_create(1);
 	if (_epfd == -1)
 		throw("epoll create1 failed");
 	std::cout << "an epoll instance for the servers sockets created(" << _epfd
@@ -95,7 +107,7 @@ void ServerManager::createEpoll()
 }
 
 ServerManager::ServerManager(const std::vector<ServerConfig>& serversInfo)
-		: _serversConfig(serversInfo), _2CRLF("\r\n\r\n")
+		: _serversConfig(serversInfo)
 {
 	createEpoll();
 	setUpServers();
