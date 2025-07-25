@@ -925,7 +925,7 @@ bool ConfigParser::isValidHttpMethod(const std::string& method)
 
 bool ConfigParser::isValidRegexPath(const std::string& path)
 {
-	return path == ".php" || path == ".py" || path == ".pl";
+	return path == ".php" || path == ".py" || path == ".sh";
 }
 
 void ConfigParser::applyInheritance()

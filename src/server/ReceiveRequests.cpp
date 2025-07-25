@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/24 20:29:40 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/25 13:22:08 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,6 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 				
 				// printRequestAndResponse("Header", client.getHeaderPart());
 				// printRequestAndResponse("Body", client.getBodyPart());
-
 				client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 			}
@@ -81,7 +80,6 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			throwIfSocketError("recv()");
 	}
 	catch (const HttpRequestException &e) {
-		std::cout << "CATCH .....\n";
 		std::string error_msg = "HTTP Request Error: ";
 		error_msg += e.what();
 		std::cerr << error_msg << std::endl;
@@ -90,7 +88,6 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 		// _servers[serverIndex].closeConnection(clientSocket); // 
 	}
 	catch (const std::runtime_error& e) {
-		std::cout << "CATCH .....\n";
 		std::string error_msg = "HTTP parsing error: ";
 		error_msg += e.what();
 		std::cerr << error_msg << std::endl;
@@ -100,7 +97,6 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 		// _servers[serverIndex].closeConnection(clientSocket); //
 	}
 	catch (const std::exception &e) {
-		std::cout << "CATCH .....\n";
 		std::string error_msg = "Parsing error: ";
 		error_msg += e.what();
 		std::cerr << error_msg << std::endl;
@@ -137,7 +133,6 @@ void	ServerManager::transferBodyToFile(Client& client, int serverIndex) {
 		
 	} catch (const std::runtime_error& e) {
 		perror(e.what());
-		std::cout << "22222\n";
 		_servers[serverIndex].closeConnection(client.getSocket().getFd());
 	}
 }

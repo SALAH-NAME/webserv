@@ -110,7 +110,6 @@ void ResponseHandler::SetTargetFileForCgi(int count)
 	close(fd);
 	target_file = new std::fstream(filename.c_str(), std::ios::out | std::ios::in | std::ios::trunc | std::ios::binary);
 	if (!target_file || fd == -1 || !target_file->is_open()) {
-		std::cout << "Failed to open file: " << filename << ", error: " << std::strerror(errno) << std::endl;//logger
 		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
 	}
 }
@@ -120,10 +119,7 @@ void ResponseHandler::AppendBufferToTmpFile(const std::string &buf)
 	if (!target_file || !target_file->is_open())
         throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
 	else if (CgiObj.GetContentLength() != -1 && cgi_buffer_size + buf.size() > (unsigned)CgiObj.GetContentLength())
-	{//
-		std::cout << "returned body lenght didn't match with the actual size" << std::endl;//logger
 		throw (ResponseHandlerError("HTTP/1.1 502 Bad Gateway", 502));
-	}//
 	target_file->write(buf.c_str(), buf.size());
 	if (target_file->fail() || target_file->bad())
 		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));

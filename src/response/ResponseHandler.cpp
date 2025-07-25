@@ -46,7 +46,7 @@ void ResponseHandler::Run(HttpRequest &req)
 
 void ResponseHandler::ProccessRequest(HttpRequest &req)
 {
-    CheckForInitialErrors(req);
+    InitialRequestCheck(req);
     RouteResolver(req.getPath(), req.getMethod());//  set resource_path and loc_config
     if (NeedToRedirect(req))
         return (GenerateRedirection(req));

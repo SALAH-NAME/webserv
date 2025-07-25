@@ -201,7 +201,7 @@ void testCgiRegistration()
 											"    location ~ \\.php$ {\n"
 											"        cgi_pass /usr/bin/php-cgi;\n"
 											"    }\n"
-											"    location ~ \\.pl$ {\n"
+											"    location ~ \\.sh$ {\n"
 											"        cgi_pass /usr/bin/perl;\n"
 											"    }\n"
 											"}\n";
