@@ -1,8 +1,0 @@
-=== RESPONSE HEADER ===
-HTTP/1.1 201 Created
-Server: Ed, Edd n Eddy/1.0
-Date: Mon, 21 Jul 2025 15:42:37 GMT
-
-
-target File: '/home/midbella/Desktop/webserv/src/local-tmp/www//pouic/toto/from_client.txt'
-is ready for input
