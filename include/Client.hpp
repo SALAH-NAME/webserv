@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/23 11:55:52 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/25 15:14:28 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,11 +44,23 @@ class Client {
 		size_t				_contentLength;
 		bool				_bodyDataPreloaded;
 
-		std::string			_lastReceivedHeaderData;
+		bool				_isResponseSendable;
+		size_t				_bytesToReadFromTargetFile;
+		std::string			_bufferedFileRemainder;
+		bool				_GetResponseInProgress;
+		bool				_responseStats;
 
-	public:
+		
+		void				isolateAndRecordExtraBytes(void);
+		
+		public:
+		
+		
 		/**/				Client(Socket, int, const ServerConfig&);
 		/**/				~Client();
+		
+		std::string			_tempBuffer;
+		
 		size_t				getReadBytes(void);
 		Socket&				getSocket();
 		int					getServerSocketFD(void);
@@ -69,7 +81,12 @@ class Client {
 		size_t				getBodySize(void);
 		bool				getBodyDataPreloaded(void);
 		size_t				getContentLength(void);
-		std::string			getLastReceivedHeaderData(void);
+		
+		bool				getGetResponseInProgress(void);
+		bool				getIsResponseSendable(void);
+		size_t				getBytesToReadFromTargetFile(void);
+		std::string&		getBufferedFileRemainder(void);
+		bool				getResponseStats(void);
 
 		void				setReadBytes(size_t);
 		void				appendToHeaderPart(const std::string& requestData);
@@ -90,17 +107,18 @@ class Client {
 		void				resetBodySize(void);
 		void				setContentLength(int);
 		void				resetContentLength(void);
-
 		void				setHeaderPart(std::string);
 	
 
 		void				clearRequestHolder(void);
 		bool				parseRequest(void);
 		void				prinfRequestinfos(void);
+		void				analyzeResponseHolder(void);
 
 		void				buildResponse();
 		void				trimBufferedBodyToContentLength(void);
 		void				writeToTargetFile(const std::string& data);
+		void				readTargetFileContent(void);
 };
 
 #endif

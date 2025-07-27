@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/23 11:56:46 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/24 19:56:26 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,9 @@ Client::Client(Socket sock, int serverFD, const ServerConfig& conf) : _socket(so
 											, _shouldTransferBody(TRANSFER_BODY_OFF)
 											, _bodySize(0), _contentLength(0)
 											, _bodyDataPreloaded(BODY_DATA_PRELOADED_OFF)
+											, _isResponseSendable(false)
+											, _GetResponseInProgress(GET_RESPONSE_OFF)
+											, _responseStats(false)
 {}
 
 Client::~Client() {}
@@ -136,14 +139,28 @@ size_t	Client::getContentLength(void) {
 	return _contentLength;
 }
 
-std::string	Client::getLastReceivedHeaderData(void) {
-	return _lastReceivedHeaderData;
+bool	Client::getGetResponseInProgress(void) {
+	return _GetResponseInProgress;
+}
+
+bool	Client::getIsResponseSendable(void) {
+	return _isResponseSendable;
+}
+
+size_t	Client::getBytesToReadFromTargetFile(void) {
+	return _bytesToReadFromTargetFile;
+}
+
+std::string&	Client::getBufferedFileRemainder(void) {
+	return _bufferedFileRemainder;
+}
+
+bool	Client::getResponseStats(void) {
+	return _responseStats;
 }
 
 void		Client::appendToHeaderPart(const std::string& headerData) {
 	_requestHeaderPart += headerData;
-	_lastReceivedHeaderData.clear();
-	_lastReceivedHeaderData = headerData;
 }
 
 void Client::appendToBodyPart(const std::string &bodyData)
@@ -267,4 +284,54 @@ void	Client::writeToTargetFile(const std::string& data) {
 	std::fstream *targetFile = _responseHandler->GetTargetFilePtr();
 	targetFile->write(data.c_str(), data.size());
 	targetFile->flush();
+}
+
+void	Client::isolateAndRecordExtraBytes(void) {
+	size_t holderSize = _responseHolder.size();
+	size_t	bytesToIsolate = holderSize - BYTES_TO_SEND;
+	size_t	byesToSend = holderSize - bytesToIsolate;
+	size_t	startByteToSend = holderSize - bytesToIsolate;
+
+	_bufferedFileRemainder = _responseHolder.substr(startByteToSend, holderSize);
+	_responseHolder = _responseHolder.substr(0, byesToSend);
+}
+
+void	Client::analyzeResponseHolder(void) {
+	if (_responseHolder.size() == BYTES_TO_SEND) {
+		_isResponseSendable = RESPONSE_READY;
+		_bytesToReadFromTargetFile = 0;
+	}
+	else if (_responseHolder.size() > BYTES_TO_SEND) {
+		isolateAndRecordExtraBytes();
+		_isResponseSendable = RESPONSE_READY;
+		_bytesToReadFromTargetFile = 0;
+	}
+	else {
+		_bytesToReadFromTargetFile = BYTES_TO_SEND - _responseHolder.size();
+		_isResponseSendable = RESPONSE_PENDING;
+	}
+	_GetResponseInProgress = GET_RESPONSE_ON;
+	setResponseInFlight(false);
+}
+
+void	Client::readTargetFileContent(void) {
+	std::string buffer;
+	std::fstream	*targetFile = _responseHandler->GetTargetFilePtr();
+
+	char temp_buffer[_bytesToReadFromTargetFile+1];
+	targetFile->read(temp_buffer, _bytesToReadFromTargetFile);
+	temp_buffer[targetFile->gcount()] = 0;
+	_responseHolder += temp_buffer;
+
+	if (targetFile->eof() && !_responseHolder.size()) {
+		_GetResponseInProgress = GET_RESPONSE_OFF;
+		_isResponseSendable = RESPONSE_PENDING;
+		_responseStats = RESPONSE_SEND_DONE;
+	}
+	else if (targetFile->eof()) {
+		_isResponseSendable = RESPONSE_READY;
+		_responseStats = RESPONSE_SEND_DONE;
+	}
+	else
+		_isResponseSendable = RESPONSE_READY;
 }

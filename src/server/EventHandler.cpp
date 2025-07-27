@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/21 22:12:54 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/24 19:34:13 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,6 +93,10 @@ void	ServerManager::processEvent(int serverIndex) {
 }
 
 void    ServerManager::waitingForEvents(void) {
+
+	std::cout << "    ##### BYTES TO SEND : " << BYTES_TO_SEND << "  |||  ";
+	std::cout << "BYTES TO READ: " << BYTES_TO_READ << "   ##### \n";
+
 	while (true) {
 		_nfds = epoll_wait(_epfd, _events, MAX_EVENTS, EPOLLTIMEOUT);
 		if (_nfds < 0)

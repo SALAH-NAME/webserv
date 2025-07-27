@@ -21,6 +21,15 @@
 #define BODY_DATA_PRELOADED_ON true
 #define BODY_DATA_PRELOADED_OFF false
 
+#define RESPONSE_READY      true   // Response Data is Enough To Send
+#define RESPONSE_PENDING    false  // Still collecting data, not ready yet
+
+#define GET_RESPONSE_ON   true
+#define GET_RESPONSE_OFF  false
+
+#define RESPONSE_SEND_DONE     true
+#define RESPONSE_SEND_PENDING  false
+
 #define _2CRLF "\r\n\r\n"
 
 #include <netinet/in.h> // For sockaddr_in
@@ -69,6 +78,7 @@ class ServerManager {
 		void								collectRequestData(Client&, int);
 		void								transmitResponse(Client&, int);
 		void								transferBodyToFile(Client&, int);
+		void								transmitFileResponse(Client& , int);
 
 		void								processEvent(int);
 		void								receiveClientsData(int);

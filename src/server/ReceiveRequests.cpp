@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/23 13:23:49 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/25 13:22:08 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			client.appendToHeaderPart(std::string(_buffer, readbytes)); // !! Append buffer to header-Part even if it contains Body-data  // READ THIS!!
 			if (std::string(_buffer, readbytes) == "\r\n")
 			{
+				// in case of receive empty line (Press Enter) !!
 				client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);	
 			}
@@ -53,35 +54,27 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			else if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
 				// std::cout << "   ====>> request is completed <<=====\n";
 				
-				isolateAndRecordBody(client, headerEnd); // !! here we handle if Header-Part contains some of Body-data // READ THIS!!
-				// !! Now we have Header-Part contains only Header-Data // READ THIS !!
-				// !! And save the body-data in Body-Part if received // READ THIS !!
+				isolateAndRecordBody(client, headerEnd);
 				
 				// printRequestAndResponse("Header", client.getHeaderPart());
 				// printRequestAndResponse("Body", client.getBodyPart());
 				client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 			}
-			// std::cout << "To validate {" << client.getLastReceivedHeaderData() << "}\n";
-			// printRequestAndResponse("To validate", client.getLastReceivedHeaderData());
 			
-			
-			std::cout << "==== THIS LAST RECEIVED HEADER ====" << std::endl; // debug
-			std::cout << client.getHeaderPart() << std::endl; // debug
-			HttpRequest &req = client.getHttpRequest(); // 
-			req.appendAndValidate(client.getHeaderPart()); // Append and validate the headers
+			HttpRequest &req = client.getHttpRequest();
+			req.appendAndValidate(client.getHeaderPart());
 			if (req.getState() == HttpRequest::STATE_ERROR)
 			{
 				client.setIncomingDataDetectedFlag(INCOMING_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 				return; // Return instead of throwing to allow response generation
 			}
-			std::cout << "==== THIS INFO ====" << std::endl; // debug
-			req.printInfos(); // debug
-			std::cout << "==== THIS INFO ====" << std::endl; // debug
-			// !! the string passed here is the last data received and appended to the Header-Part // READ THIS !!
 			
-			// client.prinfRequestinfos();
+			// std::cout << "==== THIS INFO ====" << std::endl; // debug
+			// req.printInfos(); // debug
+			// std::cout << "==== THIS INFO ====" << std::endl; // debug
+		
 		}
 		else
 			throwIfSocketError("recv()");

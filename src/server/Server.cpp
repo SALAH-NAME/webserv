@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/07/21 22:23:32 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/24 20:14:49 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@ void	Server::initAttributes(int id) {
 	_domin = AF_INET;
 	_type = SOCK_STREAM | SOCK_NONBLOCK;
 	_protocol = 0;
-	_ports.push_back(_serverConfig.getListens()[0]); // TODO: here need to support multiple ports
+	_ports = _serverConfig.getListens();
 	_timeOut = _serverConfig.getConnectionTimeout();
 	_id = id;
 }

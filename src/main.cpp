@@ -6,27 +6,27 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:24:40 by karim             #+#    #+#             */
-/*   Updated: 2025/07/23 12:15:41 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/24 13:51:15 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServerManager.hpp"
 
 void    printRequestAndResponse(std::string str, std::string request) {
+	char lasChar;
 	std::cout << "\n********************  " << str << "  *********************\n";
-	char lastChar;
 	for (size_t i = 0; i < request.size(); i++) {
 		if (request[i] == '\r')
 			std::cout << "\\r";
 		else if (request[i] == '\n')
-			std::cout << "\\n" << std::endl;
+			std::cout << "\\n\n";
 		else
 			std::cout << request[i];
-		lastChar = request[i];
+		lasChar = request[i];
 	}
-	if (lastChar != '\n')
-		std::cout << std::endl;
-	std::cout << "*****************************************\n\n";
+	if (lasChar != '\n')
+		std::cout << "\n";
+	std::cout << "********** " << str << " size: " << request.size() << " **************\n\n";
 }
 
 int main(int argc, char** argv)
