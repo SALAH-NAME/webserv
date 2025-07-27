@@ -106,6 +106,6 @@ std::string	ExtractFileExtension(const std::string &path);
 std::string	GenerateTimeStamp();
 std::string	NumtoString(int num);
 std::string	formatDate(const char *format, time_t time, int len);
-std::string GetPostFilePath(const std::string &path);
+std::string GetFileDirectoryPath(const std::string &path);
 
 #endif

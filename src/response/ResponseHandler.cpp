@@ -102,7 +102,7 @@ void ResponseHandler::ProccessHttpPOST(HttpRequest &req)
         return (CgiObj.RunCgi(req, conf, *loc_config, resource_path, remote_address));
     if (access(resource_path.c_str(), F_OK) == 0)
         throw (ResponseHandlerError("HTTP/1.1 409 Conflict", 409));
-    if (access(GetPostFilePath(resource_path).c_str(), W_OK | X_OK) != 0 ||
+    if (access(GetFileDirectoryPath(resource_path).c_str(), W_OK | X_OK) != 0 ||
             req.getPath()[req.getPath().size() - 1] == '/')
         throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
     SetResponseHeader("HTTP/1.1 201 Created", -1, false);
