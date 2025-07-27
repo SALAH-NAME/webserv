@@ -6,6 +6,7 @@ ResponseHandler::ResponseHandler(const std::string &client_address, const Server
     InitializeStatusPhrases();
     remote_address = client_address;
     loc_config = NULL;
+    is_location_allocated = false;
     resource_path = "";
     require_cgi = false;
     is_post = false;
@@ -30,7 +31,12 @@ void ResponseHandler::Run(HttpRequest &req)
     is_post = false;
     cgi_buffer_size = 0;
     loc_config = NULL;
-    if (target_file) {
+    if (is_location_allocated){
+        delete loc_config;
+        loc_config = NULL;
+        is_location_allocated = false;
+    }
+    if (target_file){
         target_file->close();
         delete target_file;
         target_file = NULL;

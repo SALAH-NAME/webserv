@@ -108,6 +108,21 @@ bool locationMatched(const std::string &req_path, const LocationConfig &location
     return false;
 }
 
+void ResponseHandler::MakeLocationFromSrvConf()
+{
+    LocationConfig *tmp = new LocationConfig();
+    tmp->setAllowedMethods(conf.getAllowedMethods());
+    tmp->setAutoindex(conf.getAutoindex());
+    tmp->setClientMaxBodySize(NumtoString(conf.getClientMaxBodySize()));
+    tmp->setErrorPages(conf.getErrorPages());
+    tmp->setIndex(conf.getIndex());
+    tmp->setPath("/");
+    tmp->setRoot(conf.getRoot());
+    tmp->setSessionTimeout(conf.getSessionTimeout());
+    tmp->setUploadStore(conf.getUploadStore());
+    loc_config = tmp;
+}
+
 void ResponseHandler::RouteResolver(const std::string &req_path, const std::string &method)
 {
     LOCATIONS   &srv_locations = conf.getLocations();
@@ -133,6 +148,10 @@ void ResponseHandler::RouteResolver(const std::string &req_path, const std::stri
             loc_config = &it->second;//     update if the new route is longer
             resource_path = current_resource_path;
         }
+    }
+    if (access((conf.getRoot() + req_path).c_str(), F_OK) == 0){
+        MakeLocationFromSrvConf();
+        resource_path = conf.getRoot() + req_path;
     }
     if (!loc_config)
         throw (ResponseHandlerError("HTTP/1.1 404 Not Found", 404));//the request path didn't match with any location
