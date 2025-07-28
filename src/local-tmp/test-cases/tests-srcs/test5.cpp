@@ -14,7 +14,7 @@ std::string test5()
 	req.setPath("/kapouet/pouic/toto/pouet/");
 	req.setVersion("HTTP/1.1");
 		std::map<std::string, std::string> headers;
-	headers["Host"] = "127.0.0.1";
+	headers["host"] = "127.0.0.1";
 	req.setHeaders(headers);
 	std::string config_file = "test-cases/tests-conf/test5.conf";
 	ConfigManager config_manager(config_file);

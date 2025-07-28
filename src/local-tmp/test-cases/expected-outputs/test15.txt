@@ -1,14 +1,15 @@
 CGI CHILD EXIT STATUS = 0
 === RESPONSE HEADER ===
-HTTP/1.1 200  OK
-Date: Sun, 27 Jul 2025 19:52:07 GMT
-Content-Length: 310
-Content-Type: text/txt
-Server: Ed, Edd n Eddy
+HTTP/1.1 200 OK
+Date: Mon, 28 Jul 2025 19:18:41 GMT
+Server: Ed, Edd n Eddy/1.0
+content-length: 310
+content-type: text/plain
+server: Ed, Edd n Eddy
 
 === RESPONSE BODY (from tmpfile) ===
 'GATEWAY_INTERFACE': 'CGI/1.1'
-'HTTP_Host': '127.0.0.1'
+'HTTP_host': '127.0.0.1'
 'PATH_INFO': ''
 'QUERY_STRING': ''
 'REMOTE_ADDR': '0.0.0.0'

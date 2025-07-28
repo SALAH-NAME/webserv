@@ -1,12 +1,12 @@
 CGI CHILD EXIT STATUS = 0
 === CGI RAW OUTPUT ===
-Content-Type: text/txt
-Content-Length: 200
+Content-Type: text/plain
+Content-Length: 310
 Server: Ed, Edd n Eddy
 Status: 200 OK
 
 'GATEWAY_INTERFACE': 'CGI/1.1'
-'HTTP_Host': '127.0.0.1'
+'HTTP_host': '127.0.0.1'
 'PATH_INFO': ''
 'QUERY_STRING': ''
 'REMOTE_ADDR': '0.0.0.0'

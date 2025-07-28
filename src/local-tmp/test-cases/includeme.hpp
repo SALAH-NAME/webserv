@@ -20,4 +20,6 @@ std::string test13();
 std::string test14();
 std::string test15();
 std::string test16();
-
+std::string test17();
+std::string test18();
+std::string test19();

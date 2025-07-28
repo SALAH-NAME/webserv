@@ -10,7 +10,7 @@ std::string test16()
 {
 	HttpRequest req;
 	std::map<std::string, std::string> headers;
-	headers["Host"] = "127.0.0.1";
+	headers["host"] = "127.0.0.1";
 	req.setMethod("GET");
 	req.setPath("/printCurrentDir.py");
 	req.setVersion("HTTP/1.1");

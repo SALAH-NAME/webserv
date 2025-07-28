@@ -44,7 +44,7 @@ std::string	ResponseHandler::GenerateCgiStatusLine()
 	if (status_code == 0)
 		return ("HTTP/1.1 200 OK");
 	if (!reason_phrase.empty())
-		return ("HTTP/1.1 " + NumtoString(status_code) + ' ' + reason_phrase);
+		return ("HTTP/1.1 " + NumtoString(status_code) + reason_phrase);
 	else if (status_phrases.find(status_code) != status_phrases.end())
 		return ("HTTP/1.1 " + NumtoString(status_code) + ' ' + status_phrases[status_code]);
 	else
@@ -54,6 +54,8 @@ std::string	ResponseHandler::GenerateCgiStatusLine()
 void ResponseHandler::GenerateHeaderFromCgiData()
 {
 	std::map<std::string, std::string> &headers = CgiObj.GetOutputHeaders();
+	std::vector<std::string> &extra_cookies = CgiObj.GetExtraCookieValues();
+
 	bool has_date = headers.find("Date") != headers.end();
 	bool has_name = headers.find("Server") != headers.end();
 	response_header += GenerateCgiStatusLine() + CRLF;
@@ -61,6 +63,8 @@ void ResponseHandler::GenerateHeaderFromCgiData()
 	response_header += has_name ? "" : "Server: " + std::string(SRV_NAME) + CRLF; 
 	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++)
 		response_header += it->first + ": " + it->second + CRLF;
+	for (std::vector<std::string>::iterator it = extra_cookies.begin(); it != extra_cookies.end(); it++)
+		response_header += "Set-Cookie: " + *it + CRLF;
 }
 
 void ResponseHandler::FinishCgiResponse()//if an exception is thrown call loadErrorPage
@@ -82,6 +86,7 @@ void ResponseHandler::AppendCgiOutput(const std::string &buffer)
 	catch (std::runtime_error &ex){
 		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));}
 	catch (CgiHandler::BadCgiOutput &ex){
+		std::cout << "err msg: " << ex.what() << std::endl;
 		throw (ResponseHandlerError("HTTP/1.1 502 Bad Gateway", 502));}
     if (ReachedCgiBodyPhase()){
 		GenerateHeaderFromCgiData();

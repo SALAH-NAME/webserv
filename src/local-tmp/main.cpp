@@ -5,7 +5,7 @@
 #include <fstream>
 #include <ostream>
 
-#define TESTS_NB 16
+#define TESTS_NB 19
 
 bool quick_pars(int &chosen_test, char **av, int ac)
 {
@@ -87,7 +87,8 @@ int main(int ac, char **av)
 	int chosen_test = 0;
 	bool compair_output = quick_pars(chosen_test, av, ac);
 	std::string (*tests[])() = {test1, test2, test3, test4, test5, test6,
-			test7, test8, test9, test10, test11, test12, test13, test14, test15, test16};
+			test7, test8, test9, test10, test11, test12, test13, test14,
+			test15, test16, test17, test18, test19};
 	if (!compair_output){
 		std::cout << tests[chosen_test-1]();
 		return 0;

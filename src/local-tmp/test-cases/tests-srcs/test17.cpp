@@ -1,26 +1,23 @@
 #include 	"../includeme.hpp"
 
 /*
-	simulation of how the server will work in case of post cgi
-	  to test the cgi output parser
+	test multi cgi
 */
 
-typedef const std::map<std::string, LocationConfig> LOCATIONS;
-
-std::string test15()
+std::string test17()
 {
 	HttpRequest req;
 	std::map<std::string, std::string> headers;
 	headers["host"] = "127.0.0.1";
 	req.setMethod("GET");
-	req.setPath("/PrintEnv.py");
+	req.setPath("/PrintEnv.sh");
 	req.setVersion("HTTP/1.1");
 	req.setHeaders(headers);
 	int r_val = -1;
 	int n = 1;
 	char buffer[128];
 	std::stringstream ss;
-	std::string config_file = "test-cases/tests-conf/test13.conf";
+	std::string config_file = "test-cases/tests-conf/test17.conf";
 	ConfigManager config_manager(config_file);
 	if (!config_manager.load())
 		return "";
@@ -59,7 +56,7 @@ std::string test15()
 		bzero(buffer, 128);
 		try {testObj.FinishCgiResponse();}
 		catch (std::exception &ex){
-			std::cout << "exception thrown in finish fun\n" << ex.what() << '\n';
+			std::cout << "exception thrown in finish function\n" << ex.what() << '\n';
 			return ss.str();
 		}
 		ss << "=== RESPONSE HEADER ===" << '\n';
@@ -76,7 +73,7 @@ std::string test15()
 	}
 	else
 	{
-		ss << "ERROR CGI is not used!!\n";
+		ss << "ERROR CGI is not used!!\n";  
 		ss << "=== RESPONSE HEADER ===" << '\n';
 		ss << testObj.GetResponseHeader() << '\n';
 	}

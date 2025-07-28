@@ -37,7 +37,7 @@ void	CgiHandler::SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &co
 	env.Add("SERVER_SOFTWARE", "Ed Edd n Eddy/1.0");	
 	if (http_headers.find("content-length") != http_headers.end())
 		env.Add("CONTENT_LENGTH", http_headers["content-length"]); 
-	if (http_headers.find("content-yype") != http_headers.end())
+	if (http_headers.find("content-type") != http_headers.end())
 		env.Add("CONTENT_TYPE", http_headers["content-type"]);
 	env.Add("QUERY_STRING", http_req.getQueryString());
 	env.Add("PATH_INFO", http_req.getPathInfo());
@@ -75,6 +75,8 @@ int	CgiHandler::GetStatusCode(){return status_code;}
 int CgiHandler::GetContentLength(){return content_length;}
 
 std::string	CgiHandler::GetReasonPhrase(){return status_reason_phrase;}
+
+std::vector<std::string> &CgiHandler::GetExtraCookieValues(){return extra_cookie_values;}
 
 void CgiHandler::KillChild()
 {

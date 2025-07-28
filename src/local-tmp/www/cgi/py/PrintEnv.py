@@ -3,7 +3,7 @@ from os import environ
 #header
 CRLF="\r\n"
 
-print("Content-Type: text/txt", end=CRLF)
+print("Content-Type: text/plain", end=CRLF)
 print("Content-Length: 310", end=CRLF)
 print("Server: Ed, Edd n Eddy",end=CRLF)
 print("Status: 200 OK", end=CRLF)

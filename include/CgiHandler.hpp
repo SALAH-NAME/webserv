@@ -72,6 +72,7 @@ class CgiHandler
 		std::string							GetReasonPhrase();
 		int									GetContentLength();
 		void								KillChild();
+		std::vector<std::string>			&GetExtraCookieValues();
 		~CgiHandler();
 	
 		class BadCgiOutput : public std::exception
