@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/25 15:14:28 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/28 18:15:01 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,34 +23,39 @@
 
 class Client {
 	private:
+
+		// TO DO : 1.client addr || 2. port
+
 		Socket				_socket;
 		int					_serverSocketFD;
-		size_t				_readBytes;
 		std::string			_requestHeaderPart;
 		std::string			_requestBodyPart;
 		size_t				_responseSize;
 		time_t				_lastTimeConnection;
 		HttpRequest			_httpRequest;
-		bool				_incomingDataDetected;
-		bool				_responseInFlight;
+		
+		bool				_incomingHeaderDataDetected;
+		bool				_responseHeaderFlag;
+		bool				_responseBodyFlag;
+		bool				_fullResponseFlag;
+
+		size_t				_uploadedBytes;
+		// size_t				_savedBodyBytes;
 		size_t				_sentBytes;
+		
 		bool				_isKeepAlive;
-		size_t				_availableResponseBytes;
 		bool				_generateInProcess;
 		std::string			_responseHolder;
+		
 		ResponseHandler*	_responseHandler;
-		bool				_shouldTransferBody;
-		size_t				_bodySize;
+		bool				_incomingBodyDataDetectedFlag;
+		// size_t				_bodySize;
 		size_t				_contentLength;
+		bool				_isResponseBodySendable;
+		bool				_isRequestBodyWritable;
+		// size_t				_bytesReadFromFile;
 		bool				_bodyDataPreloaded;
 
-		bool				_isResponseSendable;
-		size_t				_bytesToReadFromTargetFile;
-		std::string			_bufferedFileRemainder;
-		bool				_GetResponseInProgress;
-		bool				_responseStats;
-
-		
 		void				isolateAndRecordExtraBytes(void);
 		
 		public:
@@ -60,65 +65,80 @@ class Client {
 		/**/				~Client();
 		
 		std::string			_tempBuffer;
+		int 				temp_size;
+		std::string					temp_header;
 		
-		size_t				getReadBytes(void);
 		Socket&				getSocket();
 		int					getServerSocketFD(void);
 		time_t				getLastConnectionTime(void);
-		bool				getIncomingDataDetectedFlag(void);
-		bool				getResponseInFlight(void);
+		bool				getIncomingHeaderDataDetectedFlag(void);
+		
+		std::string&		getRequestBodyPart(void);
+
+		bool				getResponseHeaderFlag(void);
+		bool				getResponseBodyFlag(void);
+		bool				getFullResponseFlag(void);
+
+		std::string&		getResponseHolder(void);
+		
 		bool				getIsKeepAlive(void);
-		size_t				getSentBytes(void);
 		int					getBytesToSendNow(void);
 		bool				getGenerateInProcess(void);
 		HttpRequest&		getHttpRequest(void);
 		std::string&		getHeaderPart(void);
 		std::string&		getBodyPart(void);
 		size_t				getResponseSize(void);
-		size_t				getAvailableResponseBytes(void);
-		std::string&		getResponseHolder(void);
-		bool				getShouldTransferBody(void);
-		size_t				getBodySize(void);
+		bool				getIncomingBodyDataDetectedFlag(void);
+		size_t				getUploadedBytes(void);
 		bool				getBodyDataPreloaded(void);
 		size_t				getContentLength(void);
-		
-		bool				getGetResponseInProgress(void);
-		bool				getIsResponseSendable(void);
-		size_t				getBytesToReadFromTargetFile(void);
-		std::string&		getBufferedFileRemainder(void);
-		bool				getResponseStats(void);
 
-		void				setReadBytes(size_t);
+		bool				getIsResponseBodySendable(void);
+
+		size_t				getSavedBytes(void);
+		
+		bool				getIsRequestBodyWritable(void);
+
 		void				appendToHeaderPart(const std::string& requestData);
 		void				appendToBodyPart(const std::string& requestData);
 		void				setServerSocketFD(int);
 		void				resetLastConnectionTime(void);
 		void				setEvent(int _epfd, struct epoll_event& event);
-		void				setResponseInFlight(bool value);
+		void				setResponseHeaderFlag(bool value);
+		void				setFullResponseFlag(bool value);
 		void				setSentBytes(size_t bytes);
 		void				resetSendBytes(void);
-		void				setIncomingDataDetectedFlag(int mode);
+		void				setIncomingHeaderDataDetectedFlag(int mode);
 		void				setGenerateResponseInProcess(bool);
 		void				setResponseSize(size_t);
-		void				setAvailableResponseBytes(size_t);
 		void				setBodyDataPreloaded(bool);
-		void				setShouldTransferBody(bool);
+		void				setIncomingBodyDataDetectedFlag(bool);
 		void				setRequestBodyPart(std::string);
-		void				resetBodySize(void);
+		void				resetUploadedBytes(void);
+
 		void				setContentLength(int);
 		void				resetContentLength(void);
 		void				setHeaderPart(std::string);
-	
+		void				setUploadedBytes(size_t);
+		// void				setSavedBodyBytes(size_t);
+		
+		void				setIsRequestBodyWritable(bool);
 
-		void				clearRequestHolder(void);
+		// void				clearRequestHolder(void);
 		bool				parseRequest(void);
 		void				prinfRequestinfos(void);
-		void				analyzeResponseHolder(void);
+		// void				analyzeResponseHolder(void);
 
 		void				buildResponse();
 		void				trimBufferedBodyToContentLength(void);
-		void				writeToTargetFile(const std::string& data);
 		void				readTargetFileContent(void);
+		
+		void				receiveRequestBody(void);
+
+		bool				updateHeaderStateAfterSend(size_t);
+		bool				sendFileBody(void);
+		bool				readFileBody(void);
+		void				writeBodyToTargetFile(void);
 };
 
 #endif

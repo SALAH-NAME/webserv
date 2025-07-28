@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/24 19:38:33 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/28 17:28:03 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ void	ServerManager::generatResponses(int serverIndex) {
 
 		if (client.getGenerateInProcess() == GENERATE_RESPONSE_OFF)
 			continue ;
-
+			
 		it->second.buildResponse();
 		client.setGenerateResponseInProcess(GENERATE_RESPONSE_OFF);
 	}
@@ -36,6 +36,7 @@ void ServerManager::checkTimeOut(void)
 			if (std::time(NULL) - it->second.getLastConnectionTime() >
 					_servers[x].getTimeOut())
 			{
+				std::cout << "Time out: " << _servers[x].getTimeOut() << "\n";
 				_servers[x].closeConnection(it->first);
 			}
 		}
@@ -109,6 +110,7 @@ void ServerManager::createEpoll()
 ServerManager::ServerManager(const std::vector<ServerConfig>& serversInfo)
 		: _serversConfig(serversInfo)
 {
+	tempSize = 0;
 	createEpoll();
 	setUpServers();
 	addToEpollSet();

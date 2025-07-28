@@ -9,7 +9,7 @@ INC_DIR		:= include
 BUILD_DIR	:= build
 TEST_DIR	:= tests
 CONF_DIR	:= conf
-WWW_DIR		:= www
+WW_DIR		:= www
 
 VERBOSE_MAKE ?= 0
 ifeq ($(VERBOSE_MAKE),0)

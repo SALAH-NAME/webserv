@@ -5,33 +5,30 @@ void	Client::buildResponse() {
 
 	if (!_responseHandler->GetTargetFilePtr()) {
 		// std::cout << "     =====>>>  Build Response for : {" << _socket.getFd() << "} <<<===== \n";
+
 		_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
-		_responseSize = _responseHolder.size();
-		setAvailableResponseBytes(_responseSize);
-		setResponseInFlight(true);
+			// std::cout << "got full response (header + body)\n";
+		setFullResponseFlag(FULL_RESPONSE_READY);
 	}
 	else {
 		if (_responseHandler->IsPost()) {
 			// std::cout << "     =====>>>  write body to target file <<<===== \n";
-			_shouldTransferBody = TRANSFER_BODY_ON;
-			_responseHolder = _responseHandler->GetResponseHeader();
-			_responseSize = _responseHolder.size();
-			setAvailableResponseBytes(_responseSize);
-			// printRequestAndResponse("Response", _responseHolder);
+
+			_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
+			_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
+			// std::cout << "got full response (header + body)\n";
+			
 			std::stringstream ss(_httpRequest.getHeaders()["content-length"]);
 			ss >> _contentLength;
-			std::cout << "Body Content-Length ==> " << _contentLength << "\n";
+			// std::cout << "content length: " << _contentLength << "\n";
 		}
 		else {
 
 			// std::cout << "    =======>>> Read data from target file to send <<<=====\n";
+
 			_responseHolder = _responseHandler->GetResponseHeader();
-			_responseSize = _responseHolder.size();
-			setAvailableResponseBytes(_responseSize);
-
-			// printRequestAndResponse("Response header", _responseHolder);
-
-			analyzeResponseHolder();
+			// std::cout << "Got only Response Header\n";
+			_responseHeaderFlag = RESPONSE_HEADER_READY;
 		}
 	}
 }

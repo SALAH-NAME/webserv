@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/24 19:34:13 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/28 17:23:53 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,13 +80,16 @@ void	ServerManager::processEvent(int serverIndex) {
 		}
 		else if (server.verifyClientsFD(clientSocket)) {
 			// std::cout << "############  got an event on an existing client socket " << clientSocket << " #############\n";
+			// std::cout << "Event type: " << _events[i].events << "\n";
 			if (_events[i].events == CONNECTION_ERROR) {
+				std::cout << "Connection Error\n";
 				server.closeConnection(_events[i].data.fd);
 				continue ;
 			}
 			std::map<int, Client>::iterator clientIterator = server.getClients().find(clientSocket);
-			clientIterator->second.setIncomingDataDetectedFlag(INCOMING_HEADER_DATA_ON);
-			clientIterator->second.setEvent(_epfd, _events[i]);
+			if (clientIterator->second.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_OFF)
+				clientIterator->second.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_ON);
+			clientIterator->second.setEvent(_epfd, _events[i]);	
 		}
 	}
 	server.eraseMarked();
@@ -108,8 +111,8 @@ void    ServerManager::waitingForEvents(void) {
 			if (!_servers[x].getListeningSockets().size())
 				continue ;
 
-			processEvent(x);
-			receiveClientsData(x);
+			processEvent(x);			
+			receiveClientsData(x);			
 			generatResponses(x);
 			sendClientsResponse(x);
 		}
