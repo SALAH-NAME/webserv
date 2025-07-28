@@ -32,6 +32,7 @@ class ResponseHandler
 		bool						require_cgi;
 		bool						cgi_running;
 		bool						is_post;
+		bool						is_location_allocated;
 		CgiHandler					CgiObj;
 		STRINGS_MAP					content_types;
 		std::map<int, std::string>	status_phrases;
@@ -58,6 +59,7 @@ class ResponseHandler
 		void 		GenerateRedirection(HttpRequest &req);
 		void		GenerateErrorPage(const std::string &status_line);
 		std::string GenerateCgiStatusLine();
+		void   		MakeLocationFromSrvConf();
 		void		GenerateHeaderFromCgiData();
 		void 		SetResponseHeader(const std::string &status_line, int len,
 						bool is_static, std::string location = "");
@@ -106,6 +108,6 @@ std::string	ExtractFileExtension(const std::string &path);
 std::string	GenerateTimeStamp();
 std::string	NumtoString(int num);
 std::string	formatDate(const char *format, time_t time, int len);
-std::string GetPostFilePath(const std::string &path);
+std::string GetFileDirectoryPath(const std::string &path);
 
 #endif

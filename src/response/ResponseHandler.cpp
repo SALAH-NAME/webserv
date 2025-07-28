@@ -6,6 +6,7 @@ ResponseHandler::ResponseHandler(const std::string &client_address, const Server
     InitializeStatusPhrases();
     remote_address = client_address;
     loc_config = NULL;
+    is_location_allocated = false;
     resource_path = "";
     require_cgi = false;
     is_post = false;
@@ -30,7 +31,12 @@ void ResponseHandler::Run(HttpRequest &req)
     is_post = false;
     cgi_buffer_size = 0;
     loc_config = NULL;
-    if (target_file) {
+    if (is_location_allocated){
+        delete loc_config;
+        loc_config = NULL;
+        is_location_allocated = false;
+    }
+    if (target_file){
         target_file->close();
         delete target_file;
         target_file = NULL;
@@ -102,7 +108,7 @@ void ResponseHandler::ProccessHttpPOST(HttpRequest &req)
         return (CgiObj.RunCgi(req, conf, *loc_config, resource_path, remote_address));
     if (access(resource_path.c_str(), F_OK) == 0)
         throw (ResponseHandlerError("HTTP/1.1 409 Conflict", 409));
-    if (access(GetPostFilePath(resource_path).c_str(), W_OK | X_OK) != 0 ||
+    if (access(GetFileDirectoryPath(resource_path).c_str(), W_OK | X_OK) != 0 ||
             req.getPath()[req.getPath().size() - 1] == '/')
         throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
     SetResponseHeader("HTTP/1.1 201 Created", -1, false);

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/07/28 17:27:26 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/28 18:54:28 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,7 +103,7 @@ void	Server::closeConnection(int clientSocket) {
 void	Server::eraseMarked() {
 	for (size_t i = 0; i < _markedForEraseClients.size(); i++) {
 		close(_markedForEraseClients[i]);
-		std::cout << "close connection: " << _markedForEraseClients[i] << "\n";
+		// std::cout << "close connection: " << _markedForEraseClients[i] << "\n";
 		_clients.erase(_markedForEraseClients[i]);
 	}
 	_markedForEraseClients.clear();

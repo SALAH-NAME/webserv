@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/28 17:04:48 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/28 18:45:36 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,9 +32,7 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 	int clientSocket = client.getSocket().getFd();
 	ssize_t readbytes;
 	size_t headerEnd;
-	(void)serverIndex, (void)clientSocket;
 
-	
 	std::memset(_buffer, 0, sizeof(_buffer));
 	try {
 		readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ);

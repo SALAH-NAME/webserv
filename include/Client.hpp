@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/28 18:15:01 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/28 18:46:40 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,33 +33,25 @@ class Client {
 		size_t				_responseSize;
 		time_t				_lastTimeConnection;
 		HttpRequest			_httpRequest;
-		
 		bool				_incomingHeaderDataDetected;
 		bool				_responseHeaderFlag;
 		bool				_responseBodyFlag;
 		bool				_fullResponseFlag;
-
 		size_t				_uploadedBytes;
-		// size_t				_savedBodyBytes;
 		size_t				_sentBytes;
-		
 		bool				_isKeepAlive;
 		bool				_generateInProcess;
 		std::string			_responseHolder;
-		
 		ResponseHandler*	_responseHandler;
 		bool				_incomingBodyDataDetectedFlag;
-		// size_t				_bodySize;
 		size_t				_contentLength;
 		bool				_isResponseBodySendable;
 		bool				_isRequestBodyWritable;
-		// size_t				_bytesReadFromFile;
 		bool				_bodyDataPreloaded;
 
 		void				isolateAndRecordExtraBytes(void);
 		
 		public:
-		
 		
 		/**/				Client(Socket, int, const ServerConfig&);
 		/**/				~Client();
