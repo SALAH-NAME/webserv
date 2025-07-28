@@ -55,8 +55,8 @@ void CgiHandler::StatusValidator()
 	std::stringstream status_stream(value_holder);
 	std::string code;
 	status_stream >> code;
-	if (code.size() != 3 || !isAllDigit(code) || std::atoi(code.c_str()) < 0
-		|| std::atoi(code.c_str()) > 999 || !std::strchr("12345", code[0]))
+	if (code.size() != 3 || !isAllDigit(code) || std::atoi(code.c_str()) < 0 || std::atoi(code.c_str()) > 999
+				|| !std::strchr("12345", code[0]))
 		throw (BadCgiOutput("Invalid status code"));
 	status_code = std::atoi(code.c_str());
 	std::getline(status_stream, status_reason_phrase);

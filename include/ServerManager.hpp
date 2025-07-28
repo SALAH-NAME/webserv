@@ -36,20 +36,8 @@
 #define UPLOAD_ACTIVE   true
 #define UPLOAD_NOT_ACTIVE false
 
-// #define INCOMING_BODY_DATA_ON true
-// #define INCOMING_BODY_DATA_OFF false
-
 #define BODY_DATA_PRELOADED_ON true
 #define BODY_DATA_PRELOADED_OFF false
-
-// #define IS_SENDABLE      true   // Response Data is Enough To Send
-// #define IS_NOT_SENDABLE    false  // Still collecting data, not ready yet
-
-// #define GET_RESPONSE_ON   true
-// #define GET_RESPONSE_OFF  false
-
-// #define RESPONSE_SEND_DONE     true
-// #define RESPONSE_SEND_PENDING  false
 
 #define _2CRLF "\r\n\r\n"
 

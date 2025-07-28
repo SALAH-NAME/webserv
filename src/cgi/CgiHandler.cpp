@@ -35,16 +35,16 @@ void	CgiHandler::SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &co
 	env.Add("SERVER_PORT", NumtoString(conf.getListens()[0]));//this needs to be changed
 	env.Add("SERVER_PROTOCOL", "HTTP/1.1");
 	env.Add("SERVER_SOFTWARE", "Ed Edd n Eddy/1.0");	
-	if (http_headers.find("Content-Length") != http_headers.end())
-		env.Add("CONTENT_LENGTH", http_headers["Content-Length"]); 
-	if (http_headers.find("Content-Type") != http_headers.end())
-		env.Add("CONTENT_TYPE", http_headers["Content-Type"]);
+	if (http_headers.find("content-length") != http_headers.end())
+		env.Add("CONTENT_LENGTH", http_headers["content-length"]); 
+	if (http_headers.find("content-yype") != http_headers.end())
+		env.Add("CONTENT_TYPE", http_headers["content-type"]);
 	env.Add("QUERY_STRING", http_req.getQueryString());
 	env.Add("PATH_INFO", http_req.getPathInfo());
 	env.Add("REMOTE_ADDR", remote_address);
 	for (std::map<std::string, std::string>::iterator it = http_headers.begin(); it != http_headers.end(); it++)
-		if (it->first != "Content-Type" && it->first != "Content-Length")
-			env.Add("HTTP_" + it->first , it->second);
+		if (it->first != "content-type" && it->first != "content-length")
+			env.Add("HTTP_" + it->first , it->second);//HTTP_contetn
 }
 
 void	SetCgiChildArguments(char **Argv, const std::string &interpiter, const std::string &script_path)
@@ -125,8 +125,13 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 		throw (std::runtime_error("failed to spawn child"));
 	if (id == 0)
 	{
+		if (chdir(GetFileDirectoryPath(script_path).c_str()) != 0){
+			std::exit(1);
+			delete_strings(argv);
+		}
 		SetCgiChildFileDescriptors();
 		execve(cgi_conf.getCgiPass().c_str(), argv, this->env.GetRawEnv());
+		delete_strings(argv);
 		std::exit(1);
 	}
 	this->exec_t0 = std::time(NULL);

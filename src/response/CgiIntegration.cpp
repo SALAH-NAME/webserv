@@ -109,9 +109,13 @@ void ResponseHandler::SetTargetFileForCgi(int count)
 	int fd = open(filename.c_str(), O_CREAT, 0644);
 	close(fd);
 	target_file = new std::fstream(filename.c_str(), std::ios::out | std::ios::in | std::ios::trunc | std::ios::binary);
-	if (!target_file || fd == -1 || !target_file->is_open()) {
+	if (!target_file || fd == -1 || !target_file->is_open())
 		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
-	}
+	*target_file << response_body;
+	cgi_buffer_size += response_body.size();
+	if (target_file->bad() || target_file->fail())
+		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
+	response_body.clear();
 }
 
 void ResponseHandler::AppendBufferToTmpFile(const std::string &buf)

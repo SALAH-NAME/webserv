@@ -20,7 +20,7 @@ void	Client::buildResponse() {
 			
 			std::stringstream ss(_httpRequest.getHeaders()["content-length"]);
 			ss >> _contentLength;
-			// std::cout << "content length: " << _contentLength << "\n";
+			// std::cout << "Body Content-Length ==> " << _contentLength << "\n";
 		}
 		else {
 
