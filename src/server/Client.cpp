@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/28 18:14:30 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/29 15:34:50 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,27 +18,48 @@
 
 
 Client::Client(Socket sock, int serverFD, const ServerConfig& conf) : _socket(sock), _serverSocketFD(serverFD),
-											_lastTimeConnection(std::time(NULL))
+											 _lastTimeConnection(std::time(NULL))
 											, _incomingHeaderDataDetected(INCOMING_DATA_HEADER_OFF)
 											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)
 											, _responseBodyFlag(RESPONSE_BODY_NOT_READY)
 											, _fullResponseFlag(FULL_RESPONSE_NOT_READY)
 											, _uploadedBytes(0)
-											// , _savedBodyBytes(0)
 											, _sentBytes(0)
 											, _isKeepAlive(true)
 											, _generateInProcess(GENERATE_RESPONSE_OFF)
 											, _responseHandler(new ResponseHandler("0.0.0.0", conf))
 											, _incomingBodyDataDetectedFlag(INCOMING_BODY_DATA_OFF)
-											// , _bodySize(0)
 											, _contentLength(0)
 											, _isResponseBodySendable(NOT_SENDABLE)
 											, _isRequestBodyWritable(NOT_WRITABLE)
-											// , _bytesReadFromFile(0)
 											, _bodyDataPreloaded(BODY_DATA_PRELOADED_OFF)
 {}
 
-Client::~Client() {}
+Client::Client(const Client& other) : _socket(other._socket), _serverSocketFD(other._serverSocketFD)
+									, _lastTimeConnection(other._lastTimeConnection)
+									, _incomingHeaderDataDetected(other._incomingHeaderDataDetected)
+									, _responseHeaderFlag(other._responseHeaderFlag)
+									, _responseBodyFlag(other._responseBodyFlag)
+									, _fullResponseFlag(other._fullResponseFlag)
+									, _uploadedBytes(other._uploadedBytes)
+									, _sentBytes(other._sentBytes)
+									, _isKeepAlive(other._isKeepAlive)
+									, _generateInProcess(other._generateInProcess)
+									, _responseHandler(other._responseHandler)
+									, _incomingBodyDataDetectedFlag(other._incomingBodyDataDetectedFlag)
+									, _contentLength(other._contentLength)
+									, _isResponseBodySendable(other._isResponseBodySendable)
+									, _isRequestBodyWritable(other._isRequestBodyWritable)
+									, _bodyDataPreloaded(other._bodyDataPreloaded)
+{
+	const_cast<Client&> (other)._responseHandler = NULL;
+}
+
+Client::~Client() {
+	if (_responseHandler) {
+		delete _responseHandler;
+	}
+}
 
 Socket &Client::getSocket()
 {
@@ -151,10 +172,6 @@ bool	Client::getIsResponseBodySendable(void) {
 	return _isResponseBodySendable;
 }
 
-// size_t	Client::getSavedBytes(void) {
-// 	return _savedBodyBytes;
-// }
-
 void		Client::appendToHeaderPart(const std::string& headerData) {
 	_requestHeaderPart += headerData;
 }
@@ -199,16 +216,11 @@ void	Client::setBodyDataPreloaded(bool value) {
 
 void	Client::setRequestBodyPart(std::string bodyData) {
 	_requestBodyPart = bodyData;
-	// _bodySize = bodyData.size();
 }
 
 void	Client::setUploadedBytes(size_t bytes) {
 	_uploadedBytes = bytes;
 }
-
-// void	Client::setSavedBodyBytes(size_t savedBytes) {
-// 	_savedBodyBytes = savedBytes;
-// }
 
 void	Client::resetUploadedBytes(void) {
 	_uploadedBytes = 0;
@@ -233,12 +245,6 @@ void	Client::setHeaderPart(std::string HeaderData) {
 void	Client::setIsRequestBodyWritable(bool value) {
 	_isRequestBodyWritable = value;
 }
-
-// void	Client::clearRequestHolder(void) {
-// 	_requestHeaderPart.clear();
-// 	_requestBodyPart.clear();
-// 	_httpRequest.reset(); // Reset the incremental parser state
-// }
 
 bool Client::parseRequest()
 {
@@ -314,7 +320,6 @@ void	Client::receiveRequestBody(void) {
 	if (readBytes > 0) {
 		resetLastConnectionTime();
 		if (_uploadedBytes + readBytes >= _contentLength) {
-			// std::cout << " **** the body size is bigger than the content length: " << _contentLength << " ****\n\n";
 			readBytes = _contentLength - _uploadedBytes;
 		}
 		buffer[readBytes] = 0;
@@ -336,15 +341,10 @@ void	Client::writeBodyToTargetFile(void) {
 		BytesToWrite = _requestBodyPart.size();
 
 	targetFile->write(_requestBodyPart.c_str(), BytesToWrite);
-	if (!*targetFile) {
-		std::cerr << "\n ##########  Write failed #######\n\n";
-	}
-	
 	targetFile->flush();
 
 	_uploadedBytes += BytesToWrite;
 	_requestBodyPart = _requestBodyPart.substr(BytesToWrite);
-	// std::cout << "UPLOADED BYTES ==> " << _uploadedBytes << "\n";
 	
 	if (_requestBodyPart.size())
 		_isRequestBodyWritable = WRITABLE;

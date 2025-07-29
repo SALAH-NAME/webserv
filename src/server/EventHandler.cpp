@@ -6,12 +6,14 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/28 17:23:53 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/29 15:35:31 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// #include "Server.hpp"
 #include "ServerManager.hpp"
+
+// extern open_fds;
+// extern close_fds;
 
 void throwIfSocketError(const std::string& context) {
 	switch (errno) {
@@ -52,8 +54,8 @@ void	Server::incomingConnection(int NewEvent_fd) {
 					clientEvent.data.fd = clientSocketFD;
 					if (epoll_ctl(_epfd, EPOLL_CTL_ADD, clientSocketFD, &clientEvent) == -1)
 						throw std::runtime_error(std::string("epoll_ctl() failed: ") + strerror(errno));
-					Client newClient(sock, NewEvent_fd, _serverConfig); // create a new object where to store the request
-					_clients.insert(std::make_pair(clientSocketFD, newClient));
+					std::pair<int, Client> entry(clientSocketFD, Client(sock, NewEvent_fd, _serverConfig));
+					_clients.insert(entry);
 				}
 				catch (const char *errorMssg) {
 					break ; // no more pending connections

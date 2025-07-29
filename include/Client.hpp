@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/28 18:46:40 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/29 16:14:15 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,7 @@ class Client {
 		
 		/**/				Client(Socket, int, const ServerConfig&);
 		/**/				~Client();
+		Client(const Client& other);
 		
 		std::string			_tempBuffer;
 		int 				temp_size;
@@ -112,14 +113,11 @@ class Client {
 		void				resetContentLength(void);
 		void				setHeaderPart(std::string);
 		void				setUploadedBytes(size_t);
-		// void				setSavedBodyBytes(size_t);
 		
 		void				setIsRequestBodyWritable(bool);
 
-		// void				clearRequestHolder(void);
 		bool				parseRequest(void);
 		void				prinfRequestinfos(void);
-		// void				analyzeResponseHolder(void);
 
 		void				buildResponse();
 		void				trimBufferedBodyToContentLength(void);

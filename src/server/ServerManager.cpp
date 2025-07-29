@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/28 17:28:03 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/29 15:38:30 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,7 +110,6 @@ void ServerManager::createEpoll()
 ServerManager::ServerManager(const std::vector<ServerConfig>& serversInfo)
 		: _serversConfig(serversInfo)
 {
-	tempSize = 0;
 	createEpoll();
 	setUpServers();
 	addToEpollSet();
