@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/29 15:37:14 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/29 17:14:35 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,28 +23,27 @@
 
 class Client {
 	private:
-
 		// TO DO : 1.client addr || 2. port
-
 		Socket				_socket;
-		int					_serverSocketFD;
+
 		std::string			_requestHeaderPart;
 		std::string			_requestBodyPart;
-		size_t				_responseSize;
+		std::string			_responseHolder;
+		
 		time_t				_lastTimeConnection;
+		size_t				_contentLength;
+		size_t				_uploadedBytes;
+		
 		HttpRequest			_httpRequest;
+		ResponseHandler*	_responseHandler;
+		
 		bool				_incomingHeaderDataDetected;
+		bool				_incomingBodyDataDetectedFlag;
 		bool				_responseHeaderFlag;
 		bool				_responseBodyFlag;
 		bool				_fullResponseFlag;
-		size_t				_uploadedBytes;
-		size_t				_sentBytes;
-		bool				_isKeepAlive;
+		// bool				_isKeepAlive;
 		bool				_generateInProcess;
-		std::string			_responseHolder;
-		ResponseHandler*	_responseHandler;
-		bool				_incomingBodyDataDetectedFlag;
-		size_t				_contentLength;
 		bool				_isResponseBodySendable;
 		bool				_isRequestBodyWritable;
 		bool				_bodyDataPreloaded;
@@ -52,17 +51,16 @@ class Client {
 		void				isolateAndRecordExtraBytes(void);
 		
 		public:
-		
-		/**/				Client(Socket, int, const ServerConfig&);
+
+		/**/				Client(Socket, const ServerConfig&);
+		/**/				Client(const Client& other);
 		/**/				~Client();
-		Client(const Client& other);
 		
 		std::string			_tempBuffer;
 		int 				temp_size;
 		std::string					temp_header;
 		
 		Socket&				getSocket();
-		int					getServerSocketFD(void);
 		time_t				getLastConnectionTime(void);
 		bool				getIncomingHeaderDataDetectedFlag(void);
 		
@@ -74,7 +72,7 @@ class Client {
 
 		std::string&		getResponseHolder(void);
 		
-		bool				getIsKeepAlive(void);
+		// bool				getIsKeepAlive(void);
 		int					getBytesToSendNow(void);
 		bool				getGenerateInProcess(void);
 		HttpRequest&		getHttpRequest(void);
@@ -94,7 +92,6 @@ class Client {
 
 		void				appendToHeaderPart(const std::string& requestData);
 		void				appendToBodyPart(const std::string& requestData);
-		void				setServerSocketFD(int);
 		void				resetLastConnectionTime(void);
 		void				setEvent(int _epfd, struct epoll_event& event);
 		void				setResponseHeaderFlag(bool value);

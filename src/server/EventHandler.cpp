@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/29 15:35:31 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/29 17:19:59 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 					clientEvent.data.fd = clientSocketFD;
 					if (epoll_ctl(_epfd, EPOLL_CTL_ADD, clientSocketFD, &clientEvent) == -1)
 						throw std::runtime_error(std::string("epoll_ctl() failed: ") + strerror(errno));
-					std::pair<int, Client> entry(clientSocketFD, Client(sock, NewEvent_fd, _serverConfig));
+					std::pair<int, Client> entry(clientSocketFD, Client(sock, _serverConfig));
 					_clients.insert(entry);
 				}
 				catch (const char *errorMssg) {
