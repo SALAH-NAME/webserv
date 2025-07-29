@@ -100,9 +100,6 @@ class ServerManager {
 		/**/								~ServerManager(void);
 		void								waitingForEvents(void);
 
-		size_t tempSize;
-
-
 };
 
 void throwIfSocketError(const std::string& context);

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/28 18:45:36 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/29 15:38:02 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ void	isolateAndRecordBody(Client& client, size_t headerEnd) {
 	client.setRequestBodyPart(headerPart.substr(headerEnd + 4)); // here we save the body
 	client.setIsRequestBodyWritable(WRITABLE);
 	client.setHeaderPart(headerPart.substr(0, headerEnd + 4));
+	// std::cout << "ISOLATED\n";
 }
 
 void    ServerManager::collectRequestData(Client& client, int serverIndex) {
@@ -36,7 +37,6 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 	std::memset(_buffer, 0, sizeof(_buffer));
 	try {
 		readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ);
-		tempSize += readbytes;
 		// std::cout << "read bytes ==> " << readbytes << " from : " << client.getSocket().getFd() << "\n";
 		
 		if (readbytes > 0) {

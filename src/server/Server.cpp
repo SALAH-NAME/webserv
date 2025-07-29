@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/07/28 18:54:28 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/29 15:38:10 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,8 +107,6 @@ void	Server::eraseMarked() {
 		_clients.erase(_markedForEraseClients[i]);
 	}
 	_markedForEraseClients.clear();
-	// if (_clients.size())
-		// std::cout << "client size: " << _clients.size() << "\n";
 }
 
 std::map<int, Client>& Server::getClients() {
