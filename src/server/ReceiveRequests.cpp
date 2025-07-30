@@ -67,7 +67,7 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			req.appendAndValidate(client.getHeaderPart());
 			if (req.getState() == HttpRequest::STATE_ERROR)
 			{
-				std::cout << "    ==>>> PARSING ERROR <<<====\n";exit(0);
+				std::cout << "    ==>>> PARSING ERROR <<<====\n";//exit(0);
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_DATA_HEADER_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 				return; // Return instead of throwing to allow response generation

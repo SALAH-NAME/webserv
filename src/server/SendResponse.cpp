@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "Server.hpp"
+#include <sys/socket.h>
 
 void	ServerManager::transmitResponseHeader(Client& client, int serverIndex) {
 
@@ -22,7 +23,7 @@ void	ServerManager::transmitResponseHeader(Client& client, int serverIndex) {
 
 	size_t sentBytes;
 	try {
-		sentBytes = client.getSocket().send(response.c_str(), bytesToSendNow);
+		sentBytes = client.getSocket().send(response.c_str(), bytesToSendNow, MSG_NOSIGNAL);
 		if (sentBytes > 0) {	
 			client.resetLastConnectionTime();
 			if (client.updateHeaderStateAfterSend(bytesToSendNow))

@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <ctime>
+#include <sys/socket.h>
 #include "HttpRequest.hpp"
 
 
@@ -295,7 +296,7 @@ bool	Client::readFileBody(void) {
 
 bool	Client::sendFileBody(void) {
 
-	ssize_t sentBytes = _socket.send(_responseHolder.c_str(), _responseHolder.size());
+	ssize_t sentBytes = _socket.send(_responseHolder.c_str(), _responseHolder.size(), MSG_NOSIGNAL);
 	if (sentBytes < 0)
 		throwIfSocketError("send()");
 	
