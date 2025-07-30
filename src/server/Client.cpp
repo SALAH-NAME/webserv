@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/29 15:34:50 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/30 11:39:41 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,38 +16,35 @@
 #include <ctime>
 #include "HttpRequest.hpp"
 
-
-Client::Client(Socket sock, int serverFD, const ServerConfig& conf) : _socket(sock), _serverSocketFD(serverFD),
-											 _lastTimeConnection(std::time(NULL))
+Client::Client(Socket sock, const ServerConfig& conf, ClientInfos clientInfos) : _socket(sock)
+											, _lastTimeConnection(std::time(NULL))
+											, _contentLength(0)
+											, _uploadedBytes(0)
+											, _responseHandler(new ResponseHandler(clientInfos, conf))
 											, _incomingHeaderDataDetected(INCOMING_DATA_HEADER_OFF)
+											, _incomingBodyDataDetectedFlag(INCOMING_BODY_DATA_OFF)
 											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)
 											, _responseBodyFlag(RESPONSE_BODY_NOT_READY)
 											, _fullResponseFlag(FULL_RESPONSE_NOT_READY)
-											, _uploadedBytes(0)
-											, _sentBytes(0)
-											, _isKeepAlive(true)
+											// , _isKeepAlive(true)
 											, _generateInProcess(GENERATE_RESPONSE_OFF)
-											, _responseHandler(new ResponseHandler("0.0.0.0", conf))
-											, _incomingBodyDataDetectedFlag(INCOMING_BODY_DATA_OFF)
-											, _contentLength(0)
 											, _isResponseBodySendable(NOT_SENDABLE)
 											, _isRequestBodyWritable(NOT_WRITABLE)
 											, _bodyDataPreloaded(BODY_DATA_PRELOADED_OFF)
 {}
 
-Client::Client(const Client& other) : _socket(other._socket), _serverSocketFD(other._serverSocketFD)
+Client::Client(const Client& other) : _socket(other._socket)
 									, _lastTimeConnection(other._lastTimeConnection)
+									, _contentLength(other._contentLength)
+									, _uploadedBytes(other._uploadedBytes)
+									, _responseHandler(other._responseHandler)
 									, _incomingHeaderDataDetected(other._incomingHeaderDataDetected)
+									, _incomingBodyDataDetectedFlag(other._incomingBodyDataDetectedFlag)
 									, _responseHeaderFlag(other._responseHeaderFlag)
 									, _responseBodyFlag(other._responseBodyFlag)
 									, _fullResponseFlag(other._fullResponseFlag)
-									, _uploadedBytes(other._uploadedBytes)
-									, _sentBytes(other._sentBytes)
-									, _isKeepAlive(other._isKeepAlive)
+									// , _isKeepAlive(other._isKeepAlive)
 									, _generateInProcess(other._generateInProcess)
-									, _responseHandler(other._responseHandler)
-									, _incomingBodyDataDetectedFlag(other._incomingBodyDataDetectedFlag)
-									, _contentLength(other._contentLength)
 									, _isResponseBodySendable(other._isResponseBodySendable)
 									, _isRequestBodyWritable(other._isRequestBodyWritable)
 									, _bodyDataPreloaded(other._bodyDataPreloaded)
@@ -66,11 +63,6 @@ Socket &Client::getSocket()
 	return _socket;
 }
 
-int Client::getServerSocketFD(void)
-{
-	return _serverSocketFD;
-}
-
 time_t Client::getLastConnectionTime(void)
 {
 	return _lastTimeConnection;
@@ -82,11 +74,6 @@ bool	Client::getIncomingHeaderDataDetectedFlag(void) {
 
 std::string&	Client::getRequestBodyPart(void) {
 	return _requestBodyPart;
-}
-
-bool Client::getIsKeepAlive(void)
-{
-	return _isKeepAlive;
 }
 
 int Client::getBytesToSendNow(void)
@@ -147,11 +134,6 @@ bool	Client::getFullResponseFlag(void) {
 	return _fullResponseFlag;
 }
 
-size_t Client::getResponseSize(void)
-{
-	return _responseSize;
-}
-
 size_t	Client::getUploadedBytes(void) {
 	return _uploadedBytes;
 }
@@ -187,11 +169,6 @@ void Client::setEvent(int _epfd, struct epoll_event &event)
 	epoll_ctl(_epfd, EPOLL_CTL_ADD, event.data.fd, &event);
 }
 
-void Client::setServerSocketFD(int s_fd)
-{
-	_serverSocketFD = s_fd;
-}
-
 void	Client::resetLastConnectionTime(void){
 	_lastTimeConnection = std::time(NULL);
 }
@@ -203,11 +180,6 @@ void	Client::setIncomingHeaderDataDetectedFlag(int mode) {
 void Client::setGenerateResponseInProcess(bool value)
 {
 	_generateInProcess = value;
-}
-
-void Client::setResponseSize(size_t size)
-{
-	_responseSize = size;
 }
 
 void	Client::setBodyDataPreloaded(bool value) {

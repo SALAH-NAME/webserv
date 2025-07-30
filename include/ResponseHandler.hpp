@@ -14,6 +14,7 @@
 #include "CgiHandler.hpp"
 #include "GlobalConfig.hpp"
 #include "ServerConfig.hpp"
+#include "ServerManager.hpp" // added
 
 typedef const std::map<std::string, LocationConfig> LOCATIONS;
 typedef std::map<std::string, std::vector<std::string> > STRINGS_MAP;
@@ -65,7 +66,7 @@ class ResponseHandler
 						bool is_static, std::string location = "");
 			
 	public:
-		ResponseHandler(const std::string &client_address, const ServerConfig &server_conf);
+		ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf); // edited
 		void			LoadErrorPage(const std::string &status_line, int status_code);
 		void 			Run(HttpRequest &req);
 		bool			IsPost();		
