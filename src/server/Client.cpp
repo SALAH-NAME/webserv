@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/29 17:19:43 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/30 11:39:41 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,11 @@
 #include <ctime>
 #include "HttpRequest.hpp"
 
-Client::Client(Socket sock, const ServerConfig& conf) : _socket(sock)
+Client::Client(Socket sock, const ServerConfig& conf, ClientInfos clientInfos) : _socket(sock)
 											, _lastTimeConnection(std::time(NULL))
 											, _contentLength(0)
 											, _uploadedBytes(0)
-											, _responseHandler(new ResponseHandler("0.0.0.0", conf))
+											, _responseHandler(new ResponseHandler(clientInfos, conf))
 											, _incomingHeaderDataDetected(INCOMING_DATA_HEADER_OFF)
 											, _incomingBodyDataDetectedFlag(INCOMING_BODY_DATA_OFF)
 											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)

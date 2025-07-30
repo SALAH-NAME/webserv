@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/29 17:14:35 by karim            ###   ########.fr       */
+/*   Updated: 2025/07/30 11:35:09 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ class Client {
 		
 		public:
 
-		/**/				Client(Socket, const ServerConfig&);
+		/**/				Client(Socket, const ServerConfig&, ClientInfos);
 		/**/				Client(const Client& other);
 		/**/				~Client();
 		

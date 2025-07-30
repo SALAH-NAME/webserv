@@ -64,10 +64,17 @@
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
 #include "Socket.hpp"
-#include "ResponseHandler.hpp"
 
 class Server;
 class Client;
+class ResponseHandler;
+
+struct ClientInfos
+{
+	std::string clientAddr;
+	std::string port;
+};
+
 
 class ServerManager {
 	private:
@@ -106,5 +113,6 @@ void throwIfSocketError(const std::string& context);
 
 #include "Server.hpp"
 #include "Client.hpp"
+#include "ResponseHandler.hpp"
 
 #endif
