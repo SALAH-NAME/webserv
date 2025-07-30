@@ -1,10 +1,10 @@
 #include "ResponseHandler.hpp"
 
-ResponseHandler::ResponseHandler(const std::string &client_address, const ServerConfig &server_conf) : conf(server_conf), target_file(NULL)
+ResponseHandler::ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf) : conf(server_conf), target_file(NULL)
 {
     InitializeStandardContentTypes();
     InitializeStatusPhrases();
-    remote_address = client_address;
+    remote_address = clientInfos.clientAddr; // edited
     loc_config = NULL;
     is_location_allocated = false;
     resource_path = "";
