@@ -6,15 +6,11 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/30 11:39:41 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/01 21:04:55 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Client.hpp"
-#include <cstdlib>
-#include <iostream>
-#include <ctime>
-#include "HttpRequest.hpp"
 
 Client::Client(Socket sock, const ServerConfig& conf, ClientInfos clientInfos) : _socket(sock)
 											, _lastTimeConnection(std::time(NULL))
@@ -267,7 +263,7 @@ bool	Client::readFileBody(void) {
 
 bool	Client::sendFileBody(void) {
 
-	ssize_t sentBytes = _socket.send(_responseHolder.c_str(), _responseHolder.size());
+	ssize_t sentBytes = _socket.send(_responseHolder.c_str(), _responseHolder.size(), MSG_NOSIGNAL);
 	if (sentBytes < 0)
 		throwIfSocketError("send()");
 	
@@ -287,6 +283,13 @@ void	Client::receiveRequestBody(void) {
 	char buffer[BYTES_TO_READ+1];
 
 	std::memset(buffer, 0, sizeof(buffer));
+
+	if (!_contentLength) {
+		_isRequestBodyWritable = NOT_WRITABLE;
+		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+		_fullResponseFlag = FULL_RESPONSE_READY;
+		return ;
+	}
 
 	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ);
 	if (readBytes > 0) {
@@ -312,6 +315,17 @@ void	Client::writeBodyToTargetFile(void) {
 	else
 		BytesToWrite = _requestBodyPart.size();
 
+	if ((_uploadedBytes + BytesToWrite) > _contentLength) {
+		
+		if (!_contentLength) {
+			_isRequestBodyWritable = NOT_WRITABLE;
+			_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+			_fullResponseFlag = FULL_RESPONSE_READY;
+			return ;
+		}
+		BytesToWrite =_contentLength - _uploadedBytes;
+	}
+	
 	targetFile->write(_requestBodyPart.c_str(), BytesToWrite);
 	targetFile->flush();
 
@@ -329,5 +343,4 @@ void	Client::writeBodyToTargetFile(void) {
 		_fullResponseFlag = FULL_RESPONSE_READY;
 		return ;
 	}
-	
 }

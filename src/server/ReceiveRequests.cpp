@@ -6,11 +6,10 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/07/29 15:38:02 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/01 21:05:22 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Server.hpp"
 #include "ServerManager.hpp"
 
 void	isolateAndRecordBody(Client& client, size_t headerEnd) {
@@ -26,6 +25,7 @@ void	isolateAndRecordBody(Client& client, size_t headerEnd) {
 	client.setRequestBodyPart(headerPart.substr(headerEnd + 4)); // here we save the body
 	client.setIsRequestBodyWritable(WRITABLE);
 	client.setHeaderPart(headerPart.substr(0, headerEnd + 4));
+	client.setBodyDataPreloaded(BODY_DATA_PRELOADED_ON);
 	// std::cout << "ISOLATED\n";
 }
 
@@ -67,7 +67,7 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			req.appendAndValidate(client.getHeaderPart());
 			if (req.getState() == HttpRequest::STATE_ERROR)
 			{
-				std::cout << "    ==>>> PARSING ERROR <<<====\n";exit(0);
+				std::cout << "    ==>>> PARSING ERROR <<<====\n";//exit(0);
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_DATA_HEADER_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 				return; // Return instead of throwing to allow response generation

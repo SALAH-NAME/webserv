@@ -1,5 +1,4 @@
 #include "HttpRequest.hpp"
-#include <cstdlib>
 
 HttpRequest::HttpRequest() : state(STATE_START_LINE), valid(false), status_code(0),
                              _start_line_size(0), _headers_size(0), _start_line_parsed(false) {}

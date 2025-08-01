@@ -6,14 +6,11 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/30 11:34:54 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/01 21:05:00 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ServerManager.hpp"
-
-// extern open_fds;
-// extern close_fds;
 
 void throwIfSocketError(const std::string& context) {
 	switch (errno) {
