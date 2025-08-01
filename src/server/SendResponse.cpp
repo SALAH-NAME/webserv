@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/07/28 17:30:58 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/01 21:04:19 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ void    ServerManager::sendClientsResponse(int serverIndex) {
 		if (it->second.getResponseHeaderFlag() == RESPONSE_HEADER_READY ||
 		it->second.getFullResponseFlag() == FULL_RESPONSE_READY)
 			transmitResponseHeader(it->second, serverIndex); // send Response header to client
-		if (it->second.getResponseBodyFlag() == RESPONSE_BODY_READY)
+		else if (it->second.getResponseBodyFlag() == RESPONSE_BODY_READY)
 			transmitFileResponse(it->second, serverIndex); // read Response body from target file and send it to client
 	}
 	_servers[serverIndex].eraseMarked();
