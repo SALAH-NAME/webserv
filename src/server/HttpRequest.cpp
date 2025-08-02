@@ -257,6 +257,26 @@ void HttpRequest::appendAndValidate(std::string& _parsing_buffer)
                     state = STATE_BODY; //  STATE_COMPLETE
                     valid = true;
                     status_code = 200;
+                    
+                    if (headers.find("host") == headers.end())
+                        throw HttpRequestException(400, "Missing Host header");
+                    
+                    // For POST requests, validate Content-Length or Transfer-Encoding
+                    if (method == "POST")
+                    {
+                        bool hasContentLength = headers.find("content-length") != headers.end();
+                        bool hasChunked = false;
+                        std::map<std::string, std::string>::const_iterator it = headers.find("transfer-encoding");
+                        if (it != headers.end())
+                        {
+                            std::string val = it->second;
+                            std::string::size_type pos = val.find("chunked");
+                            if (pos != std::string::npos)
+                                hasChunked = true;
+                        }
+                        if (!hasContentLength && !hasChunked)
+                            throw HttpRequestException(411, "Length Required");
+                    }
                     break;
                 }
                 else
@@ -280,9 +300,20 @@ void HttpRequest::appendAndValidate(std::string& _parsing_buffer)
 
     // Remove processed lines from buffer
     if (pos > 0)
-    {
         _parsing_buffer = _parsing_buffer.substr(pos);
-    }
+    
+    // Handle body if it in STATE_BODY
+    // if (state == STATE_BODY && !_parsing_buffer.empty())
+    // {
+    //     // Remove newlines if present (body starts after \r\n\r\n)
+    //     std::string::size_type body_start = 0;
+    //     while (body_start < _parsing_buffer.length() && (_parsing_buffer[body_start] == '\r' || _parsing_buffer[body_start] == '\n'))
+    //         body_start++;
+    //     body = _parsing_buffer.substr(body_start);
+    //     _parsing_buffer.clear();
+    //     // NOTE: Don't transition to STATE_COMPLETE
+    //     // TODO: Let the caller decide when the request is complete
+    // }
 }
 
 bool HttpRequest::hasCompleteRequest() const
@@ -311,99 +342,6 @@ void HttpRequest::reset()
     _start_line_size = 0;
     _headers_size = 0;
     _start_line_parsed = false;
-}
-
-void HttpRequest::parseHeaders(std::istream &stream)
-{
-    std::string line;
-    while (std::getline(stream, line) && line != "\r")
-    {
-        if (!line.empty() && line[line.size() - 1] == '\r')
-            line.erase(line.size() - 1);
-        if (line.empty())
-            continue;
-        std::string::size_type colon = line.find(':');
-        if (colon == std::string::npos)
-            throw HttpRequestException(400, "Malformed header line");
-        std::string key = line.substr(0, colon);
-        std::string value = line.substr(colon + 1);
-        std::string::size_type start = key.find_first_not_of(" \t");
-        std::string::size_type end = key.find_last_not_of(" \t");
-        if (start != std::string::npos && end != std::string::npos)
-            key = key.substr(start, end - start + 1);
-        start = value.find_first_not_of(" \t");
-        end = value.find_last_not_of(" \t");
-        if (start != std::string::npos && end != std::string::npos)
-            value = value.substr(start, end - start + 1);
-        headers[key] = value;
-    }
-    if (headers.find("Host") == headers.end())
-        throw HttpRequestException(400, "Missing Host header");
-}
-
-void HttpRequest::parseBody(std::istream &stream)
-{
-    std::string line;
-    std::string body_data;
-    while (std::getline(stream, line))
-    {
-        if (!body_data.empty())
-            body_data += "\n";
-        body_data += line;
-    }
-    body = body_data;
-}
-
-bool HttpRequest::parse(const std::string &raw_request)
-{
-    reset();
-    std::istringstream stream(raw_request);
-    std::string line;
-    try
-    {
-        // State 1: Start line
-        if (!std::getline(stream, line))
-            throw HttpRequestException(400, "Empty request or missing start line");
-
-        // Remove \r if present and check if line is empty
-        std::string cleaned_line = line;
-        if (!cleaned_line.empty() && cleaned_line[cleaned_line.length() - 1] == '\r')
-        {
-            cleaned_line.erase(cleaned_line.length() - 1);
-        }
-        if (cleaned_line.empty())
-            throw HttpRequestException(400, "Empty request or missing start line");
-
-        parseStartLine(line);
-        // State 2: Headers
-        parseHeaders(stream);
-        // State 3: Body
-        if (method == "POST")
-        {
-            bool hasContentLength = headers.find("Content-Length") != headers.end();
-            bool hasChunked = false;
-            std::map<std::string, std::string>::const_iterator it = headers.find("Transfer-Encoding");
-            if (it != headers.end())
-            {
-                std::string val = it->second;
-                std::string::size_type pos = val.find("chunked");
-                if (pos != std::string::npos)
-                    hasChunked = true;
-            }
-            if (!hasContentLength && !hasChunked)
-                throw HttpRequestException(411, "Length Required");
-        }
-        parseBody(stream);
-        valid = true;
-        status_code = 200;
-        return true;
-    }
-    catch (const HttpRequestException &ex)
-    {
-        valid = false;
-        status_code = ex.statusCode();
-        return false;
-    }
 }
 
 void HttpRequest::printInfos() const
@@ -438,7 +376,7 @@ void HttpRequest::printInfos() const
 std::map<std::string, std::string> HttpRequest::getCookies() const
 {
     std::map<std::string, std::string> cookies;
-    std::map<std::string, std::string>::const_iterator it = headers.find("Cookie");
+    std::map<std::string, std::string>::const_iterator it = headers.find("cookie");
     if (it != headers.end())
     {
         std::istringstream ss(it->second);

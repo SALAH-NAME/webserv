@@ -216,7 +216,15 @@ void	Client::setIsRequestBodyWritable(bool value) {
 
 bool Client::parseRequest()
 {
-	return _httpRequest.parse(_requestHeaderPart);
+	try
+	{
+		_httpRequest.appendAndValidate(_requestHeaderPart);
+		return _httpRequest.isValid();
+	}
+	catch (const HttpRequestException &ex)
+	{
+		return false;
+	}
 }
 
 void Client::prinfRequestinfos(void)

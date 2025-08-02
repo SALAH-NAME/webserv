@@ -63,8 +63,6 @@ private:
 
     void parseStartLine(const std::string &line);
     void parseHeaderLine(const std::string &line);
-    void parseHeaders(std::istream &stream);
-    void parseBody(std::istream &stream);
     void validateStartLine(const std::string &line);
     void validateHeaderLine(const std::string &line);
     std::string toLower(const std::string &str) const;
@@ -102,8 +100,6 @@ public:
     void setPath(const std::string &p);
     void setQueryString(const std::string &q);
     void setPathInfo(const std::string &pi);
-
-    bool parse(const std::string &raw_request);
 
     void printInfos() const;
     std::map<std::string, std::string> getCookies() const;
