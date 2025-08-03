@@ -299,8 +299,10 @@ void	Client::receiveRequestBody(void) {
 		return ;
 	}
 
-	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ);
-	if (readBytes > 0) {
+	// std::cout << "----- before socket.recv() = " << _socket.getFd() << "-----\n";
+	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
+	// std::cout << "----- after socket.recv() = " << readBytes  << "-----\n";
+	if (readBytes > 0 && readBytes <= BYTES_TO_READ) {
 		resetLastConnectionTime();
 		if (_uploadedBytes + readBytes >= _contentLength) {
 			readBytes = _contentLength - _uploadedBytes;
@@ -308,6 +310,9 @@ void	Client::receiveRequestBody(void) {
 		buffer[readBytes] = 0;
 		_requestBodyPart = std::string(buffer, readBytes);
 		_isRequestBodyWritable = WRITABLE;
+	}
+	else if (readBytes == 0) {
+		// waiting for timeout or clinet closed connection
 	}
 	else
 		throwIfSocketError("recv()");	

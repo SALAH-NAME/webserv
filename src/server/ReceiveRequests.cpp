@@ -36,10 +36,10 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 
 	std::memset(_buffer, 0, sizeof(_buffer));
 	try {
-		readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ);
+		readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
 		// std::cout << "read bytes ==> " << readbytes << " from : " << client.getSocket().getFd() << "\n";
 		
-		if (readbytes > 0) {
+		if (readbytes > 0 && readbytes <= BYTES_TO_READ) {
 			client.resetLastConnectionTime();
 			client.appendToHeaderPart(std::string(_buffer, readbytes)); // !! Append buffer to header-Part even if it contains Body-data  // READ THIS!!0
 			client.temp_header += std::string(_buffer, readbytes);
