@@ -1,0 +1,36 @@
+
+#intro {
+	background-color: rgb(9, 245, 166);
+	color: rgba(12, 160, 245, 0.911);
+	text-align: center;
+	border: 3px;
+	padding: 10px;
+	margin-left: 10%;
+	margin-right: 10%;
+	border-radius: 8px;
+}
+
+a {
+	color: rgb(0, 0, 0);
+}
+
+.box-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 40vh;
+	gap: 40px;  
+}
+
+.box {
+	border-radius: 5px;
+	flex-direction: column;
+	align-items: center;
+	padding: 10px;
+	border: 3px solid rgb(228, 195, 6);
+	background-color: aqua;
+	width: 200px;
+	text-align: center;
+}
+

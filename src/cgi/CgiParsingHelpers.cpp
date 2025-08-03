@@ -60,4 +60,6 @@ void CgiHandler::StatusValidator()
 		throw (BadCgiOutput("Invalid status code"));
 	status_code = std::atoi(code.c_str());
 	std::getline(status_stream, status_reason_phrase);
+	key_holder.clear();
+	value_holder.clear();
 }
