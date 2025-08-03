@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/08/01 21:07:26 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/03 18:52:07 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,8 +56,6 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 				// printRequestAndResponse("Header", client.getHeaderPart());
 
 				isolateAndRecordBody(client, headerEnd);
-				// std::cout << "  ===>> is Preloaded : " << client.getBodyDataPreloaded() << "\n";
-				// std::cout << "  ==>> isolated bytes: " << client.getBodyPart().size() << "\n";
 				
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_DATA_HEADER_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
@@ -67,7 +65,6 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			req.appendAndValidate(client.getHeaderPart());
 			if (req.getState() == HttpRequest::STATE_ERROR)
 			{
-				std::cout << "    ==>>> PARSING ERROR <<<====\n";//exit(0);
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_DATA_HEADER_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 				return; // Return instead of throwing to allow response generation
@@ -120,6 +117,10 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();
 
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+		if (it->second.getIsPipeClosedByPeer() == PIPE_IS_CLOSED) {
+			// std::cout << " ***** input is ready to read from Pipe : " << it->second.getResponseHandler()->GetCgiOutPipe().getReadFd() << "  ****\n";
+			consumeCgiOutput(it->second, serverIndex);
+		}
 		if (it->second.getIncomingHeaderDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
 			// std::cout << " ***** incoming Header data from : " << it->second.getSocket().getFd() << "  ****\n";
 			collectRequestData(it->second, serverIndex);

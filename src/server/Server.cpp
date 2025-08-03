@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/07/29 16:14:22 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/02 14:42:57 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serv
 			_Address.sin_family = _domin;
 			_Address.sin_port = htons(_ports[i]);
 			
-			if (inet_pton(AF_INET, serverConfig.getHost().c_str(), &_Address.sin_addr) <= 0)
+			if (inet_pton(AF_INET, serverConfig.getHost().c_str(), &_Address.sin_addr) <= 0) // forebiden
 				throw std::runtime_error(std::string("Invalid IP address: ") + strerror(errno));
 
 			struct sockaddr addr;
@@ -78,12 +78,12 @@ std::vector<Socket>&		Server::getListeningSockets() {
 	return _listeningSockets;
 }
 
-bool	Server::verifyClientsFD(int client_fd) {
+std::map<int, Client>::iterator	Server::verifyClientsFD(int client_fd) {
 	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++) {
-		if (client_fd == it->first)
-			return true ;
+		if (client_fd == it->first || client_fd == it->second.getCGI_pipeFD())
+			return it ;
 	}
-	return false;
+	return _clients.end();
 }
 
 bool	Server::verifyServerSocketsFDs(int NewEvent_fd) {

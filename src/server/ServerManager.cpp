@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/29 15:38:30 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/03 16:28:52 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ void ServerManager::checkTimeOut(void)
 				_servers[x].closeConnection(it->first);
 			}
 		}
+		_servers[x].eraseMarked();
 	}
 }
 

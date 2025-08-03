@@ -116,9 +116,14 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 	ClearData();
 	is_POST = current_req.getMethod() == "POST" ? true : false;
 	SetCgiChildArguments(argv, cgi_conf.getCgiPass(), script_path);
-	output_pipe.create();
-	if (this->is_POST)
-		input_pipe.create();
+	try { // added try/catch
+		output_pipe.create();
+		if (this->is_POST)
+			input_pipe.create();
+	}
+	catch (std::runtime_error &ex){
+		throw ex;
+	}
 	SetCgiEnvironment(current_req, conf, remote_address);
 	id = fork();
 	if (id == -1)
@@ -126,8 +131,8 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 	if (id == 0)
 	{
 		if (chdir(GetFileDirectoryPath(script_path).c_str()) != 0){
-			std::exit(1);
 			delete_strings(argv);
+			std::exit(1); // Fixed: free memory before exit
 		}
 		SetCgiChildFileDescriptors();
 		execve(cgi_conf.getCgiPass().c_str(), argv, this->env.GetRawEnv());

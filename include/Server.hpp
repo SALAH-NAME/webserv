@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/24 20:09:58 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/01 10:58:39 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ class Server {
 		void 						setEPFD(int );
 
 		bool						verifyServerSocketsFDs(int);
-		bool						verifyClientsFD(int);
+		std::map<int, Client>::iterator	verifyClientsFD(int);
 		void						incomingConnection(int);			
 		void						checkTimeOut(void);
 		void						closeConnection(int);
