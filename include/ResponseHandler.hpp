@@ -40,6 +40,7 @@ class ResponseHandler
 		LocationConfig const		*loc_config;
 		std::fstream				*target_file;
 		unsigned int				cgi_buffer_size;
+		bool						post_failed;
 
 		void		InitialRequestCheck(HttpRequest &req);
 		void		ProccessRequest(HttpRequest &req);
@@ -63,6 +64,8 @@ class ResponseHandler
 		void		GenerateHeaderFromCgiData();
 		void 		SetResponseHeader(const std::string &status_line, int len,
 						bool is_static, std::string location = "");
+		bool			CheckCgiTimeOut();
+		int				GetCgiChildExitStatus();
 			
 	public:
 		ResponseHandler(const std::string &client_address, const ServerConfig &server_conf);
@@ -79,9 +82,8 @@ class ResponseHandler
 		bool			RequireCgi();//only flags that cgiobj.run() is used
 		bool			IsCgiChildRunning();
 		bool			ReachedCgiBodyPhase();
-		bool			CheckCgiTimeOut();
+		bool			postFailed();
 		void			AppendCgiOutput(const std::string &buffer);
-		int				GetCgiChildExitStatus();
 		void			FinishCgiResponse();
 		void			CheckCgiChildState();
 		void			SetTargetFileForCgi(int count);

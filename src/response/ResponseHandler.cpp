@@ -10,6 +10,7 @@ ResponseHandler::ResponseHandler(const std::string &client_address, const Server
     resource_path = "";
     require_cgi = false;
     is_post = false;
+    post_failed = false;
 }
 
 std::string	ResponseHandler::GetResponseHeader(){return response_header;}
@@ -22,6 +23,8 @@ bool ResponseHandler::IsPost(){return is_post;}
 
 std::string ResponseHandler::GetResourcePath() {return resource_path;}
 
+bool ResponseHandler::postFailed() {return post_failed;}
+
 void ResponseHandler::Run(HttpRequest &req)
 {
     response_header = "";
@@ -29,6 +32,7 @@ void ResponseHandler::Run(HttpRequest &req)
     resource_path = "";
     require_cgi = false;
     is_post = false;
+    post_failed = false;
     cgi_buffer_size = 0;
     loc_config = NULL;
     if (is_location_allocated){
@@ -106,11 +110,14 @@ void ResponseHandler::ProccessHttpPOST(HttpRequest &req)
 {
     if (require_cgi)
         return (CgiObj.RunCgi(req, conf, *loc_config, resource_path, remote_address));
-    if (access(resource_path.c_str(), F_OK) == 0)
-        throw (ResponseHandlerError("HTTP/1.1 409 Conflict", 409));
+    if (access(resource_path.c_str(), F_OK) == 0){
+        post_failed = true;
+        throw (ResponseHandlerError("HTTP/1.1 409 Conflict", 409));}
     if (access(GetFileDirectoryPath(resource_path).c_str(), W_OK | X_OK) != 0 ||
-            req.getPath()[req.getPath().size() - 1] == '/')
+            req.getPath()[req.getPath().size() - 1] == '/'){
+        post_failed = true;
         throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
+    }
     SetResponseHeader("HTTP/1.1 201 Created", -1, false);
     target_file = new std::fstream(resource_path.c_str(), std::ios::out);
     if (!target_file || !target_file->is_open())
