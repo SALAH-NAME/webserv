@@ -1,3 +1,5 @@
+#include "ServerManager.hpp"
+
 #ifndef CGI_HPP
 #define CGI_HPP
 
@@ -12,8 +14,8 @@
 #include "Environment.hpp"
 #include "HttpRequest.hpp"
 #include "ServerConfig.hpp"
-#define SRV_NAME "Ed, Edd n Eddy/1.0"//or use webserv instead
 
+#define SRV_NAME "Ed, Edd n Eddy/1.0"//or use webserv instead
 
 
 #define HEADER_NAME_SIZE_LIMIT	256
@@ -48,7 +50,7 @@ class CgiHandler
 		void	HandleDuplicates();
 		void	SetCgiChildFileDescriptors();
 		void	SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &conf,
-						const std::string &remote_address);
+						ClientInfos &client_info);
 		void	StatusValidator();
 		void	AddNewHeader();
 		void	ClearData();
@@ -59,7 +61,7 @@ class CgiHandler
 		CgiHandler();
 		void								RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 													const	LocationConfig &cgi_conf, std::string &script_path,
-														const std::string &remote_address);
+														ClientInfos &client_info);
 		pid_t 								GetChildPid();
 		void								ParseOutputBuffer(const std::string &new_buff);
 		Pipe& 								GetInPipe();
@@ -72,6 +74,7 @@ class CgiHandler
 		std::string							GetReasonPhrase();
 		int									GetContentLength();
 		void								KillChild();
+		std::vector<std::string>			&GetExtraCookieValues();
 		~CgiHandler();
 	
 		class BadCgiOutput : public std::exception

@@ -14,7 +14,6 @@
 #include "CgiHandler.hpp"
 #include "GlobalConfig.hpp"
 #include "ServerConfig.hpp"
-#include "ServerManager.hpp" // added
 
 typedef const std::map<std::string, LocationConfig> LOCATIONS;
 typedef std::map<std::string, std::vector<std::string> > STRINGS_MAP;
@@ -27,7 +26,7 @@ class ResponseHandler
 {
 	private:
 		const ServerConfig			&conf;
-		std::string					remote_address;
+		ClientInfos					client_info;
 		std::string					response_header;
 		std::string 				resource_path;
 		bool						require_cgi;
@@ -41,6 +40,7 @@ class ResponseHandler
 		LocationConfig const		*loc_config;
 		std::fstream				*target_file;
 		unsigned int				cgi_buffer_size;
+		bool						post_failed;
 
 		void		InitialRequestCheck(HttpRequest &req);
 		void		ProccessRequest(HttpRequest &req);
@@ -64,6 +64,8 @@ class ResponseHandler
 		void		GenerateHeaderFromCgiData();
 		void 		SetResponseHeader(const std::string &status_line, int len,
 						bool is_static, std::string location = "");
+		bool			CheckCgiTimeOut();
+		int				GetCgiChildExitStatus();
 			
 	public:
 		ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf); // edited
@@ -80,9 +82,8 @@ class ResponseHandler
 		bool			RequireCgi();//only flags that cgiobj.run() is used
 		bool			IsCgiChildRunning();
 		bool			ReachedCgiBodyPhase();
-		bool			CheckCgiTimeOut();
+		bool			postFailed();
 		void			AppendCgiOutput(const std::string &buffer);
-		int				GetCgiChildExitStatus();
 		void			FinishCgiResponse();
 		void			CheckCgiChildState();
 		void			SetTargetFileForCgi(int count);
