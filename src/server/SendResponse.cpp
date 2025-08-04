@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/08/03 18:52:16 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/04 16:21:39 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ void	ServerManager::transmitResponseHeader(Client& client, int serverIndex) {
 	std::string& response = client.getResponseHolder();
 
 	int bytesToSendNow =  client.getBytesToSendNow();
+	// std::cout << "Bytes to send now: " << bytesToSendNow << "\n";
 
 	size_t sentBytes;
 	try {
@@ -29,6 +30,7 @@ void	ServerManager::transmitResponseHeader(Client& client, int serverIndex) {
 		}
 		else
 			throwIfSocketError("send()");
+	// printRequestAndResponse("updated response header holder", response);
 	} catch (const std::runtime_error& e) {
 		perror(e.what());
 		_servers[serverIndex].closeConnection(client.getSocket().getFd());
