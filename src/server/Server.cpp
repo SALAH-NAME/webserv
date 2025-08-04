@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/08/02 14:42:57 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/04 15:52:59 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,6 @@ bool	Server::verifyServerSocketsFDs(int NewEvent_fd) {
 	}
 	return false;
 }
-
 
 void	Server::closeConnection(int clientSocket) {
 	epoll_ctl(_epfd, EPOLL_CTL_DEL, clientSocket, NULL);

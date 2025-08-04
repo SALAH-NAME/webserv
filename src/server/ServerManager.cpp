@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/08/03 16:28:52 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/04 16:28:58 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,7 @@ void ServerManager::checkTimeOut(void)
 	}
 }
 
-void ServerManager::setUpServers(void)
-{
+void ServerManager::setUpServers(void) {
 
 	std::cout << "----------------- Set Up Servers ----------------------\n";
 
@@ -62,8 +61,8 @@ void ServerManager::setUpServers(void)
 		throw "No server is available";
 }
 
-void ServerManager::addToEpollSet(void)
-{
+void ServerManager::addToEpollSet(void) {
+
 	std::cout << "----------------- Add To Epoll Set ----------------------\n";
 	for (size_t i = 0; i < _servers.size(); i++)
 	{
@@ -98,8 +97,8 @@ void ServerManager::addToEpollSet(void)
 	}
 }
 
-void ServerManager::createEpoll()
-{
+void ServerManager::createEpoll() {
+
 	std::cout << "----------------- Create Epoll ----------------------\n";
 	_epfd = epoll_create(1);
 	if (_epfd == -1)
@@ -109,8 +108,8 @@ void ServerManager::createEpoll()
 }
 
 ServerManager::ServerManager(const std::vector<ServerConfig>& serversInfo)
-		: _serversConfig(serversInfo)
-{
+		: _serversConfig(serversInfo) {
+
 	createEpoll();
 	setUpServers();
 	addToEpollSet();
