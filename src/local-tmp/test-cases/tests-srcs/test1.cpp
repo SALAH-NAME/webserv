@@ -20,7 +20,8 @@ std::string test1()
 		return "";
 	ServerConfig srv_conf = *config_manager.getServers().begin();
 	// std::cout << (*srv_conf.getLocations().begin()->second.getAllowedMethods().find(stringToHttpMethod("GET")) == stringToHttpMethod("GET"));//testing
-	ResponseHandler testObj("0.0.0.0", srv_conf);
+	ClientInfos clt;clt.clientAddr = "0.0.0.0";clt.port="8000";
+	ResponseHandler testObj(clt, *config_manager.getServers().begin());;
 	testObj.Run(req);
 	ss << "=== RESPONSE HEADER ===" << '\n';
 	ss << testObj.GetResponseHeader() << '\n';

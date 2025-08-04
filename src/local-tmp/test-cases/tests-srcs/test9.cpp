@@ -27,7 +27,8 @@ std::string test9()
 	if (!config_manager.load())
 		return "";
 	ServerConfig srv_conf = *config_manager.getServers().begin();
-	ResponseHandler testObj("0.0.0.0", srv_conf);
+	ClientInfos clt;clt.clientAddr = "0.0.0.0";clt.port="8000";
+	ResponseHandler testObj(clt, *config_manager.getServers().begin());;
 	testObj.Run(req);
 	ss << "=== RESPONSE HEADER ===" << '\n';
 	ss << testObj.GetResponseHeader() << '\n';

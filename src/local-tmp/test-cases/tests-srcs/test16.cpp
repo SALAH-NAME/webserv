@@ -23,8 +23,8 @@ std::string test16()
 	ConfigManager config_manager(config_file);
 	if (!config_manager.load())
 		return "";
-	ResponseHandler testObj("0.0.0.0", *config_manager.getServers().begin());
-	testObj.Run(req);
+ClientInfos clt;clt.clientAddr = "0.0.0.0";clt.port="8000";
+	ResponseHandler testObj(clt, *config_manager.getServers().begin());	testObj.Run(req);
 	wait(&r_val);
 	if (testObj.RequireCgi())
 	{
