@@ -39,6 +39,12 @@
 #define BODY_DATA_PRELOADED_ON true
 #define BODY_DATA_PRELOADED_OFF false
 
+#define REQUEST_DATA_PRELOADED_ON true
+#define REQUEST_DATA_PRELOADED_OFF false
+
+#define ENABLE_KEEP_ALIVE true
+#define DISABLE_KEEP_ALIVE false
+
 #define _2CRLF "\r\n\r\n"
 
 #include <netinet/in.h> // For sockaddr_in

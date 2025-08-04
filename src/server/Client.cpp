@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/08/01 21:07:15 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/03 12:51:27 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,11 +22,12 @@ Client::Client(Socket sock, const ServerConfig& conf, ClientInfos clientInfos) :
 											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)
 											, _responseBodyFlag(RESPONSE_BODY_NOT_READY)
 											, _fullResponseFlag(FULL_RESPONSE_NOT_READY)
-											// , _isKeepAlive(true)
+											, _isKeepAlive(DISABLE_KEEP_ALIVE)
 											, _generateInProcess(GENERATE_RESPONSE_OFF)
 											, _isResponseBodySendable(NOT_SENDABLE)
 											, _isRequestBodyWritable(NOT_WRITABLE)
-											, _bodyDataPreloaded(BODY_DATA_PRELOADED_OFF)
+											, _bodyDataPreloadedFlag(BODY_DATA_PRELOADED_OFF)
+											, _requestDataPreloadedFlag(REQUEST_DATA_PRELOADED_OFF)
 {}
 
 Client::Client(const Client& other) : _socket(other._socket)
@@ -39,11 +40,12 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _responseHeaderFlag(other._responseHeaderFlag)
 									, _responseBodyFlag(other._responseBodyFlag)
 									, _fullResponseFlag(other._fullResponseFlag)
-									// , _isKeepAlive(other._isKeepAlive)
+									, _isKeepAlive(other._isKeepAlive)
 									, _generateInProcess(other._generateInProcess)
 									, _isResponseBodySendable(other._isResponseBodySendable)
 									, _isRequestBodyWritable(other._isRequestBodyWritable)
-									, _bodyDataPreloaded(other._bodyDataPreloaded)
+									, _bodyDataPreloadedFlag(other._bodyDataPreloadedFlag)
+									, _requestDataPreloadedFlag(other._requestDataPreloadedFlag)
 {
 	const_cast<Client&> (other)._responseHandler = NULL;
 }
@@ -70,6 +72,10 @@ bool	Client::getIncomingHeaderDataDetectedFlag(void) {
 
 std::string&	Client::getRequestBodyPart(void) {
 	return _requestBodyPart;
+}
+
+std::string&	Client::getPendingRequestData(void) {
+	return _pendingRequestDataHolder;
 }
 
 int Client::getBytesToSendNow(void)
@@ -134,8 +140,12 @@ size_t	Client::getUploadedBytes(void) {
 	return _uploadedBytes;
 }
 
-bool	Client::getBodyDataPreloaded(void) {
-	return _bodyDataPreloaded;
+bool	Client::getBodyDataPreloadedFlag(void) {
+	return _bodyDataPreloadedFlag;
+}
+
+bool	Client::setRequestDataPreloadedFlag(void) {
+	return _requestDataPreloadedFlag;
 }
 
 size_t	Client::getContentLength(void) {
@@ -144,6 +154,10 @@ size_t	Client::getContentLength(void) {
 
 std::string&		Client::getResponseHolder(void) {
 	return _responseHolder;
+}
+
+bool	Client::getIsKeepAlive(void) {
+	return _isKeepAlive;
 }
 
 bool	Client::getIsResponseBodySendable(void) {
@@ -178,12 +192,20 @@ void Client::setGenerateResponseInProcess(bool value)
 	_generateInProcess = value;
 }
 
-void	Client::setBodyDataPreloaded(bool value) {
-	_bodyDataPreloaded = value;
+void	Client::setBodyDataPreloadedFlag(bool value) {
+	_bodyDataPreloadedFlag = value;
+}
+
+void	Client::setRequestDataPreloadedFlag(bool value) {
+	_requestDataPreloadedFlag = value;
 }
 
 void	Client::setRequestBodyPart(std::string bodyData) {
 	_requestBodyPart = bodyData;
+}
+
+void	Client::setPendingRequestData(std::string bodyData) {
+	_pendingRequestDataHolder = bodyData;
 }
 
 void	Client::setUploadedBytes(size_t bytes) {
@@ -230,10 +252,15 @@ bool	Client::updateHeaderStateAfterSend(size_t sentBytes) {
 		if (_responseHeaderFlag == RESPONSE_HEADER_READY) {
 			_responseHeaderFlag = RESPONSE_HEADER_NOT_READY;
 			_responseBodyFlag = RESPONSE_BODY_READY;
+			std::cout << " ==> Sent Header Successfully <==\n";
 		}
 		else {
 			_fullResponseFlag = FULL_RESPONSE_NOT_READY;
 			_responseBodyFlag = RESPONSE_BODY_NOT_READY;
+			std::cout << " ==> Sent Full Response Successfully <==\n";
+
+			printRequestAndResponse("left request data", _pendingRequestDataHolder);
+
 			return true;
 		}
 	}

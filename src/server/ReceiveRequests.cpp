@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/08/01 21:07:26 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/03 12:38:57 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,16 +17,20 @@ void	isolateAndRecordBody(Client& client, size_t headerEnd) {
 
 	if (headerPart.size() == headerEnd + 4) {
 		// no body-data received after header ==> no need to save
-		client.setBodyDataPreloaded(BODY_DATA_PRELOADED_OFF);
+		// client.setBodyDataPreloadedFlag(BODY_DATA_PRELOADED_OFF);
+		client.setRequestDataPreloadedFlag(BODY_DATA_PRELOADED_OFF);
 		return ;
 	}
 	
 	// some body-data received after header-data ==> it needs to be saved and removed from header part
-	client.setRequestBodyPart(headerPart.substr(headerEnd + 4)); // here we save the body
-	client.setIsRequestBodyWritable(WRITABLE);
+	
+	// client.setRequestBodyPart(headerPart.substr(headerEnd + 4)); // here we save the body
+	client.setPendingRequestData(headerPart.substr(headerEnd + 4)); // here we save the body
+	// client.setIsRequestBodyWritable(WRITABLE);
 	client.setHeaderPart(headerPart.substr(0, headerEnd + 4));
-	client.setBodyDataPreloaded(BODY_DATA_PRELOADED_ON);
-	// std::cout << "ISOLATED\n";
+	// client.setBodyDataPreloadedFlag(BODY_DATA_PRELOADED_ON);
+	client.setRequestDataPreloadedFlag(REQUEST_DATA_PRELOADED_ON);
+	std::cout << "ISOLATED\n";
 }
 
 void    ServerManager::collectRequestData(Client& client, int serverIndex) {
@@ -37,7 +41,7 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 	std::memset(_buffer, 0, sizeof(_buffer));
 	try {
 		readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ);
-		// std::cout << "read bytes ==> " << readbytes << " from : " << client.getSocket().getFd() << "\n";
+		std::cout << "read bytes ==> " << readbytes << " from : " << client.getSocket().getFd() << "\n";
 		
 		if (readbytes > 0) {
 			client.resetLastConnectionTime();
@@ -52,11 +56,11 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			}
 			else if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
 			// if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
-				// std::cout << "   ====>> request is completed <<=====\n";
-				// printRequestAndResponse("Header", client.getHeaderPart());
+				std::cout << "   ====>> request is completed <<=====\n";
+				printRequestAndResponse("Header", client.getHeaderPart());
 
 				isolateAndRecordBody(client, headerEnd);
-				// std::cout << "  ===>> is Preloaded : " << client.getBodyDataPreloaded() << "\n";
+				// std::cout << "  ===>> is Preloaded : " << client.getBodyDataPreloadedFlag() << "\n";
 				// std::cout << "  ==>> isolated bytes: " << client.getBodyPart().size() << "\n";
 				
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_DATA_HEADER_OFF);
@@ -125,7 +129,8 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 			collectRequestData(it->second, serverIndex);
 		}
 		else if (it->second.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_ON) {
-			// std::cout << " ***** incoming Body data from : " << it->second.getSocket().getFd() << "  ****\n";
+			std::cout << " ***** incoming Body data from : " << it->second.getSocket().getFd() << "  ****\n";
+			// exit(0);
 			transferBodyToFile(it->second, serverIndex);
 		}
 	}

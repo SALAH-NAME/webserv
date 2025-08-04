@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/07/30 11:51:45 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/02 10:38:36 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ class Client {
 		std::string			_requestHeaderPart;
 		std::string			_requestBodyPart;
 		std::string			_responseHolder;
+		std::string			_pendingRequestDataHolder;
 		
 		time_t				_lastTimeConnection;
 		size_t				_contentLength;
@@ -42,13 +43,15 @@ class Client {
 		bool				_responseHeaderFlag;
 		bool				_responseBodyFlag;
 		bool				_fullResponseFlag;
-		// bool				_isKeepAlive;
+		bool				_isKeepAlive;
 		bool				_generateInProcess;
 		bool				_isResponseBodySendable;
 		bool				_isRequestBodyWritable;
-		bool				_bodyDataPreloaded;
+		bool				_bodyDataPreloadedFlag;
+		bool				_requestDataPreloadedFlag;
 
 		void				isolateAndRecordExtraBytes(void);
+		void				extractBodyFromPendingRequestHolder(void);
 		
 		public:
 
@@ -65,6 +68,7 @@ class Client {
 		bool				getIncomingHeaderDataDetectedFlag(void);
 		
 		std::string&		getRequestBodyPart(void);
+		std::string&		getPendingRequestData(void);
 
 		bool				getResponseHeaderFlag(void);
 		bool				getResponseBodyFlag(void);
@@ -72,7 +76,7 @@ class Client {
 
 		std::string&		getResponseHolder(void);
 		
-		// bool				getIsKeepAlive(void);
+		bool				getIsKeepAlive(void);
 		int					getBytesToSendNow(void);
 		bool				getGenerateInProcess(void);
 		HttpRequest&		getHttpRequest(void);
@@ -81,7 +85,8 @@ class Client {
 		size_t				getResponseSize(void);
 		bool				getIncomingBodyDataDetectedFlag(void);
 		size_t				getUploadedBytes(void);
-		bool				getBodyDataPreloaded(void);
+		bool				getBodyDataPreloadedFlag(void);
+		bool				setRequestDataPreloadedFlag(void);
 		size_t				getContentLength(void);
 
 		bool				getIsResponseBodySendable(void);
@@ -101,9 +106,13 @@ class Client {
 		void				setIncomingHeaderDataDetectedFlag(int mode);
 		void				setGenerateResponseInProcess(bool);
 		void				setResponseSize(size_t);
-		void				setBodyDataPreloaded(bool);
+		void				setBodyDataPreloadedFlag(bool);
+		void				setRequestDataPreloadedFlag(bool value);
 		void				setIncomingBodyDataDetectedFlag(bool);
+
 		void				setRequestBodyPart(std::string);
+		void				setPendingRequestData(std::string);
+		
 		void				resetUploadedBytes(void);
 
 		void				setContentLength(int);
