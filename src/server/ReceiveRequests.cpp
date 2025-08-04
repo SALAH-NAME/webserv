@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/08/03 12:38:57 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/04 16:03:17 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,18 +17,19 @@ void	isolateAndRecordBody(Client& client, size_t headerEnd) {
 
 	if (headerPart.size() == headerEnd + 4) {
 		// no body-data received after header ==> no need to save
-		// client.setBodyDataPreloadedFlag(BODY_DATA_PRELOADED_OFF);
-		client.setRequestDataPreloadedFlag(BODY_DATA_PRELOADED_OFF);
+		client.setRequestDataPreloadedFlag(REQUEST_DATA_PRELOADED_OFF);
+		client.setBodyDataPreloadedFlag(BODY_DATA_PRELOADED_OFF);
 		return ;
 	}
 	
 	// some body-data received after header-data ==> it needs to be saved and removed from header part
 	
 	// client.setRequestBodyPart(headerPart.substr(headerEnd + 4)); // here we save the body
-	client.setPendingRequestData(headerPart.substr(headerEnd + 4)); // here we save the body
+	client.setPendingRequestData(headerPart.substr(headerEnd + 4)); // here we save the data ('next request' or 'current request body')
+	
 	// client.setIsRequestBodyWritable(WRITABLE);
 	client.setHeaderPart(headerPart.substr(0, headerEnd + 4));
-	// client.setBodyDataPreloadedFlag(BODY_DATA_PRELOADED_ON);
+	// client.setBodyDataPreloaded(BODY_DATA_PRELOADED_ON);
 	client.setRequestDataPreloadedFlag(REQUEST_DATA_PRELOADED_ON);
 	std::cout << "ISOLATED\n";
 }
@@ -40,10 +41,10 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 
 	std::memset(_buffer, 0, sizeof(_buffer));
 	try {
-		readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ);
-		std::cout << "read bytes ==> " << readbytes << " from : " << client.getSocket().getFd() << "\n";
+		readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
+		// std::cout << "read bytes ==> " << readbytes << " from : " << client.getSocket().getFd() << "\n";
 		
-		if (readbytes > 0) {
+		if (readbytes > 0 && readbytes <= BYTES_TO_READ) {
 			client.resetLastConnectionTime();
 			client.appendToHeaderPart(std::string(_buffer, readbytes)); // !! Append buffer to header-Part even if it contains Body-data  // READ THIS!!0
 			client.temp_header += std::string(_buffer, readbytes);
@@ -71,7 +72,6 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			req.appendAndValidate(client.getHeaderPart());
 			if (req.getState() == HttpRequest::STATE_ERROR)
 			{
-				std::cout << "    ==>>> PARSING ERROR <<<====\n";//exit(0);
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_DATA_HEADER_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 				return; // Return instead of throwing to allow response generation
@@ -124,13 +124,16 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();
 
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
+		if (it->second.getIsPipeClosedByPeer() == PIPE_IS_CLOSED) {
+			// std::cout << " ***** input is ready to read from Pipe : " << it->second.getResponseHandler()->GetCgiOutPipe().getReadFd() << "  ****\n";
+			consumeCgiOutput(it->second, serverIndex);
+		}
 		if (it->second.getIncomingHeaderDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
 			// std::cout << " ***** incoming Header data from : " << it->second.getSocket().getFd() << "  ****\n";
 			collectRequestData(it->second, serverIndex);
 		}
 		else if (it->second.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_ON) {
-			std::cout << " ***** incoming Body data from : " << it->second.getSocket().getFd() << "  ****\n";
-			// exit(0);
+			// std::cout << " ***** incoming Body data from : " << it->second.getSocket().getFd() << "  ****\n";
 			transferBodyToFile(it->second, serverIndex);
 		}
 	}

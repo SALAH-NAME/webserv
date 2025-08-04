@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/08/02 10:38:36 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/04 15:13:59 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,8 @@ class Client {
 	private:
 		// TO DO : 1.client addr || 2. port
 		Socket				_socket;
+		int					_epfd;
+		int					_CGI_pipeFD;
 
 		std::string			_requestHeaderPart;
 		std::string			_requestBodyPart;
@@ -50,12 +52,21 @@ class Client {
 		bool				_bodyDataPreloadedFlag;
 		bool				_requestDataPreloadedFlag;
 
+		bool				_isCgiRequired;
+		bool				_isPipeReadable;
+		bool				_isPipeClosedByPeer;
+		bool				_pipeReadComplete;
+
+		bool				_setTargetFile;
+
 		void				isolateAndRecordExtraBytes(void);
+		void				generateDynamicResponse();
+		void				generateStaticResponse();
 		void				extractBodyFromPendingRequestHolder(void);
 		
 		public:
 
-		/**/				Client(Socket, const ServerConfig&, ClientInfos);
+		/**/				Client(Socket, const ServerConfig&, int, ClientInfos);
 		/**/				Client(const Client& other);
 		/**/				~Client();
 		
@@ -64,6 +75,7 @@ class Client {
 		std::string					temp_header;
 		
 		Socket&				getSocket();
+		int					getCGI_pipeFD(void);
 		time_t				getLastConnectionTime(void);
 		bool				getIncomingHeaderDataDetectedFlag(void);
 		
@@ -75,7 +87,8 @@ class Client {
 		bool				getFullResponseFlag(void);
 
 		std::string&		getResponseHolder(void);
-		
+		ResponseHandler*	getResponseHandler(void);
+
 		bool				getIsKeepAlive(void);
 		int					getBytesToSendNow(void);
 		bool				getGenerateInProcess(void);
@@ -94,6 +107,11 @@ class Client {
 		size_t				getSavedBytes(void);
 		
 		bool				getIsRequestBodyWritable(void);
+		bool				getIsCgiRequired(void);
+		bool 				getIsPipeReadable(void);
+		bool				getIsPipeClosedByPeer(void);
+
+		bool				getSetTargetFile(void);
 
 		void				appendToHeaderPart(const std::string& requestData);
 		void				appendToBodyPart(const std::string& requestData);
@@ -101,6 +119,7 @@ class Client {
 		void				setEvent(int _epfd, struct epoll_event& event);
 		void				setResponseHeaderFlag(bool value);
 		void				setFullResponseFlag(bool value);
+		void				setResponseHolder(const std::string responseData);
 		void				setSentBytes(size_t bytes);
 		void				resetSendBytes(void);
 		void				setIncomingHeaderDataDetectedFlag(int mode);
@@ -109,11 +128,9 @@ class Client {
 		void				setBodyDataPreloadedFlag(bool);
 		void				setRequestDataPreloadedFlag(bool value);
 		void				setIncomingBodyDataDetectedFlag(bool);
-
 		void				setRequestBodyPart(std::string);
-		void				setPendingRequestData(std::string);
-		
 		void				resetUploadedBytes(void);
+		void				setPendingRequestData(std::string);
 
 		void				setContentLength(int);
 		void				resetContentLength(void);
@@ -121,6 +138,12 @@ class Client {
 		void				setUploadedBytes(size_t);
 		
 		void				setIsRequestBodyWritable(bool);
+		void				setIsPipeReadable(bool);
+		void				setIsPipeClosedByPeer(bool);
+		void				setIsCgiRequired(bool);
+		void				setPipeReadComplete(bool);
+
+		void				setSetTargetFile(bool);
 
 		bool				parseRequest(void);
 		void				prinfRequestinfos(void);
@@ -135,6 +158,7 @@ class Client {
 		bool				sendFileBody(void);
 		bool				readFileBody(void);
 		void				writeBodyToTargetFile(void);
+		void				closeAndDeregisterPipe(void);
 };
 
 #endif

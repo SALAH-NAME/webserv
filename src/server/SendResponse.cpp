@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/08/03 12:47:54 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/04 16:21:39 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@
 void	ServerManager::transmitResponseHeader(Client& client, int serverIndex) {
 
 	std::string& response = client.getResponseHolder();
-
 
 	int bytesToSendNow =  client.getBytesToSendNow();
 	// std::cout << "Bytes to send now: " << bytesToSendNow << "\n";
@@ -39,16 +38,14 @@ void	ServerManager::transmitResponseHeader(Client& client, int serverIndex) {
 }
 
 void	ServerManager::transmitFileResponse(Client& client, int serverIndex) {
-
 	try {
-		
 		if (client.getIsResponseBodySendable() == NOT_SENDABLE) {
 			if (client.readFileBody())
 				_servers[serverIndex].closeConnection(client.getSocket().getFd());
 		}
 		else if (client.getIsResponseBodySendable() == SENDABLE) {
 			if (client.sendFileBody())
-			_servers[serverIndex].closeConnection(client.getSocket().getFd());
+				_servers[serverIndex].closeConnection(client.getSocket().getFd());
 		}
 		
 	} catch (const std::runtime_error& e) {

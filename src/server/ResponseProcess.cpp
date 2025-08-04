@@ -42,27 +42,39 @@ void	Client::extractBodyFromPendingRequestHolder() {
 	// exit(0);
 }
 
-void	Client::buildResponse() {
+void	Client::generateDynamicResponse() {
+	_CGI_pipeFD = _responseHandler->GetCgiOutPipe().getReadFd();
+	struct epoll_event					_event;
+	_event.events = EPOLLIN | EPOLLHUP | EPOLLET;
+	_event.data.fd = _CGI_pipeFD;
+	
+	try {
+		if (epoll_ctl(_epfd, EPOLL_CTL_ADD, _CGI_pipeFD, &_event) == -1)
+			throw std::string("epoll_ctl failed");
+	}
+	catch(std::string e)
+	{
+		std::cout << e << "\n";
+		return ;
+	}
 
-	std::cout << "keep-alive: " << _httpRequest.getHeaders()["connection"] << "\n";
-	if (_httpRequest.getHeaders()["connection"] == "keep-alive")
-		_isKeepAlive = ENABLE_KEEP_ALIVE;
-	else if (_httpRequest.getHeaders()["connection"] == "close")
-		_isKeepAlive = DISABLE_KEEP_ALIVE;
+	_isCgiRequired = CGI_REQUIRED;
+	std::cout << "Pipe fd: " << _CGI_pipeFD << " Added successfully to epoll: " << _epfd << "\n";
+	std::cout << "Is CGI required: " << _isCgiRequired << std::endl;
 
-	_responseHandler->Run(_httpRequest);
+}
 
+void	Client::generateStaticResponse() {
 
 	if (!_responseHandler->GetTargetFilePtr()) {
-		std::cout << "     =====>>>  Build Response for : {" << _socket.getFd() << "} <<<===== \n";
-
+		// std::cout << "     =====>>>  No target file needed : {" << _socket.getFd() << "} <<<===== \n";
 		_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
 			// std::cout << "got full response (header + body)\n";
 		setFullResponseFlag(FULL_RESPONSE_READY);
 	}
 	else {
 		if (_responseHandler->IsPost()) {
-			std::cout << "     =====>>>  write body to target file <<<===== \n";
+			// std::cout << "     =====>>>  write body to target file <<<===== \n";
 
 			std::stringstream ss(_httpRequest.getHeaders()["content-length"]);
 			ss >> _contentLength;
@@ -84,4 +96,19 @@ void	Client::buildResponse() {
 			_responseHeaderFlag = RESPONSE_HEADER_READY;
 		}
 	}
+}
+
+void	Client::buildResponse() {
+	_responseHandler->Run(_httpRequest);
+
+	std::cout << "keep-alive: " << _httpRequest.getHeaders()["connection"] << "\n";
+	if (_httpRequest.getHeaders()["connection"] == "keep-alive")
+		_isKeepAlive = ENABLE_KEEP_ALIVE;
+	else if (_httpRequest.getHeaders()["connection"] == "close")
+		_isKeepAlive = DISABLE_KEEP_ALIVE;
+
+	if (_responseHandler->RequireCgi())
+		generateDynamicResponse();
+	else
+		generateStaticResponse();
 }

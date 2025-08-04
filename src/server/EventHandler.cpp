@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/08/01 21:05:00 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/03 18:52:00 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 					clientEvent.data.fd = clientSocketFD;
 					if (epoll_ctl(_epfd, EPOLL_CTL_ADD, clientSocketFD, &clientEvent) == -1)
 						throw std::runtime_error(std::string("epoll_ctl() failed: ") + strerror(errno));
-					std::pair<int, Client> entry(clientSocketFD, Client(sock, _serverConfig, clientinfos));
+					std::pair<int, Client> entry(clientSocketFD, Client(sock, _serverConfig, _epfd, clientinfos));
 					_clients.insert(entry);
 				}
 				catch (const char *errorMssg) {
@@ -112,6 +112,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 void	ServerManager::processEvent(int serverIndex) {
 	int clientSocket;
 	Server& server =_servers[serverIndex];
+	std::map<int, Client>::iterator clientIterator;
 
 	for (int i = 0; i < _nfds; i++) {
 		clientSocket = _events[i].data.fd;
@@ -119,15 +120,21 @@ void	ServerManager::processEvent(int serverIndex) {
 			// std::cout << "########### got an event on the server socket {" << clientSocket << "} ##############\n";
 			server.incomingConnection(clientSocket);
 		}
-		else if (server.verifyClientsFD(clientSocket)) {
-			// std::cout << "############  got an event on an existing client socket " << clientSocket << " #############\n";
-			// std::cout << "Event type: " << _events[i].events << "\n";
+		else if ((clientIterator = server.verifyClientsFD(clientSocket)) != server.getClients().end()) {
+			// std::cout << "############  got an event on an existing client socket or pipe fd " << clientSocket << " #############\n";
 			if (_events[i].events == CONNECTION_ERROR) {
 				std::cout << "Connection Error\n";
 				server.closeConnection(_events[i].data.fd);
 				continue ;
+			}			
+			else if (clientIterator->second.getIsCgiRequired() == CGI_REQUIRED) {
+				if ((_events[i].events & EPOLLHUP) && (_events[i].events & EPOLLIN)) {
+					std::cout << "set pipe to \"PIPE_IS_CLOSED\" (ready to read)\n";	
+					clientIterator->second.setIsPipeClosedByPeer(PIPE_IS_CLOSED);
+					clientIterator->second.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
+				}
+				return ;
 			}
-			std::map<int, Client>::iterator clientIterator = server.getClients().find(clientSocket);
 			if (clientIterator->second.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_OFF)
 				clientIterator->second.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_ON);
 			clientIterator->second.setEvent(_epfd, _events[i]);	
@@ -142,6 +149,7 @@ void    ServerManager::waitingForEvents(void) {
 	std::cout << "BYTES TO READ: " << BYTES_TO_READ << "   ##### \n";
 
 	while (true) {
+		std::memset(_events, 0, sizeof(_events));
 		_nfds = epoll_wait(_epfd, _events, MAX_EVENTS, EPOLLTIMEOUT);
 		if (_nfds < 0)
 			throw "epoll_wait failed";
@@ -153,7 +161,7 @@ void    ServerManager::waitingForEvents(void) {
 				continue ;
 
 			processEvent(x);			
-			receiveClientsData(x);			
+			receiveClientsData(x);
 			generatResponses(x);
 			sendClientsResponse(x);
 		}

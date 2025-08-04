@@ -3,8 +3,8 @@
 
 #define EPOLLTIMEOUT 100
 #define MAX_EVENTS 100
-#define BYTES_TO_READ 32 * 1023
-#define BYTES_TO_SEND 32 * 1023
+#define BYTES_TO_READ 100 * 1023
+#define BYTES_TO_SEND 100 * 1023
 #define BUFFERSIZE (((BYTES_TO_READ > BYTES_TO_SEND) ? BYTES_TO_READ : BYTES_TO_SEND) + 1)
 #define RESPONSESIZE 746 // Fix size for the temp response
 
@@ -44,6 +44,18 @@
 
 #define ENABLE_KEEP_ALIVE true
 #define DISABLE_KEEP_ALIVE false
+
+#define PIPE_IS_READABLE true
+#define PIPE_IS_NOT_READABLE false
+
+#define PIPE_IS_CLOSED true
+#define PIPE_IS_NOT_CLOSED false
+
+#define CGI_REQUIRED true
+#define CGI_IS_NOT_REQUIRED false
+
+#define READ_PIPE_COMPLETE true
+#define READ_PIPE_NOT_COMPLETE false
 
 #define _2CRLF "\r\n\r\n"
 
@@ -101,6 +113,7 @@ class ServerManager {
 		void								transmitResponseHeader(Client&, int);
 		void								transferBodyToFile(Client&, int);
 		void								transmitFileResponse(Client& , int);
+		void								consumeCgiOutput(Client& , int);
 
 		void								processEvent(int);
 		void								receiveClientsData(int);

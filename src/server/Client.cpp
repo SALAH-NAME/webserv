@@ -6,13 +6,15 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/08/03 12:51:27 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/04 16:31:44 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Client.hpp"
 
-Client::Client(Socket sock, const ServerConfig& conf, ClientInfos clientInfos) : _socket(sock)
+Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clientInfos) : _socket(sock)
+											, _epfd(epfd)
+											, _CGI_pipeFD(-1)
 											, _lastTimeConnection(std::time(NULL))
 											, _contentLength(0)
 											, _uploadedBytes(0)
@@ -28,9 +30,16 @@ Client::Client(Socket sock, const ServerConfig& conf, ClientInfos clientInfos) :
 											, _isRequestBodyWritable(NOT_WRITABLE)
 											, _bodyDataPreloadedFlag(BODY_DATA_PRELOADED_OFF)
 											, _requestDataPreloadedFlag(REQUEST_DATA_PRELOADED_OFF)
+											, _isCgiRequired(CGI_IS_NOT_REQUIRED)
+											, _isPipeReadable(PIPE_IS_NOT_READABLE)
+											, _isPipeClosedByPeer(PIPE_IS_NOT_CLOSED)
+											, _pipeReadComplete(READ_PIPE_NOT_COMPLETE)
+											, _setTargetFile(false)
 {}
 
 Client::Client(const Client& other) : _socket(other._socket)
+									, _epfd(other._epfd)
+									, _CGI_pipeFD(other._CGI_pipeFD)
 									, _lastTimeConnection(other._lastTimeConnection)
 									, _contentLength(other._contentLength)
 									, _uploadedBytes(other._uploadedBytes)
@@ -46,6 +55,11 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _isRequestBodyWritable(other._isRequestBodyWritable)
 									, _bodyDataPreloadedFlag(other._bodyDataPreloadedFlag)
 									, _requestDataPreloadedFlag(other._requestDataPreloadedFlag)
+									, _isCgiRequired(other._isCgiRequired)
+									, _isPipeReadable(other._isPipeReadable)
+									, _isPipeClosedByPeer(other._isPipeClosedByPeer)
+									, _pipeReadComplete(other._pipeReadComplete)
+									, _setTargetFile(other._setTargetFile)
 {
 	const_cast<Client&> (other)._responseHandler = NULL;
 }
@@ -61,6 +75,10 @@ Socket &Client::getSocket()
 	return _socket;
 }
 
+int	Client::getCGI_pipeFD(void) {
+	return _CGI_pipeFD;
+}
+
 time_t Client::getLastConnectionTime(void)
 {
 	return _lastTimeConnection;
@@ -72,6 +90,10 @@ bool	Client::getIncomingHeaderDataDetectedFlag(void) {
 
 std::string&	Client::getRequestBodyPart(void) {
 	return _requestBodyPart;
+}
+
+ResponseHandler*	Client::getResponseHandler(void) {
+	return _responseHandler;
 }
 
 std::string&	Client::getPendingRequestData(void) {
@@ -112,6 +134,18 @@ bool	Client::getIncomingBodyDataDetectedFlag(void) {
 
 bool	Client::getIsRequestBodyWritable(void) {
 	return _isRequestBodyWritable;
+}
+
+bool	Client::getIsCgiRequired(void) {
+	return _isCgiRequired;
+}
+
+bool	Client::getIsPipeReadable(void) {
+	return _isPipeReadable;
+}
+
+bool	Client::getIsPipeClosedByPeer(void) {
+	return _isPipeClosedByPeer;
 }
 
 void Client::setResponseHeaderFlag(bool value)
@@ -156,16 +190,20 @@ std::string&		Client::getResponseHolder(void) {
 	return _responseHolder;
 }
 
+bool	Client::getSetTargetFile(void) {
+	return _setTargetFile;
+}
+
+void		Client::appendToHeaderPart(const std::string& headerData) {
+	_requestHeaderPart += headerData;
+}
+
 bool	Client::getIsKeepAlive(void) {
 	return _isKeepAlive;
 }
 
 bool	Client::getIsResponseBodySendable(void) {
 	return _isResponseBodySendable;
-}
-
-void		Client::appendToHeaderPart(const std::string& headerData) {
-	_requestHeaderPart += headerData;
 }
 
 void Client::appendToBodyPart(const std::string &bodyData)
@@ -232,13 +270,45 @@ void	Client::setHeaderPart(std::string HeaderData) {
 	_requestHeaderPart = HeaderData;
 }
 
+void	Client::setResponseHolder(const std::string responseData) {
+	_responseHolder = responseData;
+}
+
 void	Client::setIsRequestBodyWritable(bool value) {
 	_isRequestBodyWritable = value;
 }
 
+void	Client::setIsPipeReadable(bool value) {
+	_isPipeReadable = value;
+}
+
+void	Client::setIsPipeClosedByPeer(bool value) {
+	_isPipeClosedByPeer = value;
+}
+
+void	Client::setIsCgiRequired(bool value) {
+	_isCgiRequired = value;
+}
+
+void	Client::setPipeReadComplete(bool value) {
+	_pipeReadComplete = value;
+}
+
+void	Client::setSetTargetFile(bool value) {
+	_setTargetFile = value;
+}
+
 bool Client::parseRequest()
 {
-	return _httpRequest.parse(_requestHeaderPart);
+	try
+	{
+		_httpRequest.appendAndValidate(_requestHeaderPart);
+		return _httpRequest.isValid();
+	}
+	catch (const HttpRequestException &ex)
+	{
+		return false;
+	}
 }
 
 void Client::prinfRequestinfos(void)
@@ -277,15 +347,16 @@ bool	Client::readFileBody(void) {
 	if (_bytesReadFromFile == 0) {
 		_responseBodyFlag = RESPONSE_BODY_NOT_READY;
 		_isResponseBodySendable = NOT_SENDABLE;
+		// std::cout << "Send response body \n";
 		return true;
 	}
 
 	buffer[_bytesReadFromFile] = 0;
 	_responseHolder = std::string(buffer, _bytesReadFromFile);
+	// printRequestAndResponse("target file data", _responseHolder);
 
 	_isResponseBodySendable = SENDABLE;
 	return false;
-
 }
 
 bool	Client::sendFileBody(void) {
@@ -318,8 +389,8 @@ void	Client::receiveRequestBody(void) {
 		return ;
 	}
 
-	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ);
-	if (readBytes > 0) {
+	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
+	if (readBytes > 0 && readBytes <= BYTES_TO_READ) {
 		resetLastConnectionTime();
 		if (_uploadedBytes + readBytes >= _contentLength) {
 			readBytes = _contentLength - _uploadedBytes;
@@ -327,6 +398,9 @@ void	Client::receiveRequestBody(void) {
 		buffer[readBytes] = 0;
 		_requestBodyPart = std::string(buffer, readBytes);
 		_isRequestBodyWritable = WRITABLE;
+	}
+	else if (readBytes == 0) {
+		// waiting for timeout or clinet closed connection
 	}
 	else
 		throwIfSocketError("recv()");	
@@ -370,4 +444,14 @@ void	Client::writeBodyToTargetFile(void) {
 		_fullResponseFlag = FULL_RESPONSE_READY;
 		return ;
 	}
+}
+
+void	Client::closeAndDeregisterPipe(void) {
+	std::cout << "============================================================\n";
+	epoll_ctl(_epfd, EPOLL_CTL_DEL, _CGI_pipeFD, NULL);
+	std::cout << "  ## Removed Pipe fd: " << _CGI_pipeFD << " from epoll  ## \n";
+	close(_CGI_pipeFD);
+	std::cout << "  ## closed Pipe fd: " << _CGI_pipeFD << "              ## \n";
+	std::cout << "============================================================\n\n";
+	
 }

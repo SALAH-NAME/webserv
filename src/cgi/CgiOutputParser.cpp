@@ -2,30 +2,43 @@
 
 void	CgiHandler::HandleDuplicates()
 {
-	if (key_holder == "Status" || key_holder == "Content-Type" || key_holder == "Content-Length")
+	if (key_holder == "status" || key_holder == "content-type" || key_holder == "content-length")
 		throw (BadCgiOutput("duplicate " + key_holder));
-	else if (key_holder == "Set-Cookie"){
+	else if (key_holder == "set-cookie"){
 		if (ReachedMaxHeadersNumber())
 			throw (BadCgiOutput("passed max headers number"));
 		extra_cookie_values.push_back(value_holder);
+		key_holder.clear();
+		value_holder.clear();
+		return ;
 	}
 	else if (output_headers[key_holder].size() + value_holder.size() > HEADER_VALUE_SIZE_LIMIT)
 		throw (BadCgiOutput("passed max header value size"));
 	output_headers[key_holder] += ", " + value_holder;
+	key_holder.clear();
+	value_holder.clear();
+}
+
+void ToLower(std::string &str)
+{
+	for (unsigned int i=0;i < str.size();i++)
+		if (isupper(str[i]))
+			str[i] = tolower(str[i]);
 }
 
 void	CgiHandler::AddNewHeader()
 {
 	TrimSpaces(value_holder);
+	ToLower(key_holder);
 	if (key_holder.size() > HEADER_SIZE_LIMIT || value_holder.size() > HEADER_VALUE_SIZE_LIMIT)
 		throw (BadCgiOutput("passed max header name/value size"));
 	if (output_headers.find(key_holder) != output_headers.end())
 		return (HandleDuplicates());
 	if (ReachedMaxHeadersNumber())
 		throw (BadCgiOutput("passed max headers number"));
-	else if (key_holder == "Status")
+	else if (key_holder == "status")
 		return (StatusValidator());
-	else if (key_holder == "Content-Length")
+	else if (key_holder == "content-length")
 		ContentLengthValidator();
 	output_headers[key_holder] = value_holder;
 	key_holder.clear();
@@ -56,9 +69,9 @@ void	AppendCharToValue(std::string &value, char c)
 
 void	CgiHandler::PreBodyPhraseChecks()
 {
-	if (output_headers.find("Content-Type") == output_headers.end())
+	if (output_headers.find("content-type") == output_headers.end())
 		throw (BadCgiOutput("Content-Type header not found"));
-	else if (output_headers.find("Content-Length") != output_headers.end() 
+	else if (output_headers.find("content-length") != output_headers.end() 
 			&& content_length < (signed)preserved_body.size())
 		throw (BadCgiOutput("Content-Length value smaller than body size"));
 }
