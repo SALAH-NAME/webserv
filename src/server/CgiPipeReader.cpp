@@ -30,8 +30,20 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 			}
 		}
 		else if (!readBytes){
-			client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
-			client.setPipeReadComplete(READ_PIPE_COMPLETE);
+			try {
+				responseHandler->CheckForContentType();
+
+				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
+				client.setPipeReadComplete(READ_PIPE_COMPLETE);
+
+			} catch (ResponseHandler::ResponseHandlerError& e) {
+				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
+				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
+				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
+
+				client.CgiExceptionHandler();
+			}
+
 		}
 		else {
 			// read failed !!

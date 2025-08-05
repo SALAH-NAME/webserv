@@ -112,8 +112,8 @@ void ResponseHandler::CheckCgiChildState() // use only if cgi is required
 void ResponseHandler::SetTargetFileForCgi(int count)
 {
 	std::string filename = TMP_FILE_PREFIX + NumtoString(count);
-	if (target_file)
-		delete target_file;
+
+	CgiObj.PreBodyPhraseChecks();
 	int fd = open(filename.c_str(), O_CREAT, 0644);
 	close(fd);
 	target_file = new std::fstream(filename.c_str(), std::ios::out | std::ios::in | std::ios::trunc | std::ios::binary);

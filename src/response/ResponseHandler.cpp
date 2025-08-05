@@ -13,6 +13,16 @@ ResponseHandler::ResponseHandler(const ClientInfos clientInfos, const ServerConf
     post_failed = false;
 }
 
+void    ResponseHandler::CheckForContentType()
+{
+    try{
+        CgiObj.PreBodyPhraseChecks();
+    }
+    catch (CgiHandler::BadCgiOutput &ex){
+        throw (ResponseHandlerError("HTTP/1.1 502 Bad Gateway", 500));
+    }
+}
+
 std::string	ResponseHandler::GetResponseHeader(){return response_header;}
 
 std::string ResponseHandler::GetResponseBody(){return response_body;}
