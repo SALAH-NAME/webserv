@@ -6,11 +6,10 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/07/24 19:34:13 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/03 18:52:00 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-// #include "Server.hpp"
 #include "ServerManager.hpp"
 
 void throwIfSocketError(const std::string& context) {
@@ -31,29 +30,71 @@ void throwIfSocketError(const std::string& context) {
 	}
 }
 
+static void extractPort(std::string& port, uint16_t netPort) {
+    // Network byte order is big-endian: high byte first
+	uint16_t hostPort = ((netPort >> 8) & 0xFF) | ((netPort & 0xFF) << 8);
+    
+    std::stringstream ss;
+    ss << hostPort;
+    port = ss.str();
+}
+
+
+static void	ipToString(std::string& ip, uint32_t rawAddr) {
+    std::stringstream ss;
+
+    ss << ((rawAddr >> 24) & 0xFF) << '.'
+        << ((rawAddr >> 16) & 0xFF) << '.'
+        << ((rawAddr >> 8) & 0xFF) << '.'
+        << (rawAddr & 0xFF);
+
+    ip = ss.str();
+}
+
+static void	getClientsInfos(ClientInfos* clientinfos, uint32_t rawIP, uint16_t netPort) {
+	// Convert it to host byte order
+	rawIP = ntohl(rawIP);
+	
+	ipToString(clientinfos->clientAddr, rawIP);
+	extractPort(clientinfos->port, netPort);
+}
+
+
 void	Server::incomingConnection(int NewEvent_fd) {
+	struct sockaddr_in	serverSockAddr;
+	socklen_t			serverSockAddrLen = sizeof(serverSockAddr);
+	
 	struct epoll_event	clientEvent;
 	ssize_t				clientEventLen = sizeof(clientEvent);
 	int					clientSocketFD;
+	
+	struct sockaddr_in	clientAddr;
+	socklen_t			clientAddrLen = sizeof(clientAddr);
+
+	ClientInfos clientinfos;
 		
-	std::memset(&clientEvent, 0, clientEventLen); // use std::
+	std::memset(&clientEvent, 0, clientEventLen);
 	clientEvent.events = EPOLLIN | EPOLLET; // make the client socket Edge-Triggered
 	
 	for (size_t i = 0; i < _listeningSockets.size(); i++) {
 		if (_listeningSockets[i].getFd() != NewEvent_fd)
 			continue ;
 		
+		std::memset(&clientAddr, 0, clientAddrLen); 
+		std::memset(&serverSockAddr, 0, serverSockAddrLen); 
 		try {
 			while (true) {
 				try {
-					Socket sock = _listeningSockets[i].accept();
+					Socket sock = _listeningSockets[i].accept((struct sockaddr*)&clientAddr, &clientAddrLen);
 					clientSocketFD = sock.getFd();
+					getsockname(clientSocketFD, (struct sockaddr*)&serverSockAddr, &serverSockAddrLen);
+					getClientsInfos(&clientinfos, clientAddr.sin_addr.s_addr, serverSockAddr.sin_port);
 					// std::cout << "  ======>>> accept : " << clientSocketFD << " <<====== \n";
 					clientEvent.data.fd = clientSocketFD;
 					if (epoll_ctl(_epfd, EPOLL_CTL_ADD, clientSocketFD, &clientEvent) == -1)
 						throw std::runtime_error(std::string("epoll_ctl() failed: ") + strerror(errno));
-					Client newClient(sock, NewEvent_fd, _serverConfig); // create a new object where to store the request
-					_clients.insert(std::make_pair(clientSocketFD, newClient));
+					std::pair<int, Client> entry(clientSocketFD, Client(sock, _serverConfig, _epfd, clientinfos));
+					_clients.insert(entry);
 				}
 				catch (const char *errorMssg) {
 					break ; // no more pending connections
@@ -71,6 +112,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 void	ServerManager::processEvent(int serverIndex) {
 	int clientSocket;
 	Server& server =_servers[serverIndex];
+	std::map<int, Client>::iterator clientIterator;
 
 	for (int i = 0; i < _nfds; i++) {
 		clientSocket = _events[i].data.fd;
@@ -78,15 +120,24 @@ void	ServerManager::processEvent(int serverIndex) {
 			// std::cout << "########### got an event on the server socket {" << clientSocket << "} ##############\n";
 			server.incomingConnection(clientSocket);
 		}
-		else if (server.verifyClientsFD(clientSocket)) {
-			// std::cout << "############  got an event on an existing client socket " << clientSocket << " #############\n";
+		else if ((clientIterator = server.verifyClientsFD(clientSocket)) != server.getClients().end()) {
+			// std::cout << "############  got an event on an existing client socket or pipe fd " << clientSocket << " #############\n";
 			if (_events[i].events == CONNECTION_ERROR) {
+				std::cout << "Connection Error\n";
 				server.closeConnection(_events[i].data.fd);
 				continue ;
+			}			
+			else if (clientIterator->second.getIsCgiRequired() == CGI_REQUIRED) {
+				if ((_events[i].events & EPOLLHUP) && (_events[i].events & EPOLLIN)) {
+					std::cout << "set pipe to \"PIPE_IS_CLOSED\" (ready to read)\n";	
+					clientIterator->second.setIsPipeClosedByPeer(PIPE_IS_CLOSED);
+					clientIterator->second.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
+				}
+				return ;
 			}
-			std::map<int, Client>::iterator clientIterator = server.getClients().find(clientSocket);
-			clientIterator->second.setIncomingDataDetectedFlag(INCOMING_HEADER_DATA_ON);
-			clientIterator->second.setEvent(_epfd, _events[i]);
+			if (clientIterator->second.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_OFF)
+				clientIterator->second.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_ON);
+			clientIterator->second.setEvent(_epfd, _events[i]);	
 		}
 	}
 	server.eraseMarked();
@@ -98,6 +149,7 @@ void    ServerManager::waitingForEvents(void) {
 	std::cout << "BYTES TO READ: " << BYTES_TO_READ << "   ##### \n";
 
 	while (true) {
+		std::memset(_events, 0, sizeof(_events));
 		_nfds = epoll_wait(_epfd, _events, MAX_EVENTS, EPOLLTIMEOUT);
 		if (_nfds < 0)
 			throw "epoll_wait failed";
@@ -108,7 +160,7 @@ void    ServerManager::waitingForEvents(void) {
 			if (!_servers[x].getListeningSockets().size())
 				continue ;
 
-			processEvent(x);
+			processEvent(x);			
 			receiveClientsData(x);
 			generatResponses(x);
 			sendClientsResponse(x);

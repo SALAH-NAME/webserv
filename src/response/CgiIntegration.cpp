@@ -56,8 +56,8 @@ void ResponseHandler::GenerateHeaderFromCgiData()
 	std::map<std::string, std::string> &headers = CgiObj.GetOutputHeaders();
 	std::vector<std::string> &extra_cookies = CgiObj.GetExtraCookieValues();
 
-	bool has_date = headers.find("Date") != headers.end();
-	bool has_name = headers.find("Server") != headers.end();
+	bool has_date = headers.find("date") != headers.end();
+	bool has_name = headers.find("server") != headers.end();//use server and date
 	response_header += GenerateCgiStatusLine() + CRLF;
 	response_header += has_date ? "" : "Date: " + GenerateTimeStamp() + CRLF;
 	response_header += has_name ? "" : "Server: " + std::string(SRV_NAME) + CRLF; 
@@ -86,7 +86,6 @@ void ResponseHandler::AppendCgiOutput(const std::string &buffer)
 	catch (std::runtime_error &ex){
 		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));}
 	catch (CgiHandler::BadCgiOutput &ex){
-		std::cout << "err msg: " << ex.what() << std::endl;
 		throw (ResponseHandlerError("HTTP/1.1 502 Bad Gateway", 502));}
     if (ReachedCgiBodyPhase()){
 		GenerateHeaderFromCgiData();

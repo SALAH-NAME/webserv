@@ -1,10 +1,10 @@
 #include "ResponseHandler.hpp"
 
-ResponseHandler::ResponseHandler(const std::string &client_address, const ServerConfig &server_conf) : conf(server_conf), target_file(NULL)
+ResponseHandler::ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf) : conf(server_conf), target_file(NULL)
 {
     InitializeStandardContentTypes();
     InitializeStatusPhrases();
-    remote_address = client_address;
+    client_info = clientInfos;
     loc_config = NULL;
     is_location_allocated = false;
     resource_path = "";
@@ -97,7 +97,7 @@ void    ResponseHandler::HandleDirRequest(HttpRequest &req)
 void ResponseHandler::ProccessHttpGET(HttpRequest &req)
 {
     if (require_cgi)
-        return (CgiObj.RunCgi(req, conf, *loc_config, resource_path, remote_address));    
+        return (CgiObj.RunCgi(req, conf, *loc_config, resource_path, client_info));    
     if (access(resource_path.c_str(), R_OK) != 0 || (IsDir(resource_path.c_str())
         && loc_config->getIndex().empty() && !loc_config->getAutoindex()))
             throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
@@ -109,7 +109,7 @@ void ResponseHandler::ProccessHttpGET(HttpRequest &req)
 void ResponseHandler::ProccessHttpPOST(HttpRequest &req)
 {
     if (require_cgi)
-        return (CgiObj.RunCgi(req, conf, *loc_config, resource_path, remote_address));
+        return (CgiObj.RunCgi(req, conf, *loc_config, resource_path, client_info));
     if (access(resource_path.c_str(), F_OK) == 0){
         post_failed = true;
         throw (ResponseHandlerError("HTTP/1.1 409 Conflict", 409));}

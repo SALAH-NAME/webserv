@@ -26,7 +26,7 @@ class ResponseHandler
 {
 	private:
 		const ServerConfig			&conf;
-		std::string					remote_address;
+		ClientInfos					client_info;
 		std::string					response_header;
 		std::string 				resource_path;
 		bool						require_cgi;
@@ -68,7 +68,7 @@ class ResponseHandler
 		int				GetCgiChildExitStatus();
 			
 	public:
-		ResponseHandler(const std::string &client_address, const ServerConfig &server_conf);
+		ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf); // edited
 		void			LoadErrorPage(const std::string &status_line, int status_code);
 		void 			Run(HttpRequest &req);
 		bool			IsPost();		

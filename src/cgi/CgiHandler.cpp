@@ -25,14 +25,14 @@ void	CgiHandler::SetCgiChildFileDescriptors()
 }
 
 void	CgiHandler::SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &conf,
-			const std::string &remote_address)//adding data fetched from the request into the env object
+			ClientInfos &client_info)//adding data fetched from the request into the env object
 {
 	std::map<std::string, std::string> http_headers = http_req.getHeaders(); 
 	env.Add("GATEWAY_INTERFACE", "CGI/1.1");
 	env.Add("REQUEST_METHOD", http_req.getMethod());
 	env.Add("SCRIPT_NAME", http_req.getPath());
 	env.Add("SERVER_NAME", conf.getHost());
-	env.Add("SERVER_PORT", NumtoString(conf.getListens()[0]));//this needs to be changed
+	env.Add("SERVER_PORT", client_info.port);//
 	env.Add("SERVER_PROTOCOL", "HTTP/1.1");
 	env.Add("SERVER_SOFTWARE", "Ed Edd n Eddy/1.0");	
 	if (http_headers.find("content-length") != http_headers.end())
@@ -41,10 +41,10 @@ void	CgiHandler::SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &co
 		env.Add("CONTENT_TYPE", http_headers["content-type"]);
 	env.Add("QUERY_STRING", http_req.getQueryString());
 	env.Add("PATH_INFO", http_req.getPathInfo());
-	env.Add("REMOTE_ADDR", remote_address);
+	env.Add("REMOTE_ADDR", client_info.clientAddr);
 	for (std::map<std::string, std::string>::iterator it = http_headers.begin(); it != http_headers.end(); it++)
 		if (it->first != "content-type" && it->first != "content-length")
-			env.Add("HTTP_" + it->first , it->second);//HTTP_contetn
+			env.Add("HTTP_" + it->first , it->second);
 }
 
 void	SetCgiChildArguments(char **Argv, const std::string &interpiter, const std::string &script_path)
@@ -110,7 +110,7 @@ void CgiHandler::ClearData()
 
 void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 				const LocationConfig &cgi_conf, std::string &script_path,
-					const std::string &remote_address)
+					ClientInfos &client_info)
 {
 	int 	id;
 	char	**argv = new char*[3];
@@ -121,15 +121,15 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 	output_pipe.create();
 	if (this->is_POST)
 		input_pipe.create();
-	SetCgiEnvironment(current_req, conf, remote_address);
+	SetCgiEnvironment(current_req, conf, client_info);
 	id = fork();
 	if (id == -1)
 		throw (std::runtime_error("failed to spawn child"));
 	if (id == 0)
 	{
 		if (chdir(GetFileDirectoryPath(script_path).c_str()) != 0){
-			std::exit(1);
 			delete_strings(argv);
+			std::exit(1); // Fixed: free memory before exit
 		}
 		SetCgiChildFileDescriptors();
 		execve(cgi_conf.getCgiPass().c_str(), argv, this->env.GetRawEnv());
