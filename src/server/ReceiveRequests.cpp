@@ -58,7 +58,7 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			else if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
 			// if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
 				std::cout << "   ====>> request is completed <<=====\n";
-				printRequestAndResponse("Header", client.getHeaderPart());
+				// printRequestAndResponse("Header", client.getHeaderPart());
 
 				isolateAndRecordBody(client, headerEnd);
 				// std::cout << "  ===>> is Preloaded : " << client.getBodyDataPreloadedFlag() << "\n";
