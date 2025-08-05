@@ -329,7 +329,7 @@ bool	Client::updateHeaderStateAfterSend(size_t sentBytes) {
 			_responseBodyFlag = RESPONSE_BODY_NOT_READY;
 			std::cout << " ==> Sent Full Response Successfully <==\n";
 
-			printRequestAndResponse("left request data", _pendingRequestDataHolder);
+			// printRequestAndResponse("left request data", _pendingRequestDataHolder);
 
 			return true;
 		}
