@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/08/04 15:13:59 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/05 19:14:20 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -159,6 +159,8 @@ class Client {
 		bool				readFileBody(void);
 		void				writeBodyToTargetFile(void);
 		void				closeAndDeregisterPipe(void);
+
+		void				CgiExceptionHandler(void);
 };
 
 #endif
