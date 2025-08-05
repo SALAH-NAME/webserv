@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/08/04 17:59:43 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/05 19:16:48 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -454,4 +454,17 @@ void	Client::closeAndDeregisterPipe(void) {
 	std::cout << "  ## closed Pipe fd: " << _CGI_pipeFD << "              ## \n";
 	std::cout << "============================================================\n\n";
 	
+}
+
+void	Client::CgiExceptionHandler(void) {
+	if (_responseHandler->GetTargetFilePtr()) {
+		// std::cout << "   ===>>> from target file \n";
+		_responseHolder = _responseHandler->GetResponseHeader();
+		_responseHeaderFlag = RESPONSE_HEADER_READY;
+	}
+	else {
+		// std::cout << " ====>  no neeed \n";
+		_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
+		_fullResponseFlag = FULL_RESPONSE_READY;
+	}
 }
