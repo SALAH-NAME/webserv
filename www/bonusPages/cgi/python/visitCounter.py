@@ -1,7 +1,7 @@
 from os import environ
 from datetime import datetime
 
-response_header = "Conten-Type: text/html\r\n"
+response_header = "Content-Type: text/html\r\n"
 timestamp = ""
 counter = 0
 

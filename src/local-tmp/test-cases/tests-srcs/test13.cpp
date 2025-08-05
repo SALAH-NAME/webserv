@@ -5,7 +5,6 @@
 */
 
 
-
 void init(HttpRequest &req)
 {
 	std::map<std::string, std::string> headers;

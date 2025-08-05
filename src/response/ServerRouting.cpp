@@ -17,7 +17,7 @@ bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_lo
         {
             //the requested file extension matched with a cgi location
             if (access((it->second.getRoot() + req_path).c_str(), F_OK) != 0)
-                return (false);
+                throw (ResponseHandlerError("HTTP/1.1 404 Not Found", 404));
             if (IsDir((it->second.getRoot()+req_path).c_str()))//if the path exist but as a directory
                 throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
             resource_path = it->second.getRoot() + '/' + req_path;
