@@ -66,7 +66,6 @@ class Client {
 		void				generateDynamicResponse();
 		void				generateStaticResponse();
 		void				extractBodyFromPendingRequestHolder(void);
-
 		
 		public:
 

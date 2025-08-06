@@ -13,7 +13,7 @@
 #include "ServerManager.hpp"
 
 void    printRequestAndResponse(std::string str, std::string request) {
-	char lasChar;
+	char lasChar = 0;
 	std::cout << "\n********************  " << str << "  *********************\n";
 	for (size_t i = 0; i < request.size(); i++) {
 		if (request[i] == '\r')

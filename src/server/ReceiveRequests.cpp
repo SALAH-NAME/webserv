@@ -133,5 +133,6 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 			transferBodyToFile(it->second, serverIndex);
 		}
 	}
+	
 	_servers[serverIndex].eraseMarked();
 }

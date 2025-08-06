@@ -1,16 +1,17 @@
 #include "ResponseHandler.hpp"
 
-void ResponseHandler::InitialRequestCheck(HttpRequest &req)
+void ResponseHandler::InitialRequestCheck()
 {
-	if (!req.isValid()){
-		std::string full_status_line =	"HTTP/1.1 " + NumtoString(req.getStatusCode()) +
-											' ' + req.getErrorMsg();
-		throw (ResponseHandlerError(full_status_line, req.getStatusCode()));
+	if (!req->isValid()){
+		std::string full_status_line =	"HTTP/1.1 " + NumtoString(req->getStatusCode()) +
+											' ' + req->getErrorMsg();
+		keep_alive = false;
+		throw (ResponseHandlerError(full_status_line, req->getStatusCode()));
 	}
 		return ;
 }
 
-void	ResponseHandler::GenerateErrorPage(const std::string &status_line)
+void	ResponseHandler::GenerateErrorPage( const std::string &status_line)
 {
 	response_body =
 		"<html>\n<head><title>"+ status_line +"</title></head>\n"
@@ -20,7 +21,7 @@ void	ResponseHandler::GenerateErrorPage(const std::string &status_line)
 	SetResponseHeader(status_line, response_body.size(), false);
 }
 
-void	ResponseHandler::LoadErrorPage(const std::string &status_line, int status_code)
+void	ResponseHandler::LoadErrorPage( const std::string &status_line, int status_code)
 {
 	require_cgi = false;
 	if (target_file)
