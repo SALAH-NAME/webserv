@@ -57,6 +57,9 @@
 #define READ_PIPE_COMPLETE true
 #define READ_PIPE_NOT_COMPLETE false
 
+#define SENT true
+#define NOT_SENT false
+
 #define _2CRLF "\r\n\r\n"
 
 #include <netinet/in.h> // For sockaddr_in
@@ -109,7 +112,7 @@ class ServerManager {
 		void								setUpServers(void);
 		void    							addToEpollSet(void);
 		void								checkTimeOut(void);
-		void								collectRequestData(Client&, int);
+		void								collectRequestData(Client&);
 		void								transmitResponseHeader(Client&, int);
 		void								transferBodyToFile(Client&, int);
 		void								transmitFileResponse(Client& , int);
@@ -119,6 +122,7 @@ class ServerManager {
 		void								receiveClientsData(int);
 		void								generatResponses(int);
 		void								sendClientsResponse(int);
+		void								handleKeepAlive(Client&, int);
 
 	public:
 

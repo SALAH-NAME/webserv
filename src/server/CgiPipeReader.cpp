@@ -25,11 +25,25 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
 				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
+
+				client.CgiExceptionHandler();
 			}
 		}
 		else if (!readBytes){
-			client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
-			client.setPipeReadComplete(READ_PIPE_COMPLETE);
+			try {
+				responseHandler->CheckForContentType();
+
+				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
+				client.setPipeReadComplete(READ_PIPE_COMPLETE);
+
+			} catch (ResponseHandler::ResponseHandlerError& e) {
+				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
+				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
+				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
+
+				client.CgiExceptionHandler();
+			}
+
 		}
 		else {
 			// read failed !!
@@ -46,6 +60,8 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
 				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				client.getResponseHandler()->LoadErrorPage(e.what(), e.getStatusCode());
+
+				client.CgiExceptionHandler();
 			}
 		}
 
@@ -59,6 +75,8 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
 				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
+				
+				client.CgiExceptionHandler();
 			}
 		}
 		else if (!readBytes) {
@@ -74,6 +92,8 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
 				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
+
+				client.CgiExceptionHandler();
 			}
 		}
 	}

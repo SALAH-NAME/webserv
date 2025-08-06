@@ -2,12 +2,12 @@
 version=$(bash --version | head -n 1)
 script_name="$0"
 
-echo -en "Content-Type: text/html\r\f"
-echo -en "Status: 200\r\f\r\f"
+echo -en "Content-Type: text/html\r\n"
+echo -en "Status: 200\r\n\r\n"
 
 echo -en "<html>
 	<head>
-		<title>python CGI</title>
+		<title>bash CGI</title>
 	</head>
 	<body>
 		<p>

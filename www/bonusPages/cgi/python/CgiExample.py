@@ -4,7 +4,7 @@ from os import environ
 if "SERVER_SOFTWARE" not in environ:
 	environ["SERVER_SOFTWARE"] = "Ed Edd n Eddy/1.0"
 
-CRLF='\r\f'
+CRLF='\r\n'
 current_version = version
 script_name = argv[0]
 

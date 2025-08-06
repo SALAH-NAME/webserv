@@ -68,6 +68,7 @@ class ResponseHandler
 		int				GetCgiChildExitStatus();
 			
 	public:
+		void			CheckForContentType();
 		ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf); // edited
 		void			LoadErrorPage(const std::string &status_line, int status_code);
 		void 			Run(HttpRequest &req);

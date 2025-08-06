@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/08/04 16:03:17 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/06 15:58:03 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,7 @@ void	isolateAndRecordBody(Client& client, size_t headerEnd) {
 	std::cout << "ISOLATED\n";
 }
 
-void    ServerManager::collectRequestData(Client& client, int serverIndex) {
-	int clientSocket = client.getSocket().getFd();
+void    ServerManager::collectRequestData(Client& client) {
 	ssize_t readbytes;
 	size_t headerEnd;
 
@@ -48,17 +47,18 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			client.resetLastConnectionTime();
 			client.appendToHeaderPart(std::string(_buffer, readbytes)); // !! Append buffer to header-Part even if it contains Body-data  // READ THIS!!0
 			client.temp_header += std::string(_buffer, readbytes);
-			// printRequestAndResponse("Header", client.getHeaderPart());
+			// printRequestAndResponse("updated header", client.getHeaderPart());
 			if (std::string(_buffer, readbytes) == "\r\n")
 			{
 				// in case of receive empty line (Press Enter) !!
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_DATA_HEADER_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+				// std::cout << " ==> Empty line\n";
 			}
 			else if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
 			// if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
-				std::cout << "   ====>> request is completed <<=====\n";
-				printRequestAndResponse("Header", client.getHeaderPart());
+				// std::cout << "   ====>> request is completed <<=====\n";
+				// printRequestAndResponse("Header", client.getHeaderPart());
 
 				isolateAndRecordBody(client, headerEnd);
 				// std::cout << "  ===>> is Preloaded : " << client.getBodyDataPreloadedFlag() << "\n";
@@ -86,7 +86,6 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 		std::cerr << error_msg << std::endl;
 		client.setIncomingHeaderDataDetectedFlag(INCOMING_DATA_HEADER_OFF);
 		client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-		_servers[serverIndex].closeConnection(clientSocket); // 
 	}
 	catch (const std::runtime_error& e) {
 		std::string error_msg = "HTTP parsing error: ";
@@ -95,7 +94,6 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 		client.setIncomingHeaderDataDetectedFlag(INCOMING_DATA_HEADER_OFF);
 		client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 		// perror(e.what());
-		_servers[serverIndex].closeConnection(clientSocket); //
 	}
 	catch (const std::exception &e) {
 		std::string error_msg = "Parsing error: ";
@@ -103,7 +101,6 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 		std::cerr << error_msg << std::endl;
 		client.setIncomingHeaderDataDetectedFlag(INCOMING_DATA_HEADER_OFF);
 		client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-		_servers[serverIndex].closeConnection(clientSocket);
 	}
 }
 
@@ -130,13 +127,12 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 		}
 		if (it->second.getIncomingHeaderDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
 			// std::cout << " ***** incoming Header data from : " << it->second.getSocket().getFd() << "  ****\n";
-			collectRequestData(it->second, serverIndex);
+			collectRequestData(it->second);
 		}
 		else if (it->second.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_ON) {
 			// std::cout << " ***** incoming Body data from : " << it->second.getSocket().getFd() << "  ****\n";
 			transferBodyToFile(it->second, serverIndex);
 		}
 	}
-	
 	_servers[serverIndex].eraseMarked();
 }

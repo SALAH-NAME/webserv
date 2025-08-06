@@ -80,12 +80,11 @@ std::vector<std::string> &CgiHandler::GetExtraCookieValues(){return extra_cookie
 
 void CgiHandler::KillChild()
 {
-	int status;
-
 	ClearData();
-	if (exec_t0 == -1 || waitpid(child_pid, &status, WNOHANG) == child_pid)
+	if (waitpid(child_pid, NULL, WNOHANG) == child_pid)
 		return;
 	kill(child_pid, SIGKILL);
+	child_pid = -1;
 }
 
 void CgiHandler::ClearData()
@@ -95,7 +94,6 @@ void CgiHandler::ClearData()
 	input_pipe.closeRead();
 	input_pipe.closeWrite();
 	env.clear();
-	child_pid = 0;
 	Body_phase = false;
 	exec_t0 = -1;
 	status_code = 0;
@@ -116,6 +114,7 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 	char	**argv = new char*[3];
 
 	ClearData();
+	child_pid = -1;
 	is_POST = current_req.getMethod() == "POST" ? true : false;
 	SetCgiChildArguments(argv, cgi_conf.getCgiPass(), script_path);
 	output_pipe.create();
