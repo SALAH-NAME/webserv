@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/08/06 16:13:00 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/06 19:33:15 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 											, _contentLength(0)
 											, _uploadedBytes(0)
 											, _responseHandler(new ResponseHandler(clientInfos, conf))
-											, _incomingHeaderDataDetected(INCOMING_DATA_HEADER_OFF)
+											, _incomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF)
 											, _incomingBodyDataDetectedFlag(INCOMING_BODY_DATA_OFF)
 											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)
 											, _responseBodyFlag(RESPONSE_BODY_NOT_READY)
@@ -49,7 +49,7 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _contentLength(other._contentLength)
 									, _uploadedBytes(other._uploadedBytes)
 									, _responseHandler(other._responseHandler)
-									, _incomingHeaderDataDetected(other._incomingHeaderDataDetected)
+									, _incomingHeaderDataDetectedFlag(other._incomingHeaderDataDetectedFlag)
 									, _incomingBodyDataDetectedFlag(other._incomingBodyDataDetectedFlag)
 									, _responseHeaderFlag(other._responseHeaderFlag)
 									, _responseBodyFlag(other._responseBodyFlag)
@@ -91,7 +91,7 @@ time_t Client::getLastConnectionTime(void)
 }
 
 bool	Client::getIncomingHeaderDataDetectedFlag(void) {
-	return _incomingHeaderDataDetected;
+	return _incomingHeaderDataDetectedFlag;
 }
 
 std::string&	Client::getRequestBodyPart(void) {
@@ -184,7 +184,7 @@ bool	Client::getBodyDataPreloadedFlag(void) {
 	return _bodyDataPreloadedFlag;
 }
 
-bool	Client::setRequestDataPreloadedFlag(void) {
+bool	Client::getRequestDataPreloadedFlag(void) {
 	return _requestDataPreloadedFlag;
 }
 
@@ -232,7 +232,7 @@ void	Client::resetLastConnectionTime(void){
 }
 
 void	Client::setIncomingHeaderDataDetectedFlag(int mode) {
-	_incomingHeaderDataDetected = mode;
+	_incomingHeaderDataDetectedFlag = mode;
 }
 
 void Client::setGenerateResponseInProcess(bool value)
@@ -503,6 +503,8 @@ void				Client::printClientStatus(void) {
 	std::cout << "  ##  _responseSent : " << _responseSent << "  ## \n";
 	std::cout << "--------------------------------------------------------\n\n";
 
+	printRequestAndResponse("Pending data", _pendingRequestDataHolder);
+
 	// exit(0);
 }
 
@@ -514,7 +516,11 @@ void	Client::resetAttributes(void) {
 	_httpRequest.reset();
 	delete _responseHandler;
 	_responseHandler = new ResponseHandler(_clientInfos, _conf);
-	_incomingHeaderDataDetected =  INCOMING_DATA_HEADER_OFF;
+	
+	if (_requestDataPreloadedFlag == REQUEST_DATA_PRELOADED_ON)
+		_incomingHeaderDataDetectedFlag = INCOMING_HEADER_DATA_ON;
+	else
+		_incomingHeaderDataDetectedFlag =  INCOMING_HEADER_DATA_OFF;
 	_incomingBodyDataDetectedFlag =  INCOMING_BODY_DATA_OFF;
 	_responseHeaderFlag =  RESPONSE_HEADER_NOT_READY;
 	_responseBodyFlag =  RESPONSE_BODY_NOT_READY;
@@ -537,4 +543,16 @@ void	Client::resetAttributes(void) {
 
 
 	std::cout << " ## RESETED ##\n";
+}
+
+void	Client::getBufferFromPendingData(char* buffer, ssize_t* readBytes) {
+	size_t i;
+	for (i = 0; i < _pendingRequestDataHolder.size(); i++) {
+		buffer[i] = _pendingRequestDataHolder[i];
+ 	}
+	buffer[i] = 0;
+	*readBytes = i;
+
+	_pendingRequestDataHolder.clear();
+	_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
 }

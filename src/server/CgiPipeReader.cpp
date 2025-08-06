@@ -16,7 +16,7 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 	if (!responseHandler->ReachedCgiBodyPhase()) {
 		// reading CGI header
 		readBytes = cgiOutPipe.read(buffer, BYTES_TO_READ); // reade cgi headers
-		// std::cout << "read header bytes: " << readBytes << "\n";
+		std::cout << "read header bytes: " << readBytes << "\n";
 		if (readBytes > 0) {
 			buffer[readBytes] = 0;
 			try {
@@ -66,7 +66,7 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 		}
 
 		readBytes = cgiOutPipe.read(buffer, BYTES_TO_READ);
-		// std::cout << "read body bytes: " << readBytes << "\n";
+		std::cout << "read body bytes: " << readBytes << "\n";
 		if (readBytes > 0) {
 			buffer[readBytes] = 0;
 			try {
@@ -83,6 +83,7 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 			try {
 				responseHandler->FinishCgiResponse();
 				client.setResponseHolder(responseHandler->GetResponseHeader());
+				printRequestAndResponse("response header", client.getResponseHolder());
 				client.setResponseHeaderFlag(RESPONSE_HEADER_READY);
 				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
 				client.closeAndDeregisterPipe();
