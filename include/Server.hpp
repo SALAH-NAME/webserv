@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/07/19 18:28:41 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/01 10:58:39 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,47 +17,47 @@
 
 class Server {
 	private:
-		const ServerConfig&		_serverConfig;
-		int 					_id;
-		sockaddr_in				_Address;
-		std::vector<int>		_ports;
-		int						_domin;
-		int						_type;
-		int						_protocol;
-		int						_nMaxBacklog;
-		int 					_epfd;
-		bool					_isKeepAlive;
-		int						_timeOut;
-		std::map<int, Client>	_clients;
-		std::vector<int>		_markedForEraseClients;
-		std::vector<Socket>		_listeningSockets;
-		Socket					_transferSocket;
+		const ServerConfig&			_serverConfig;
+		int 						_id;
+		sockaddr_in					_Address;
+		std::vector<unsigned int>	_ports;
+		int							_domin;
+		int							_type;
+		int							_protocol;
+		int							_nMaxBacklog;
+		int 						_epfd;
+		bool						_isKeepAlive;
+		int							_timeOut;
+		std::map<int, Client>		_clients;
+		std::vector<int>			_markedForEraseClients;
+		std::vector<Socket>			_listeningSockets;
+		Socket						_transferSocket;
 		
-		void					initAttributes(int);
-		void					setEventStatus(struct epoll_event&, int);
+		void						initAttributes(int);
+		void						setEventStatus(struct epoll_event&, int);
 	public:
-		/**/					Server(const ServerConfig&, size_t);
-		/**/					~Server(void);
+		/**/						Server(const ServerConfig&, size_t);
+		/**/						~Server(void);
 
-		int						getID(void);
-		std::vector<Socket>&	getListeningSockets(void);
-		std::map<int, Client>&	getClients(void);
-		int						getTimeOut(void);
-		std::vector<int>		getMarkedForEraseClients();
-		Socket&					getTransferSocket(void);
+		int							getID(void);
+		std::vector<Socket>&		getListeningSockets(void);
+		std::map<int, Client>&		getClients(void);
+		int							getTimeOut(void);
+		std::vector<int>			getMarkedForEraseClients();
+		Socket&						getTransferSocket(void);
 
-		void					setPort(std::vector<int>);
-		void 					setEPFD(int );
+		void						setPort(std::vector<int>);
+		void 						setEPFD(int );
 
-		bool					verifyServerSocketsFDs(int);
-		bool					verifyClientsFD(int);
-		void					incomingConnection(int);			
-		void					checkTimeOut(void);
-		void					closeConnection(int);
-		void					eraseMarked();
+		bool						verifyServerSocketsFDs(int);
+		std::map<int, Client>::iterator	verifyClientsFD(int);
+		void						incomingConnection(int);			
+		void						checkTimeOut(void);
+		void						closeConnection(int);
+		void						eraseMarked();
 };
 
-std::vector<int>::iterator		getIterator(int, std::vector<int>&);
-void							printRequestAndResponse(std::string, std::string);
+std::vector<int>::iterator			getIterator(int, std::vector<int>&);
+void								printRequestAndResponse(std::string, std::string);
 
 #endif

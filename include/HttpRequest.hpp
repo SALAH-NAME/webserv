@@ -63,8 +63,6 @@ private:
 
     void parseStartLine(const std::string &line);
     void parseHeaderLine(const std::string &line);
-    void parseHeaders(std::istream &stream);
-    void parseBody(std::istream &stream);
     void validateStartLine(const std::string &line);
     void validateHeaderLine(const std::string &line);
     std::string toLower(const std::string &str) const;
@@ -72,6 +70,19 @@ private:
     void parseUriComponents();
     bool isValidMethod(const std::string &method) const;
     bool isValidVersion(const std::string &version) const;
+
+    
+    bool shouldContinueParsing() const;
+    std::string extractNextLine(std::string& buffer, std::string::size_type& pos, bool& found);
+    void updateBufferAfterProcessing(std::string& buffer, std::string::size_type pos);
+    void handleParsingError(const HttpRequestException& e);
+    void processStartLine(const std::string& line);
+    void processHeaderLine(const std::string& line);
+    void processEndOfHeaders();
+    void validateRequiredHeaders();
+    void validatePostRequest();
+    bool isChunkedEncoding(const std::string& transferEncoding) const;
+    bool hasCompleteLineInBuffer(const std::string& buffer, std::string::size_type pos) const;
 
 public:
     HttpRequest();
@@ -102,8 +113,6 @@ public:
     void setPath(const std::string &p);
     void setQueryString(const std::string &q);
     void setPathInfo(const std::string &pi);
-
-    bool parse(const std::string &raw_request);
 
     void printInfos() const;
     std::map<std::string, std::string> getCookies() const;

@@ -6,44 +6,77 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/07/23 11:56:46 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/05 19:16:48 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Client.hpp"
-#include <cstdlib>
-#include <iostream>
-#include <ctime>
-#include "HttpRequest.hpp"
 
-Client::Client(Socket sock, int serverFD, const ServerConfig& conf) : _socket(sock), _serverSocketFD(serverFD),
-											_readBytes(0), _lastTimeConnection(std::time(NULL)),
-											_incomingDataDetected(INCOMING_DATA_OFF),
-											_responseInFlight(false), _sentBytes(0),
-											_isKeepAlive(true),
-											_availableResponseBytes(0),
-											_generateInProcess(GENERATE_RESPONSE_OFF)
-											, _responseHandler(new ResponseHandler("0.0.0.0", conf))
-											, _shouldTransferBody(TRANSFER_BODY_OFF)
-											, _bodySize(0), _contentLength(0)
-											, _bodyDataPreloaded(BODY_DATA_PRELOADED_OFF)
+Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clientInfos) : _socket(sock)
+											, _epfd(epfd)
+											, _CGI_pipeFD(-1)
+											, _lastTimeConnection(std::time(NULL))
+											, _contentLength(0)
+											, _uploadedBytes(0)
+											, _responseHandler(new ResponseHandler(clientInfos, conf))
+											, _incomingHeaderDataDetected(INCOMING_DATA_HEADER_OFF)
+											, _incomingBodyDataDetectedFlag(INCOMING_BODY_DATA_OFF)
+											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)
+											, _responseBodyFlag(RESPONSE_BODY_NOT_READY)
+											, _fullResponseFlag(FULL_RESPONSE_NOT_READY)
+											, _isKeepAlive(DISABLE_KEEP_ALIVE)
+											, _generateInProcess(GENERATE_RESPONSE_OFF)
+											, _isResponseBodySendable(NOT_SENDABLE)
+											, _isRequestBodyWritable(NOT_WRITABLE)
+											, _bodyDataPreloadedFlag(BODY_DATA_PRELOADED_OFF)
+											, _requestDataPreloadedFlag(REQUEST_DATA_PRELOADED_OFF)
+											, _isCgiRequired(CGI_IS_NOT_REQUIRED)
+											, _isPipeReadable(PIPE_IS_NOT_READABLE)
+											, _isPipeClosedByPeer(PIPE_IS_NOT_CLOSED)
+											, _pipeReadComplete(READ_PIPE_NOT_COMPLETE)
+											, _setTargetFile(false)
 {}
 
-Client::~Client() {}
+Client::Client(const Client& other) : _socket(other._socket)
+									, _epfd(other._epfd)
+									, _CGI_pipeFD(other._CGI_pipeFD)
+									, _lastTimeConnection(other._lastTimeConnection)
+									, _contentLength(other._contentLength)
+									, _uploadedBytes(other._uploadedBytes)
+									, _responseHandler(other._responseHandler)
+									, _incomingHeaderDataDetected(other._incomingHeaderDataDetected)
+									, _incomingBodyDataDetectedFlag(other._incomingBodyDataDetectedFlag)
+									, _responseHeaderFlag(other._responseHeaderFlag)
+									, _responseBodyFlag(other._responseBodyFlag)
+									, _fullResponseFlag(other._fullResponseFlag)
+									, _isKeepAlive(other._isKeepAlive)
+									, _generateInProcess(other._generateInProcess)
+									, _isResponseBodySendable(other._isResponseBodySendable)
+									, _isRequestBodyWritable(other._isRequestBodyWritable)
+									, _bodyDataPreloadedFlag(other._bodyDataPreloadedFlag)
+									, _requestDataPreloadedFlag(other._requestDataPreloadedFlag)
+									, _isCgiRequired(other._isCgiRequired)
+									, _isPipeReadable(other._isPipeReadable)
+									, _isPipeClosedByPeer(other._isPipeClosedByPeer)
+									, _pipeReadComplete(other._pipeReadComplete)
+									, _setTargetFile(other._setTargetFile)
+{
+	const_cast<Client&> (other)._responseHandler = NULL;
+}
+
+Client::~Client() {
+	if (_responseHandler) {
+		delete _responseHandler;
+	}
+}
 
 Socket &Client::getSocket()
 {
 	return _socket;
 }
 
-size_t Client::getReadBytes(void)
-{
-	return _readBytes;
-}
-
-int Client::getServerSocketFD(void)
-{
-	return _serverSocketFD;
+int	Client::getCGI_pipeFD(void) {
+	return _CGI_pipeFD;
 }
 
 time_t Client::getLastConnectionTime(void)
@@ -51,25 +84,28 @@ time_t Client::getLastConnectionTime(void)
 	return _lastTimeConnection;
 }
 
-bool	Client::getIncomingDataDetectedFlag(void) {
-	return _incomingDataDetected;
+bool	Client::getIncomingHeaderDataDetectedFlag(void) {
+	return _incomingHeaderDataDetected;
 }
 
-bool Client::getIsKeepAlive(void)
-{
-	return _isKeepAlive;
+std::string&	Client::getRequestBodyPart(void) {
+	return _requestBodyPart;
 }
 
-size_t Client::getSentBytes(void)
-{
-	return _sentBytes;
+ResponseHandler*	Client::getResponseHandler(void) {
+	return _responseHandler;
+}
+
+std::string&	Client::getPendingRequestData(void) {
+	return _pendingRequestDataHolder;
 }
 
 int Client::getBytesToSendNow(void)
 {
-	if (_availableResponseBytes >= BYTES_TO_SEND)
+	if (_responseHolder.size() >= BYTES_TO_SEND)
 		return BYTES_TO_SEND;
-	return _availableResponseBytes;
+	else
+		return _responseHolder.size();
 }
 
 bool Client::getGenerateInProcess(void)
@@ -92,64 +128,87 @@ std::string &Client::getBodyPart(void)
 	return _requestBodyPart;
 }
 
-size_t Client::getAvailableResponseBytes(void)
+bool	Client::getIncomingBodyDataDetectedFlag(void) {
+	return _incomingBodyDataDetectedFlag;
+}
+
+bool	Client::getIsRequestBodyWritable(void) {
+	return _isRequestBodyWritable;
+}
+
+bool	Client::getIsCgiRequired(void) {
+	return _isCgiRequired;
+}
+
+bool	Client::getIsPipeReadable(void) {
+	return _isPipeReadable;
+}
+
+bool	Client::getIsPipeClosedByPeer(void) {
+	return _isPipeClosedByPeer;
+}
+
+void Client::setResponseHeaderFlag(bool value)
 {
-	return _availableResponseBytes;
+	_responseHeaderFlag = value;
 }
 
-bool	Client::getShouldTransferBody(void) {
-	return _shouldTransferBody;
+void	Client::setFullResponseFlag(bool value) {
+	_fullResponseFlag = value;
 }
 
-void	Client::setReadBytes(size_t bytes) {
-	_readBytes += bytes;
-}
-
-void Client::setResponseInFlight(bool value)
+bool Client::getResponseHeaderFlag(void)
 {
-	_responseInFlight = value;
+	return _responseHeaderFlag;
 }
 
-bool Client::getResponseInFlight(void)
-{
-	return _responseInFlight;
+bool	Client::getResponseBodyFlag(void) {
+	return _responseBodyFlag;
 }
 
-size_t Client::getResponseSize(void)
-{
-	return _responseSize;
+bool	Client::getFullResponseFlag(void) {
+	return _fullResponseFlag;
 }
 
-std::string&	Client::getResponseHolder(void) {
-	return _responseHolder;
+size_t	Client::getUploadedBytes(void) {
+	return _uploadedBytes;
 }
 
-size_t	Client::getBodySize(void) {
-	return _bodySize;
+bool	Client::getBodyDataPreloadedFlag(void) {
+	return _bodyDataPreloadedFlag;
 }
 
-bool	Client::getBodyDataPreloaded(void) {
-	return _bodyDataPreloaded;
+bool	Client::setRequestDataPreloadedFlag(void) {
+	return _requestDataPreloadedFlag;
 }
 
 size_t	Client::getContentLength(void) {
 	return _contentLength;
 }
 
-std::string	Client::getLastReceivedHeaderData(void) {
-	return _lastReceivedHeaderData;
+std::string&		Client::getResponseHolder(void) {
+	return _responseHolder;
+}
+
+bool	Client::getSetTargetFile(void) {
+	return _setTargetFile;
 }
 
 void		Client::appendToHeaderPart(const std::string& headerData) {
 	_requestHeaderPart += headerData;
-	_lastReceivedHeaderData.clear();
-	_lastReceivedHeaderData = headerData;
+}
+
+bool	Client::getIsKeepAlive(void) {
+	return _isKeepAlive;
+}
+
+bool	Client::getIsResponseBodySendable(void) {
+	return _isResponseBodySendable;
 }
 
 void Client::appendToBodyPart(const std::string &bodyData)
 {
 	_requestBodyPart += bodyData;
-	_bodySize += bodyData.size();
 }
 
 void Client::setEvent(int _epfd, struct epoll_event &event)
@@ -158,29 +217,12 @@ void Client::setEvent(int _epfd, struct epoll_event &event)
 	epoll_ctl(_epfd, EPOLL_CTL_ADD, event.data.fd, &event);
 }
 
-void Client::setServerSocketFD(int s_fd)
-{
-	_serverSocketFD = s_fd;
-}
-
 void	Client::resetLastConnectionTime(void){
 	_lastTimeConnection = std::time(NULL);
 }
 
-void Client::setSentBytes(size_t bytes)
-{
-	_sentBytes += bytes;
-	_availableResponseBytes -= bytes;
-}
-
-void Client::resetSendBytes(void)
-{
-	_sentBytes = 0;
-	_availableResponseBytes = 0;
-}
-
-void	Client::setIncomingDataDetectedFlag(int mode) {
-	_incomingDataDetected = mode;
+void	Client::setIncomingHeaderDataDetectedFlag(int mode) {
+	_incomingHeaderDataDetected = mode;
 }
 
 void Client::setGenerateResponseInProcess(bool value)
@@ -188,27 +230,28 @@ void Client::setGenerateResponseInProcess(bool value)
 	_generateInProcess = value;
 }
 
-void Client::setResponseSize(size_t size)
-{
-	_responseSize = size;
+void	Client::setBodyDataPreloadedFlag(bool value) {
+	_bodyDataPreloadedFlag = value;
 }
 
-void Client::setAvailableResponseBytes(size_t value)
-{
-	_availableResponseBytes = value;
-}
-
-void	Client::setBodyDataPreloaded(bool value) {
-	_bodyDataPreloaded = value;
+void	Client::setRequestDataPreloadedFlag(bool value) {
+	_requestDataPreloadedFlag = value;
 }
 
 void	Client::setRequestBodyPart(std::string bodyData) {
 	_requestBodyPart = bodyData;
-	_bodySize = bodyData.size();
 }
 
-void Client::resetBodySize(void) {
-	_bodySize = 0;
+void	Client::setPendingRequestData(std::string bodyData) {
+	_pendingRequestDataHolder = bodyData;
+}
+
+void	Client::setUploadedBytes(size_t bytes) {
+	_uploadedBytes = bytes;
+}
+
+void	Client::resetUploadedBytes(void) {
+	_uploadedBytes = 0;
 }
 
 void	Client::setContentLength(int length) {
@@ -219,23 +262,53 @@ void	Client::resetContentLength(void) {
 	_contentLength = 0;
 }
 
-void	Client::setShouldTransferBody(bool value) {
-	_shouldTransferBody = value;
+void	Client::setIncomingBodyDataDetectedFlag(bool value) {
+	_incomingBodyDataDetectedFlag = value;
 }
 
 void	Client::setHeaderPart(std::string HeaderData) {
 	_requestHeaderPart = HeaderData;
 }
 
-void	Client::clearRequestHolder(void) {
-	_requestHeaderPart.clear();
-	_requestBodyPart.clear();
-	_httpRequest.reset(); // Reset the incremental parser state
+void	Client::setResponseHolder(const std::string responseData) {
+	_responseHolder = responseData;
+}
+
+void	Client::setIsRequestBodyWritable(bool value) {
+	_isRequestBodyWritable = value;
+}
+
+void	Client::setIsPipeReadable(bool value) {
+	_isPipeReadable = value;
+}
+
+void	Client::setIsPipeClosedByPeer(bool value) {
+	_isPipeClosedByPeer = value;
+}
+
+void	Client::setIsCgiRequired(bool value) {
+	_isCgiRequired = value;
+}
+
+void	Client::setPipeReadComplete(bool value) {
+	_pipeReadComplete = value;
+}
+
+void	Client::setSetTargetFile(bool value) {
+	_setTargetFile = value;
 }
 
 bool Client::parseRequest()
 {
-	return _httpRequest.parse(_requestHeaderPart);
+	try
+	{
+		_httpRequest.appendAndValidate(_requestHeaderPart);
+		return _httpRequest.isValid();
+	}
+	catch (const HttpRequestException &ex)
+	{
+		return false;
+	}
 }
 
 void Client::prinfRequestinfos(void)
@@ -243,28 +316,155 @@ void Client::prinfRequestinfos(void)
 	_httpRequest.printInfos();
 }
 
-void	Client::trimBufferedBodyToContentLength(void) {
-	if (_requestBodyPart.size() < _contentLength) {
-		_bodyDataPreloaded = BODY_DATA_PRELOADED_OFF;
-	}
-	else if (_requestBodyPart.size() == _contentLength) {
-		_shouldTransferBody = TRANSFER_BODY_OFF;
-		_responseInFlight = true;
-	}
-	else {
+bool	Client::updateHeaderStateAfterSend(size_t sentBytes) {
+	_responseHolder = _responseHolder.substr(sentBytes);
+	if (!_responseHolder.size()) {
+		if (_responseHeaderFlag == RESPONSE_HEADER_READY) {
+			_responseHeaderFlag = RESPONSE_HEADER_NOT_READY;
+			_responseBodyFlag = RESPONSE_BODY_READY;
+			std::cout << " ==> Sent Header Successfully <==\n";
+		}
+		else {
+			_fullResponseFlag = FULL_RESPONSE_NOT_READY;
+			_responseBodyFlag = RESPONSE_BODY_NOT_READY;
+			std::cout << " ==> Sent Full Response Successfully <==\n";
 
-		_requestBodyPart = _requestBodyPart.substr(0, _contentLength);
-		_bodyDataPreloaded = BODY_DATA_PRELOADED_OFF;
-		if (_requestBodyPart.size() == _contentLength) {
-			_shouldTransferBody = TRANSFER_BODY_OFF;
-			_responseInFlight = true;
+			// printRequestAndResponse("left request data", _pendingRequestDataHolder);
+
+			return true;
 		}
 	}
-	writeToTargetFile(_requestBodyPart);
+	return false;
 }
 
-void	Client::writeToTargetFile(const std::string& data) {
+bool	Client::readFileBody(void) {
+
 	std::fstream *targetFile = _responseHandler->GetTargetFilePtr();
-	targetFile->write(data.c_str(), data.size());
+
+	char buffer[BYTES_TO_SEND+1];
+	targetFile->read(buffer, BYTES_TO_SEND);
+	ssize_t _bytesReadFromFile = targetFile->gcount();
+	if (_bytesReadFromFile == 0) {
+		_responseBodyFlag = RESPONSE_BODY_NOT_READY;
+		_isResponseBodySendable = NOT_SENDABLE;
+		// std::cout << "Send response body \n";
+		return true;
+	}
+
+	buffer[_bytesReadFromFile] = 0;
+	_responseHolder = std::string(buffer, _bytesReadFromFile);
+	// printRequestAndResponse("target file data", _responseHolder);
+
+	_isResponseBodySendable = SENDABLE;
+	return false;
+}
+
+bool	Client::sendFileBody(void) {
+
+	ssize_t sentBytes = _socket.send(_responseHolder.c_str(), _responseHolder.size(), MSG_NOSIGNAL);
+	if (sentBytes < 0)
+		throwIfSocketError("send()");
+	
+	resetLastConnectionTime();
+	if (_responseHolder.size() < BYTES_TO_SEND) {
+		_isResponseBodySendable = NOT_SENDABLE;
+		_responseBodyFlag = RESPONSE_BODY_NOT_READY;
+		return true;
+	}
+
+	_isResponseBodySendable = NOT_SENDABLE;
+	return false;
+}
+
+void	Client::receiveRequestBody(void) {
+
+	char buffer[BYTES_TO_READ+1];
+
+	std::memset(buffer, 0, sizeof(buffer));
+
+	if (!_contentLength) {
+		_isRequestBodyWritable = NOT_WRITABLE;
+		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+		_fullResponseFlag = FULL_RESPONSE_READY;
+		return ;
+	}
+
+	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
+	if (readBytes > 0 && readBytes <= BYTES_TO_READ) {
+		resetLastConnectionTime();
+		if (_uploadedBytes + readBytes >= _contentLength) {
+			readBytes = _contentLength - _uploadedBytes;
+		}
+		buffer[readBytes] = 0;
+		_requestBodyPart = std::string(buffer, readBytes);
+		_isRequestBodyWritable = WRITABLE;
+	}
+	else if (readBytes == 0) {
+		// waiting for timeout or clinet closed connection
+	}
+	else
+		throwIfSocketError("recv()");	
+}
+
+void	Client::writeBodyToTargetFile(void) {
+	std::fstream *targetFile = _responseHandler->GetTargetFilePtr();
+
+	size_t BytesToWrite;
+
+	if (_requestBodyPart.size() >= BYTES_TO_READ)
+		BytesToWrite = BYTES_TO_READ;
+	else
+		BytesToWrite = _requestBodyPart.size();
+
+	if ((_uploadedBytes + BytesToWrite) > _contentLength) {
+		
+		if (!_contentLength) {
+			_isRequestBodyWritable = NOT_WRITABLE;
+			_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+			_fullResponseFlag = FULL_RESPONSE_READY;
+			return ;
+		}
+		BytesToWrite =_contentLength - _uploadedBytes;
+	}
+	
+	targetFile->write(_requestBodyPart.c_str(), BytesToWrite);
 	targetFile->flush();
+
+	_uploadedBytes += BytesToWrite;
+	_requestBodyPart = _requestBodyPart.substr(BytesToWrite);
+	
+	if (_requestBodyPart.size())
+		_isRequestBodyWritable = WRITABLE;
+	else
+		_isRequestBodyWritable = NOT_WRITABLE;
+
+	if (_uploadedBytes == _contentLength) {
+		_isRequestBodyWritable = NOT_WRITABLE;
+		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+		_fullResponseFlag = FULL_RESPONSE_READY;
+		return ;
+	}
+}
+
+void	Client::closeAndDeregisterPipe(void) {
+	std::cout << "============================================================\n";
+	epoll_ctl(_epfd, EPOLL_CTL_DEL, _CGI_pipeFD, NULL);
+	std::cout << "  ## Removed Pipe fd: " << _CGI_pipeFD << " from epoll  ## \n";
+	close(_CGI_pipeFD);
+	std::cout << "  ## closed Pipe fd: " << _CGI_pipeFD << "              ## \n";
+	std::cout << "============================================================\n\n";
+	
+}
+
+void	Client::CgiExceptionHandler(void) {
+	if (_responseHandler->GetTargetFilePtr()) {
+		// std::cout << "   ===>>> from target file \n";
+		_responseHolder = _responseHandler->GetResponseHeader();
+		_responseHeaderFlag = RESPONSE_HEADER_READY;
+	}
+	else {
+		// std::cout << " ====>  no neeed \n";
+		_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
+		_fullResponseFlag = FULL_RESPONSE_READY;
+	}
 }

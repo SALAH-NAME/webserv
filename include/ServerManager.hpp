@@ -3,23 +3,59 @@
 
 #define EPOLLTIMEOUT 100
 #define MAX_EVENTS 100
-#define BYTES_TO_READ 1023
-#define BYTES_TO_SEND 1023
-#define BUFFERSIZE 1024
+#define BYTES_TO_READ 100 * 1023
+#define BYTES_TO_SEND 100 * 1023
+#define BUFFERSIZE (((BYTES_TO_READ > BYTES_TO_SEND) ? BYTES_TO_READ : BYTES_TO_SEND) + 1)
 #define RESPONSESIZE 746 // Fix size for the temp response
 
 #define INCOMING_HEADER_DATA_ON true
-#define INCOMING_DATA_OFF false
+#define INCOMING_DATA_HEADER_OFF false
 #define CONNECTION_ERROR (EPOLLIN | EPOLLERR | EPOLLHUP)
+
+#define INCOMING_BODY_DATA_ON true
+#define INCOMING_BODY_DATA_OFF false
 
 #define GENERATE_RESPONSE_ON true
 #define GENERATE_RESPONSE_OFF false
 
-#define TRANSFER_BODY_ON true
-#define TRANSFER_BODY_OFF false
+#define RESPONSE_HEADER_READY		true
+#define RESPONSE_HEADER_NOT_READY	false
+
+#define RESPONSE_BODY_READY		true
+#define RESPONSE_BODY_NOT_READY	false
+
+#define FULL_RESPONSE_READY		true
+#define FULL_RESPONSE_NOT_READY	false
+
+#define SENDABLE		true
+#define NOT_SENDABLE	false
+
+#define WRITABLE		true
+#define NOT_WRITABLE	false
+
+#define UPLOAD_ACTIVE   true
+#define UPLOAD_NOT_ACTIVE false
 
 #define BODY_DATA_PRELOADED_ON true
 #define BODY_DATA_PRELOADED_OFF false
+
+#define REQUEST_DATA_PRELOADED_ON true
+#define REQUEST_DATA_PRELOADED_OFF false
+
+#define ENABLE_KEEP_ALIVE true
+#define DISABLE_KEEP_ALIVE false
+
+#define PIPE_IS_READABLE true
+#define PIPE_IS_NOT_READABLE false
+
+#define PIPE_IS_CLOSED true
+#define PIPE_IS_NOT_CLOSED false
+
+#define CGI_REQUIRED true
+#define CGI_IS_NOT_REQUIRED false
+
+#define READ_PIPE_COMPLETE true
+#define READ_PIPE_NOT_COMPLETE false
 
 #define _2CRLF "\r\n\r\n"
 
@@ -46,10 +82,17 @@
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
 #include "Socket.hpp"
-#include "ResponseHandler.hpp"
 
 class Server;
 class Client;
+class ResponseHandler;
+
+struct ClientInfos
+{
+	std::string clientAddr;
+	std::string port;
+};
+
 
 class ServerManager {
 	private:
@@ -67,8 +110,10 @@ class ServerManager {
 		void    							addToEpollSet(void);
 		void								checkTimeOut(void);
 		void								collectRequestData(Client&, int);
-		void								transmitResponse(Client&, int);
+		void								transmitResponseHeader(Client&, int);
 		void								transferBodyToFile(Client&, int);
+		void								transmitFileResponse(Client& , int);
+		void								consumeCgiOutput(Client& , int);
 
 		void								processEvent(int);
 		void								receiveClientsData(int);
@@ -81,12 +126,12 @@ class ServerManager {
 		/**/								~ServerManager(void);
 		void								waitingForEvents(void);
 
-
 };
 
 void throwIfSocketError(const std::string& context);
 
 #include "Server.hpp"
 #include "Client.hpp"
+#include "ResponseHandler.hpp"
 
 #endif

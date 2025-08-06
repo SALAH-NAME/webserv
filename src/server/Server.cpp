@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/07/21 22:23:32 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/04 15:52:59 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@ void	Server::initAttributes(int id) {
 	_domin = AF_INET;
 	_type = SOCK_STREAM | SOCK_NONBLOCK;
 	_protocol = 0;
-	_ports.push_back(_serverConfig.getListens()[0]); // TODO: here need to support multiple ports
+	_ports = _serverConfig.getListens();
 	_timeOut = _serverConfig.getConnectionTimeout();
 	_id = id;
 }
@@ -40,7 +40,7 @@ Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serv
 			_Address.sin_family = _domin;
 			_Address.sin_port = htons(_ports[i]);
 			
-			if (inet_pton(AF_INET, serverConfig.getHost().c_str(), &_Address.sin_addr) <= 0)
+			if (inet_pton(AF_INET, serverConfig.getHost().c_str(), &_Address.sin_addr) <= 0) // forebiden
 				throw std::runtime_error(std::string("Invalid IP address: ") + strerror(errno));
 
 			struct sockaddr addr;
@@ -78,12 +78,12 @@ std::vector<Socket>&		Server::getListeningSockets() {
 	return _listeningSockets;
 }
 
-bool	Server::verifyClientsFD(int client_fd) {
+std::map<int, Client>::iterator	Server::verifyClientsFD(int client_fd) {
 	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++) {
-		if (client_fd == it->first)
-			return true ;
+		if (client_fd == it->first || client_fd == it->second.getCGI_pipeFD())
+			return it ;
 	}
-	return false;
+	return _clients.end();
 }
 
 bool	Server::verifyServerSocketsFDs(int NewEvent_fd) {
@@ -94,7 +94,6 @@ bool	Server::verifyServerSocketsFDs(int NewEvent_fd) {
 	return false;
 }
 
-
 void	Server::closeConnection(int clientSocket) {
 	epoll_ctl(_epfd, EPOLL_CTL_DEL, clientSocket, NULL);
 	_markedForEraseClients.push_back(clientSocket);
@@ -103,6 +102,7 @@ void	Server::closeConnection(int clientSocket) {
 void	Server::eraseMarked() {
 	for (size_t i = 0; i < _markedForEraseClients.size(); i++) {
 		close(_markedForEraseClients[i]);
+		// std::cout << "close connection: " << _markedForEraseClients[i] << "\n";
 		_clients.erase(_markedForEraseClients[i]);
 	}
 	_markedForEraseClients.clear();

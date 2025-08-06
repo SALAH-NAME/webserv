@@ -1,69 +1,114 @@
 #include "ServerManager.hpp"
 
-static std::string getResponseString(void) {
+void	Client::extractBodyFromPendingRequestHolder() {
+	size_t	bytesToExtract;
 
-	std::string response;
+	std::cout << " ****************************************************** \n";
+	std::cout << " ## Pending Request Data Holder size  ==> " << _pendingRequestDataHolder.size() << "\n";
 
-	std::string responseBody =
-			"<!DOCTYPE html>\n"
-			"<html lang=\"en\">\n"
-			"<head>\n"
-			"    <meta charset=\"UTF-8\">\n"
-			"    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-			"    <title>Welcome!</title>\n"
-			"</head>\n"
-			"<body style=\"font-family: sans-serif; background-color: #f4f4f4; margin: 40px; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); text-align: center;\">\n"
-			"    <h1 style=\"color: #333; margin-bottom: 20px;\">Hello from My Server!</h1>\n"
-			"    <p style=\"color: #666; line-height: 1.6; margin-bottom: 15px;\">You've reached a basic HTML page served by my simple web server.</p>\n"
-			"    <p style=\"color: #007bff; font-weight: bold; margin-bottom: 15px;\">Enjoy the simplicity!</p>\n"
-			"</body>\n"
-			"</html>";
-		
-		std::stringstream ss;
-		ss << responseBody.length();
-		std::string contentLength = ss.str();
-		
-		std::string responseHeader =
-			"HTTP/1.1 200 OK\r\n"
-			"Content-Type: text/html\r\n"
-			"Content-Length: " + contentLength + "\r\n"
-			"\r\n";
+	if (_pendingRequestDataHolder.size() <= _contentLength) {
+		bytesToExtract = _pendingRequestDataHolder.size();
+		// if (bytesToExtract < _contentLength)
+		// 	_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
+		// else
+		// _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
+	}
+	else {
+		bytesToExtract = _contentLength;
+		// _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_ON;
+	}
 
-		response = responseHeader + responseBody;
+	_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
+	_bodyDataPreloadedFlag = BODY_DATA_PRELOADED_ON;
+	_isRequestBodyWritable = WRITABLE;
 
-		return response;
+	_requestBodyPart = _pendingRequestDataHolder.substr(0, bytesToExtract);
+	_pendingRequestDataHolder = _pendingRequestDataHolder.substr(bytesToExtract);
+	
+	std::cout << " ## Request Data Preloaded Flag       ==> " << _requestDataPreloadedFlag << "\n";
+	if (_requestDataPreloadedFlag)
+		std::cout << " ## Pending Request Data size         ==> " << _pendingRequestDataHolder.size() << "\n\n"; 
+	else
+		std::cout << "\n";
+
+	std::cout << " ## Incoming Body Data Detected Flag  ==> " << _incomingBodyDataDetectedFlag << "\n";
+	std::cout << " ## Dody Data Preloaded Flag          ==> " << _bodyDataPreloadedFlag << "\n";
+	std::cout << " ## Is Request Body Writable          ==> " << _isRequestBodyWritable << "\n";
+	std::cout << " ## Request Body Part size            ==> " << _requestBodyPart.size() << "\n";
+	std::cout << " ****************************************************** \n";
+
+	// exit(0);
 }
 
-void	Client::buildResponse() {
-	// std::cout << "RUN" << std::endl;
-	_responseHandler->Run(_httpRequest);
+void	Client::generateDynamicResponse() {
+	_CGI_pipeFD = _responseHandler->GetCgiOutPipe().getReadFd();
+	struct epoll_event					_event;
+	_event.events = EPOLLIN | EPOLLHUP | EPOLLET;
+	_event.data.fd = _CGI_pipeFD;
+	
+	try {
+		if (epoll_ctl(_epfd, EPOLL_CTL_ADD, _CGI_pipeFD, &_event) == -1)
+			throw std::string("epoll_ctl failed");
+	}
+	catch(std::string e)
+	{
+		std::cout << e << "\n";
+		return ;
+	}
+
+	_isCgiRequired = CGI_REQUIRED;
+	std::cout << "Pipe fd: " << _CGI_pipeFD << " Added successfully to epoll: " << _epfd << "\n";
+	std::cout << "Is CGI required: " << _isCgiRequired << std::endl;
+
+}
+
+void	Client::generateStaticResponse() {
 
 	if (!_responseHandler->GetTargetFilePtr()) {
-		// std::cout << "     =====>>>  Build Response for : {" << _socket.getFd() << "} <<<===== \n";
+		// std::cout << "     =====>>>  No target file needed : {" << _socket.getFd() << "} <<<===== \n";
 		_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
-		_responseSize = _responseHolder.size();
-		setAvailableResponseBytes(_responseSize);
-		setResponseInFlight(true);
+			// std::cout << "got full response (header + body)\n";
+		setFullResponseFlag(FULL_RESPONSE_READY);
 	}
 	else {
 		if (_responseHandler->IsPost()) {
 			// std::cout << "     =====>>>  write body to target file <<<===== \n";
-			_shouldTransferBody = TRANSFER_BODY_ON;
-			_responseHolder = _responseHandler->GetResponseHeader();
-			_responseSize = _responseHolder.size();
-			setAvailableResponseBytes(_responseSize);
-			// printRequestAndResponse("Response", _responseHolder);exit(0);
-			std::stringstream ss(_httpRequest.getHeaders()["Content-Length"]);
+
+			std::stringstream ss(_httpRequest.getHeaders()["content-length"]);
 			ss >> _contentLength;
-			// std::cout << "Body Content-Length ==> " << _contentLength << "\n";
+			std::cout << "Body Content-Length ==> " << _contentLength << "\n";
+
+			if (_requestDataPreloadedFlag == REQUEST_DATA_PRELOADED_ON)
+				extractBodyFromPendingRequestHolder();
+			// _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
+			_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
+			// std::cout << "got full response (header + body)\n";
+			
 		}
 		else {
-			// std::cout << "       ====>>> default Response for : {" << _socket.getFd() << "} <<<=====\n";
-			_responseHolder = getResponseString();
-			_responseSize = _responseHolder.size();
-			_availableResponseBytes = _responseSize;
-			// printRequestAndResponse("RESPONSE", _requestHeaderPart + _requestBodyPart);
-			setResponseInFlight(true);
+
+			// std::cout << "    =======>>> Read data from target file to send <<<=====\n";
+
+			_responseHolder = _responseHandler->GetResponseHeader();
+			// std::cout << "Got only Response Header\n";
+			_responseHeaderFlag = RESPONSE_HEADER_READY;
 		}
 	}
+}
+
+void	Client::buildResponse() {
+	_responseHandler->Run(_httpRequest);
+
+	std::cout << "keep-alive: " << _httpRequest.getHeaders()["connection"] << "\n";
+	if (_httpRequest.getHeaders()["connection"] == "keep-alive")
+		_isKeepAlive = ENABLE_KEEP_ALIVE;
+	else if (_httpRequest.getHeaders()["connection"] == "close")
+		_isKeepAlive = DISABLE_KEEP_ALIVE;
+
+	if (_responseHandler->RequireCgi())
+		generateDynamicResponse();
+	else
+		generateStaticResponse();
 }

@@ -41,7 +41,8 @@ void ResponseHandler::SetResponseHeader(const std::string &status_line, int len,
         bool is_static, std::string location)
 {
     response_header = status_line + CRLF + "Server: " + SRV_NAME + CRLF + "Date: " +
-        GenerateTimeStamp() + CRLF ;
+        GenerateTimeStamp() + CRLF;
+    response_header += "Connection: " + std::string(keep_alive ? "keep-alive" : "close") + CRLF;
     if (len != -1)
     {
         response_header += is_static ? GenerateContentType(resource_path) : "Content-Type: text/html";
@@ -52,7 +53,7 @@ void ResponseHandler::SetResponseHeader(const std::string &status_line, int len,
     response_header += CRLF;
 }
 
-void    ResponseHandler::GenerateDirListing(HttpRequest &req)
+void    ResponseHandler::GenerateDirListing()
 {
     DIR                         *dir;
     std::vector<std::string>    dir_entries;
@@ -68,8 +69,8 @@ void    ResponseHandler::GenerateDirListing(HttpRequest &req)
         if (static_cast <std::string>(dir_iter->d_name) != ".")
             dir_entries.push_back(dir_iter->d_name);
     std::sort(dir_entries.begin(), dir_entries.end());
-    response_body = "<html>\n\t<head><title>Index of " + req.getPath() + "</title></head>\n\t<body>\n";
-    response_body += "\t\t<h1>Index of " + req.getPath() + "</h1><hr>\n\t\t<pre>";
+    response_body = "<html>\n\t<head><title>Index of " + req->getPath() + "</title></head>\n\t<body>\n";
+    response_body += "\t\t<h1>Index of " + req->getPath() + "</h1><hr>\n\t\t<pre>";
     for (std::vector<std::string>::iterator it = dir_entries.begin(); it != dir_entries.end(); it++)
     {
         if (stat((resource_path + *it).c_str(), &file_stat) == 0)
@@ -85,13 +86,13 @@ void    ResponseHandler::GenerateDirListing(HttpRequest &req)
     closedir(dir); 
 }
 
-void ResponseHandler::GenerateRedirection(HttpRequest &req)
+void ResponseHandler::GenerateRedirection()
 {
     std::string status_code = NumtoString(301);
     std::string location;
     std::string http_message = " Moved Permanently";
     if (IsDir(resource_path.c_str()) && !loc_config->hasRedirect())
-        location = "Location: http://" + req.getHeaders()["Host"] + req.getPath() + '/';
+        location = "Location: http://" + req->getHeaders()["host"] + req->getPath() + '/';
     else {
         location = "Location: " + loc_config->getRedirect().url;
         status_code = NumtoString(loc_config->getRedirect().status_code);

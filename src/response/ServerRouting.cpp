@@ -1,10 +1,28 @@
 #include "ResponseHandler.hpp"
 
-bool ResponseHandler::NeedToRedirect(HttpRequest &req){
+bool ResponseHandler::NeedToRedirect(){
     return ((IsDir(resource_path.c_str()) &&
-        req.getPath()[req.getPath().size()-1] != '/') ||
+        req->getPath()[req->getPath().size()-1] != '/') ||
             loc_config->hasRedirect());
 }
+
+// void ResponseHandler::SetUsedServer()
+// {
+//     std::vector<ServerConfig> servers = std::vector<ServerConfig>();//tmp
+
+//     if (servers.size() <= 1 || req->getHeaders().find("host") == req->getHeaders().end())
+//        return ;
+//     for (std::vector<ServerConfig>::iterator it = servers.begin(); it != servers.end();it++)
+//     {
+//         if (it->getServerNames().empty())
+//             continue;
+//         if (std::find(it->getServerNames().begin(), it->getServerNames().end(),
+//             req->getHeaders()["host"]) != it->getServerNames().end()){
+//             conf = *it;
+//             break;
+//         }
+//     }
+// }
 
 bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations)
 {
@@ -17,7 +35,7 @@ bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_lo
         {
             //the requested file extension matched with a cgi location
             if (access((it->second.getRoot() + req_path).c_str(), F_OK) != 0)
-                return (false);
+                throw (ResponseHandlerError("HTTP/1.1 404 Not Found", 404));
             if (IsDir((it->second.getRoot()+req_path).c_str()))//if the path exist but as a directory
                 throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
             resource_path = it->second.getRoot() + '/' + req_path;
@@ -49,7 +67,7 @@ std::string GetRestOfPath(const std::string &full_path, int pos)
 
 bool PathPartExtractor(const std::string &full_path, int current_pos, std::string &part)
 {
-	bool found;
+	bool found = false;
     unsigned int i = 0;
     while (current_pos >= 0)
     {
@@ -71,7 +89,7 @@ bool PathPartExtractor(const std::string &full_path, int current_pos, std::strin
 	return (found);
 }
 
-std::string GetPostFilePath(const std::string &path)
+std::string GetFileDirectoryPath(const std::string &path)
 {
     int i = path.size() - 1;
     while( i >= 0 && path[i] == '/')
@@ -100,12 +118,27 @@ bool locationMatched(const std::string &req_path, const LocationConfig &location
     if (loc_part.empty() && !PathPartExtractor(req_path, pos, req_part) && locationConf.hasRedirect())
         return true;
     req_part = GetRestOfPath(req_path, pos);
-    testing_path = locationConf.getRoot() + "/" + (method != "POST" ? req_part : GetPostFilePath(req_part)); // appending the req_part to the config root if not POST
+    testing_path = locationConf.getRoot() + "/" + (method != "POST" ? req_part : GetFileDirectoryPath(req_part)); // appending the req_part to the config root if not POST
     if (access(testing_path.c_str(), F_OK) == 0){// checks if the resulting path exists
         current_path = locationConf.getRoot() + "/" + req_part;
         return true;
     }
     return false;
+}
+
+void ResponseHandler::MakeLocationFromSrvConf()
+{
+    LocationConfig *tmp = new LocationConfig();
+    tmp->setAllowedMethods(conf.getAllowedMethods());
+    tmp->setAutoindex(conf.getAutoindex());
+    tmp->setClientMaxBodySize(NumtoString(conf.getClientMaxBodySize()));
+    tmp->setErrorPages(conf.getErrorPages());
+    tmp->setIndex(conf.getIndex());
+    tmp->setPath("/");
+    tmp->setRoot(conf.getRoot());
+    tmp->setSessionTimeout(conf.getSessionTimeout());
+    tmp->setUploadStore(conf.getUploadStore());
+    loc_config = tmp;
 }
 
 void ResponseHandler::RouteResolver(const std::string &req_path, const std::string &method)
@@ -133,6 +166,10 @@ void ResponseHandler::RouteResolver(const std::string &req_path, const std::stri
             loc_config = &it->second;//     update if the new route is longer
             resource_path = current_resource_path;
         }
+    }
+    if (access((conf.getRoot() + req_path).c_str(), F_OK) == 0){
+        MakeLocationFromSrvConf();
+        resource_path = conf.getRoot() + req_path;
     }
     if (!loc_config)
         throw (ResponseHandlerError("HTTP/1.1 404 Not Found", 404));//the request path didn't match with any location

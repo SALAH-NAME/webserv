@@ -1,14 +1,28 @@
 #include "ResponseHandler.hpp"
 
-ResponseHandler::ResponseHandler(const std::string &client_address, const ServerConfig &server_conf) : conf(server_conf), target_file(NULL)
+ResponseHandler::ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf) : conf(server_conf)
 {
     InitializeStandardContentTypes();
     InitializeStatusPhrases();
-    remote_address = client_address;
+    req = NULL;
+    client_info = clientInfos;
     loc_config = NULL;
+    is_location_allocated = false;
     resource_path = "";
     require_cgi = false;
     is_post = false;
+    keep_alive = false;
+    target_file = NULL;
+}
+
+void    ResponseHandler::CheckForContentType()
+{
+    try{
+        CgiObj.PreBodyPhraseChecks();
+    }
+    catch (CgiHandler::BadCgiOutput &ex){
+        throw (ResponseHandlerError("HTTP/1.1 502 Bad Gateway", 500));
+    }
 }
 
 std::string	ResponseHandler::GetResponseHeader(){return response_header;}
@@ -21,22 +35,38 @@ bool ResponseHandler::IsPost(){return is_post;}
 
 std::string ResponseHandler::GetResourcePath() {return resource_path;}
 
-void ResponseHandler::Run(HttpRequest &req)
+bool ResponseHandler::KeepConnectioAlive() {return keep_alive;}
+
+void ResponseHandler::RefreshData()
 {
-    response_header = "";
-    response_body = "";
-    resource_path = "";
+    response_header.clear();
+    response_body.clear();
+    resource_path.clear();
     require_cgi = false;
     is_post = false;
+    keep_alive = false;
+    req = NULL;
     cgi_buffer_size = 0;
+    if (is_location_allocated){
+        delete loc_config;
+        loc_config = NULL;
+        is_location_allocated = false;
+    }
     loc_config = NULL;
-    if (target_file) {
+    if (target_file){
         target_file->close();
         delete target_file;
         target_file = NULL;
     }
+}
+
+void ResponseHandler::Run(HttpRequest &request)
+{
+    RefreshData();
+    req = &request; 
+    //set conf based on server names and host header
     try {
-        ProccessRequest(req);
+        ProccessRequest();
     }
     catch (ResponseHandlerError &ex)
     {
@@ -44,34 +74,43 @@ void ResponseHandler::Run(HttpRequest &req)
     }
 }
 
-void ResponseHandler::ProccessRequest(HttpRequest &req)
+void ResponseHandler::SetKeepAlive()
 {
-    InitialRequestCheck(req);
-    RouteResolver(req.getPath(), req.getMethod());//  set resource_path and loc_config
-    if (NeedToRedirect(req))
-        return (GenerateRedirection(req));
-    if (loc_config->getAllowedMethods().find(stringToHttpMethod(req.getMethod())) == loc_config->getAllowedMethods().end())
+    if (req->getHeaders().find("connection") == req->getHeaders().end())
+        keep_alive = false;
+    else
+        keep_alive = req->getHeaders()["connection"] == "keep-alive" ? true : false;
+}
+
+void ResponseHandler::ProccessRequest()
+{
+    InitialRequestCheck();
+    SetKeepAlive();
+    RouteResolver(req->getPath(), req->getMethod());//  set resource_path and loc_config
+    if (NeedToRedirect())
+        return (GenerateRedirection());
+    if (loc_config->getAllowedMethods().find(stringToHttpMethod(req->getMethod())) == loc_config->getAllowedMethods().end())
         throw (ResponseHandlerError("HTTP/1.1 405 Not Allowed", 405));//req method is not allowed on the route
-    switch (stringToHttpMethod(req.getMethod()))
+    switch (stringToHttpMethod(req->getMethod()))
     {
         case HTTP_GET:
-            ProccessHttpGET(req);
+            ProccessHttpGET();
             break;
         case HTTP_POST:
-            ProccessHttpPOST(req);
+            ProccessHttpPOST();
             break;
         case HTTP_DELETE:
             ProccessHttpDELETE();
             break;
     }
-}
+}   
 
-void    ResponseHandler::HandleDirRequest(HttpRequest &req)
+void    ResponseHandler::HandleDirRequest()
 {
     const std::vector<std::string> &indexes = loc_config->getIndex();
     std::string current_path;
     if (indexes.empty())
-        return (GenerateDirListing(req));
+        return (GenerateDirListing());
     for (unsigned int i=0;i<indexes.size();i++)
     {
         current_path = resource_path + '/' + indexes[i];
@@ -79,36 +118,41 @@ void    ResponseHandler::HandleDirRequest(HttpRequest &req)
             return (LoadStaticFile(current_path));
     }
     if (loc_config->getAutoindex())
-        return (GenerateDirListing(req));
+        return (GenerateDirListing());
     else 
         throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
 }
 
-void ResponseHandler::ProccessHttpGET(HttpRequest &req)
+void ResponseHandler::ProccessHttpGET()
 {
     if (require_cgi)
-        return (CgiObj.RunCgi(req, conf, *loc_config, resource_path, remote_address));    
+        return (CgiObj.RunCgi(*req, conf, *loc_config, resource_path, client_info));    
     if (access(resource_path.c_str(), R_OK) != 0 || (IsDir(resource_path.c_str())
         && loc_config->getIndex().empty() && !loc_config->getAutoindex()))
             throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
     if (IsDir(resource_path.c_str()))
-        return (HandleDirRequest(req));
+        return (HandleDirRequest());
     return (LoadStaticFile(resource_path));
 }
 
-void ResponseHandler::ProccessHttpPOST(HttpRequest &req)
+void ResponseHandler::ProccessHttpPOST()
 {
     if (require_cgi)
-        return (CgiObj.RunCgi(req, conf, *loc_config, resource_path, remote_address));
-    if (access(resource_path.c_str(), F_OK) == 0)
+        return (CgiObj.RunCgi(*req, conf, *loc_config, resource_path, client_info));
+    if (access(resource_path.c_str(), F_OK) == 0){
+        keep_alive = false;
         throw (ResponseHandlerError("HTTP/1.1 409 Conflict", 409));
-    if (access(GetPostFilePath(resource_path).c_str(), W_OK | X_OK) != 0 ||
-            req.getPath()[req.getPath().size() - 1] == '/')
-        throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
+    }
+    if (access(GetFileDirectoryPath(resource_path).c_str(), W_OK | X_OK) != 0 ||
+            req->getPath()[req->getPath().size() - 1] == '/'){\
+        keep_alive = false;
+        throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));}
     SetResponseHeader("HTTP/1.1 201 Created", -1, false);
     target_file = new std::fstream(resource_path.c_str(), std::ios::out);
-    if (!target_file || !target_file->is_open())
+    if (!target_file || !target_file->is_open()){
+        keep_alive = false;
         throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
+    }
     is_post = true;
 }
 
@@ -122,7 +166,10 @@ void ResponseHandler::ProccessHttpDELETE()
 }
 
 ResponseHandler::~ResponseHandler(){
-	if (target_file) {
+	if (is_location_allocated){
+        delete loc_config;
+    }
+    if (target_file) {
 		target_file->close();
 		delete target_file;
 		target_file = NULL;

@@ -1,3 +1,5 @@
+#include "ServerManager.hpp"
+
 #ifndef CGI_HPP
 #define CGI_HPP
 
@@ -12,8 +14,8 @@
 #include "Environment.hpp"
 #include "HttpRequest.hpp"
 #include "ServerConfig.hpp"
-#define SRV_NAME "Ed, Edd n Eddy/1.0"//or use webserv instead
 
+#define SRV_NAME "Ed, Edd n Eddy/1.0"//or use webserv instead
 
 
 #define HEADER_NAME_SIZE_LIMIT	256
@@ -48,18 +50,17 @@ class CgiHandler
 		void	HandleDuplicates();
 		void	SetCgiChildFileDescriptors();
 		void	SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &conf,
-						const std::string &remote_address);
+						ClientInfos &client_info);
 		void	StatusValidator();
 		void	AddNewHeader();
 		void	ClearData();
-		void	PreBodyPhraseChecks();
 		void	ContentLengthValidator();
 
 	public:
 		CgiHandler();
 		void								RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 													const	LocationConfig &cgi_conf, std::string &script_path,
-														const std::string &remote_address);
+														ClientInfos &client_info);
 		pid_t 								GetChildPid();
 		void								ParseOutputBuffer(const std::string &new_buff);
 		Pipe& 								GetInPipe();
@@ -72,6 +73,8 @@ class CgiHandler
 		std::string							GetReasonPhrase();
 		int									GetContentLength();
 		void								KillChild();
+		void								PreBodyPhraseChecks();
+		std::vector<std::string>			&GetExtraCookieValues();
 		~CgiHandler();
 	
 		class BadCgiOutput : public std::exception
@@ -91,5 +94,5 @@ bool			isAllDigit(std::string &str);
 bool			Crlf_check(const std::string &str, unsigned int index);
 void			SyntaxErrorsCheck(const std::string &buff, unsigned int i, bool key_phase);
 void			TrimSpaces(std::string &str);
-
+std::string		GetFileDirectoryPath(const std::string &path);
 #endif
