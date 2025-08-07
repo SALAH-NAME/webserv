@@ -42,9 +42,6 @@
 #define REQUEST_DATA_PRELOADED_ON true
 #define REQUEST_DATA_PRELOADED_OFF false
 
-#define ENABLE_KEEP_ALIVE true
-#define DISABLE_KEEP_ALIVE false
-
 #define PIPE_IS_READABLE true
 #define PIPE_IS_NOT_READABLE false
 

@@ -85,12 +85,6 @@ void	Client::generateStaticResponse() {
 void	Client::buildResponse() {
 	_responseHandler->Run(_httpRequest);
 
-	// std::cout << "keep-alive: " << _httpRequest.getHeaders()["connection"] << "\n";
-	if (_httpRequest.getHeaders()["connection"] == "keep-alive")
-		_isKeepAlive = ENABLE_KEEP_ALIVE;
-	else if (_httpRequest.getHeaders()["connection"] == "close")
-		_isKeepAlive = DISABLE_KEEP_ALIVE;
-
 	if (_responseHandler->RequireCgi())
 		generateDynamicResponse();
 	else
