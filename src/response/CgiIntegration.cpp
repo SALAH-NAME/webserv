@@ -55,12 +55,14 @@ void ResponseHandler::GenerateHeaderFromCgiData()
 {
 	std::map<std::string, std::string> &headers = CgiObj.GetOutputHeaders();
 	std::vector<std::string> &extra_cookies = CgiObj.GetExtraCookieValues();
-
 	bool has_date = headers.find("date") != headers.end();
 	bool has_name = headers.find("server") != headers.end();
+	bool has_connection = headers.find("connection") != headers.end();
+
 	response_header += GenerateCgiStatusLine() + CRLF;
 	response_header += has_date ? "" : "Date: " + GenerateTimeStamp() + CRLF;
-	response_header += has_name ? "" : "Server: " + std::string(SRV_NAME) + CRLF; 
+	response_header += has_name ? "" : "Server: " + std::string(SRV_NAME) + CRLF;
+	response_header += has_connection ? "" : (keep_alive ? "Connection: keep_alive\r\n" : "Connection: close\r\n");
 	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); it++)
 		response_header += it->first + ": " + it->second + CRLF;
 	for (std::vector<std::string>::iterator it = extra_cookies.begin(); it != extra_cookies.end(); it++)

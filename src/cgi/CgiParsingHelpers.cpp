@@ -31,9 +31,9 @@ void	SyntaxErrorsCheck(const std::string &buff, unsigned int i, bool key_phase)
 
 bool Crlf_check(const std::string &str, unsigned int index)
 {
-	if (index+1 >= str.size())
+	if (index + 1 >= str.size() - 1)
 		return false;
-	return (str[index] == '\r' && str[index+1] == '\n');
+	return (str[index] == '\r' && str[index + 1] == '\n');
 }
 
 bool CgiHandler::ReachedMaxHeadersNumber(){

@@ -9,7 +9,7 @@
 #define RESPONSESIZE 746 // Fix size for the temp response
 
 #define INCOMING_HEADER_DATA_ON true
-#define INCOMING_DATA_HEADER_OFF false
+#define INCOMING_HEADER_DATA_OFF false
 #define CONNECTION_ERROR (EPOLLIN | EPOLLERR | EPOLLHUP)
 
 #define INCOMING_BODY_DATA_ON true
