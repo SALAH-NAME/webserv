@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/08/06 19:15:19 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/07 13:00:35 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,6 @@ class Client {
 		bool				_responseHeaderFlag;
 		bool				_responseBodyFlag;
 		bool				_fullResponseFlag;
-		bool				_isKeepAlive;
 		bool				_generateInProcess;
 		bool				_isResponseBodySendable;
 		bool				_isRequestBodyWritable;
@@ -92,7 +91,6 @@ class Client {
 		std::string&		getResponseHolder(void);
 		ResponseHandler*	getResponseHandler(void);
 
-		bool				getIsKeepAlive(void);
 		int					getBytesToSendNow(void);
 		bool				getGenerateInProcess(void);
 		HttpRequest&		getHttpRequest(void);

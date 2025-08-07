@@ -2,16 +2,22 @@
 
 void	Client::extractBodyFromPendingRequestHolder() {
 	size_t	bytesToExtract;
-	if (_pendingRequestDataHolder.size() <= _contentLength) {
+	if (_pendingRequestDataHolder.size() < _contentLength) {
 		bytesToExtract = _pendingRequestDataHolder.size();
 		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
+		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
+	}
+	else if (_pendingRequestDataHolder.size() > _contentLength) {
+		bytesToExtract = _contentLength;
+		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_ON;
+		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
 	}
 	else {
 		bytesToExtract = _contentLength;
-		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_ON;
+		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
+		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
 	}
 
-	_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
 	_bodyDataPreloadedFlag = BODY_DATA_PRELOADED_ON;
 	_isRequestBodyWritable = WRITABLE;
 
@@ -55,11 +61,12 @@ void	Client::generateStaticResponse() {
 
 			std::stringstream ss(_httpRequest.getHeaders()["content-length"]);
 			ss >> _contentLength;
-			std::cout << "Body Content-Length ==> " << _contentLength << "\n";
+			// std::cout << "Body Content-Length ==> " << _contentLength << "\n";
 
 			if (_requestDataPreloadedFlag == REQUEST_DATA_PRELOADED_ON)
 				extractBodyFromPendingRequestHolder();
-			// _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
+			else
+				_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
 			_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
 			// std::cout << "got full response (header + body)\n";
 			
@@ -77,12 +84,6 @@ void	Client::generateStaticResponse() {
 
 void	Client::buildResponse() {
 	_responseHandler->Run(_httpRequest);
-
-	std::cout << "keep-alive: " << _httpRequest.getHeaders()["connection"] << "\n";
-	if (_httpRequest.getHeaders()["connection"] == "keep-alive")
-		_isKeepAlive = ENABLE_KEEP_ALIVE;
-	else if (_httpRequest.getHeaders()["connection"] == "close")
-		_isKeepAlive = DISABLE_KEEP_ALIVE;
 
 	if (_responseHandler->RequireCgi())
 		generateDynamicResponse();

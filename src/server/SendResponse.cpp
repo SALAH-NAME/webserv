@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/08/06 19:39:18 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/07 12:59:29 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,14 +15,11 @@
 
 void	ServerManager::handleKeepAlive(Client& client, int serverIndex) {
 
-	std::cout << "   ###################### Is keep alive: " << client.getIsKeepAlive() << " ##############\n";
-
-	if (client.getIsKeepAlive() == DISABLE_KEEP_ALIVE)
-		_servers[serverIndex].closeConnection(client.getSocket().getFd());
-	else {
+	std::cout << "   ###################### Is keep alive: " << client.getResponseHandler()->KeepConnectioAlive() << " ##############\n";
+	if (client.getResponseHandler()->KeepConnectioAlive())
 		client.resetAttributes();
-		// client.printClientStatus();
-	}
+	else
+		_servers[serverIndex].closeConnection(client.getSocket().getFd());
 }
 
 void	ServerManager::transmitResponseHeader(Client& client, int serverIndex) {

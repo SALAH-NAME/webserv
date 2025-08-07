@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/08/06 19:33:15 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/07 13:01:17 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,6 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)
 											, _responseBodyFlag(RESPONSE_BODY_NOT_READY)
 											, _fullResponseFlag(FULL_RESPONSE_NOT_READY)
-											, _isKeepAlive(DISABLE_KEEP_ALIVE)
 											, _generateInProcess(GENERATE_RESPONSE_OFF)
 											, _isResponseBodySendable(NOT_SENDABLE)
 											, _isRequestBodyWritable(NOT_WRITABLE)
@@ -54,7 +53,6 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _responseHeaderFlag(other._responseHeaderFlag)
 									, _responseBodyFlag(other._responseBodyFlag)
 									, _fullResponseFlag(other._fullResponseFlag)
-									, _isKeepAlive(other._isKeepAlive)
 									, _generateInProcess(other._generateInProcess)
 									, _isResponseBodySendable(other._isResponseBodySendable)
 									, _isRequestBodyWritable(other._isRequestBodyWritable)
@@ -204,10 +202,6 @@ void		Client::appendToHeaderPart(const std::string& headerData) {
 	_requestHeaderPart += headerData;
 }
 
-bool	Client::getIsKeepAlive(void) {
-	return _isKeepAlive;
-}
-
 bool	Client::getIsResponseBodySendable(void) {
 	return _isResponseBodySendable;
 }
@@ -339,18 +333,6 @@ void	Client::updateHeaderStateAfterSend(size_t sentBytes) {
 			_responseBodyFlag = RESPONSE_BODY_NOT_READY;
 			_responseSent = SENT;
 			std::cout << " ==> Sent Full Response Successfully <==\n";
-
-			
-			// printRequestAndResponse("left request data", _pendingRequestDataHolder);
-			
-			// if (_isKeepAlive == DISABLE_KEEP_ALIVE)
-			// return true;
-			// else {
-				
-			// 	resetAttributes();
-			// 	printClientStatus();
-			// 	return false;
-			// }
 		}
 	}
 }
@@ -383,18 +365,9 @@ void	Client::sendFileBody(void) {
 		_responseSent = SENT;
 		std::cout << " ==>> Send response body Successfully \n";
 		return ;
-	
-		// if (_isKeepAlive == DISABLE_KEEP_ALIVE)
-		// 	return true;
-		// else {
-		// 	resetAttributes();
-		// 	printClientStatus();
-		// 	return false;
-		// }
 	}
 	
 	_isResponseBodySendable = NOT_SENDABLE;
-	// return false;
 }
 
 void	Client::receiveRequestBody(void) {
@@ -525,7 +498,6 @@ void	Client::resetAttributes(void) {
 	_responseHeaderFlag =  RESPONSE_HEADER_NOT_READY;
 	_responseBodyFlag =  RESPONSE_BODY_NOT_READY;
 	_fullResponseFlag =  FULL_RESPONSE_NOT_READY;
-	_isKeepAlive =  DISABLE_KEEP_ALIVE;
 	_generateInProcess =  GENERATE_RESPONSE_OFF;
 	_isResponseBodySendable =  NOT_SENDABLE;
 	_isRequestBodyWritable =  NOT_WRITABLE;

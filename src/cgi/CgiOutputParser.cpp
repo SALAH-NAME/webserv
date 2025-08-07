@@ -87,19 +87,23 @@ void	CgiHandler::ParseOutputBuffer(const std::string &cgi_output_buff)
 		SyntaxErrorsCheck(cgi_output_buff, i, key_phase);
 		if (key_phase && cgi_output_buff[i] == ':'){
 			key_phase = false;
-			i++;
+			parsed_bytes_count++;
+			continue ;
 		}
-		else if (Crlf_check(cgi_output_buff, i))
+		if (Crlf_check(cgi_output_buff, i))
 		{
 			AddNewHeader();
-			i += 2;
 			key_phase = true;
-			if (Crlf_check(cgi_output_buff, i)){//end of header
-				preserved_body = cgi_output_buff.substr(i+2);
+			if (Crlf_check(cgi_output_buff, i + 2)){//end of header
+				parsed_bytes_count += 4;
+				preserved_body = cgi_output_buff.substr(i + 4);
 				PreBodyPhraseChecks();
 				Body_phase = true;
 				return ;
 			}
+			i += 1;
+			parsed_bytes_count += 2;
+			continue;
 		}
 		if (key_phase)
 			AppendCharToKey(key_holder, cgi_output_buff[i]);
