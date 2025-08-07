@@ -109,11 +109,11 @@ void ResponseHandler::CheckCgiChildState() // use only if cgi is required
 		throw (ResponseHandlerError("HTTP/1.1 502 Bad Gateway", 502));
 }
 
-void ResponseHandler::SetTargetFileForCgi(int count)
+void ResponseHandler::SetTargetFileForCgi(int id)
 {
-	std::string filename = TMP_FILE_PREFIX + NumtoString(count);
-	if (target_file)
-		delete target_file;
+	std::string filename = TMP_FILE_PREFIX + NumtoString(id);
+
+	CgiObj.PreBodyPhraseChecks();
 	int fd = open(filename.c_str(), O_CREAT, 0644);
 	close(fd);
 	target_file = new std::fstream(filename.c_str(), std::ios::out | std::ios::in | std::ios::trunc | std::ios::binary);
@@ -126,6 +126,13 @@ void ResponseHandler::SetTargetFileForCgi(int count)
 		CgiObj.KillChild();
 		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));}
 	response_body.clear();
+}
+
+void	ResponseHandler::DeleteCgiTargetFile(int id)
+{
+	std::string filename = TMP_FILE_PREFIX + NumtoString(id);
+
+	std::remove(filename.c_str());
 }
 
 void ResponseHandler::AppendBufferToTmpFile(const std::string &buf)

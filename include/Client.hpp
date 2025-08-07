@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/08/05 19:14:20 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/06 16:11:13 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@ class Client {
 		// TO DO : 1.client addr || 2. port
 		Socket				_socket;
 		int					_epfd;
+		const ServerConfig&	_conf;
+		ClientInfos			_clientInfos;
 		int					_CGI_pipeFD;
 
 		std::string			_requestHeaderPart;
@@ -58,6 +60,8 @@ class Client {
 		bool				_pipeReadComplete;
 
 		bool				_setTargetFile;
+
+		bool				_responseSent;
 
 		void				isolateAndRecordExtraBytes(void);
 		void				generateDynamicResponse();
@@ -112,6 +116,7 @@ class Client {
 		bool				getIsPipeClosedByPeer(void);
 
 		bool				getSetTargetFile(void);
+		bool				getResponseSent(void);
 
 		void				appendToHeaderPart(const std::string& requestData);
 		void				appendToBodyPart(const std::string& requestData);
@@ -154,13 +159,16 @@ class Client {
 		
 		void				receiveRequestBody(void);
 
-		bool				updateHeaderStateAfterSend(size_t);
-		bool				sendFileBody(void);
-		bool				readFileBody(void);
+		void				updateHeaderStateAfterSend(size_t);
+		void				sendFileBody(void);
+		void				readFileBody(void);
 		void				writeBodyToTargetFile(void);
 		void				closeAndDeregisterPipe(void);
 
 		void				CgiExceptionHandler(void);
+		void				resetAttributes(void);
+		void				handleKeepAlive(void);
+		void				printClientStatus(void);
 };
 
 #endif

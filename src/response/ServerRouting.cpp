@@ -1,10 +1,28 @@
 #include "ResponseHandler.hpp"
 
-bool ResponseHandler::NeedToRedirect(HttpRequest &req){
+bool ResponseHandler::NeedToRedirect(){
     return ((IsDir(resource_path.c_str()) &&
-        req.getPath()[req.getPath().size()-1] != '/') ||
+        req->getPath()[req->getPath().size()-1] != '/') ||
             loc_config->hasRedirect());
 }
+
+// void ResponseHandler::SetUsedServer()
+// {
+//     std::vector<ServerConfig> servers = std::vector<ServerConfig>();//tmp
+
+//     if (servers.size() <= 1 || req->getHeaders().find("host") == req->getHeaders().end())
+//        return ;
+//     for (std::vector<ServerConfig>::iterator it = servers.begin(); it != servers.end();it++)
+//     {
+//         if (it->getServerNames().empty())
+//             continue;
+//         if (std::find(it->getServerNames().begin(), it->getServerNames().end(),
+//             req->getHeaders()["host"]) != it->getServerNames().end()){
+//             conf = *it;
+//             break;
+//         }
+//     }
+// }
 
 bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations)
 {
@@ -49,7 +67,7 @@ std::string GetRestOfPath(const std::string &full_path, int pos)
 
 bool PathPartExtractor(const std::string &full_path, int current_pos, std::string &part)
 {
-	bool found;
+	bool found = false;
     unsigned int i = 0;
     while (current_pos >= 0)
     {
