@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/08/06 19:33:15 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/07 11:55:01 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -339,18 +339,6 @@ void	Client::updateHeaderStateAfterSend(size_t sentBytes) {
 			_responseBodyFlag = RESPONSE_BODY_NOT_READY;
 			_responseSent = SENT;
 			std::cout << " ==> Sent Full Response Successfully <==\n";
-
-			
-			// printRequestAndResponse("left request data", _pendingRequestDataHolder);
-			
-			// if (_isKeepAlive == DISABLE_KEEP_ALIVE)
-			// return true;
-			// else {
-				
-			// 	resetAttributes();
-			// 	printClientStatus();
-			// 	return false;
-			// }
 		}
 	}
 }
@@ -383,18 +371,9 @@ void	Client::sendFileBody(void) {
 		_responseSent = SENT;
 		std::cout << " ==>> Send response body Successfully \n";
 		return ;
-	
-		// if (_isKeepAlive == DISABLE_KEEP_ALIVE)
-		// 	return true;
-		// else {
-		// 	resetAttributes();
-		// 	printClientStatus();
-		// 	return false;
-		// }
 	}
 	
 	_isResponseBodySendable = NOT_SENDABLE;
-	// return false;
 }
 
 void	Client::receiveRequestBody(void) {

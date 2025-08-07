@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/08/06 19:35:41 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/07 11:53:21 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ void	isolateAndRecordBody(Client& client, size_t headerEnd) {
 	client.setHeaderPart(headerPart.substr(0, headerEnd + 4));
 	// client.setBodyDataPreloaded(BODY_DATA_PRELOADED_ON);
 	client.setRequestDataPreloadedFlag(REQUEST_DATA_PRELOADED_ON);
-	std::cout << "ISOLATED\n";
+	// std::cout << "ISOLATED\n";
 }
 
 void    ServerManager::collectRequestData(Client& client) {
@@ -121,7 +121,7 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
 		if (it->second.getIsPipeClosedByPeer() == PIPE_IS_CLOSED) {
-			std::cout << " ***** input is ready to read from Pipe : " << it->second.getResponseHandler()->GetCgiOutPipe().getReadFd() << "  ****\n";
+			// std::cout << " ***** input is ready to read from Pipe : " << it->second.getResponseHandler()->GetCgiOutPipe().getReadFd() << "  ****\n";
 			consumeCgiOutput(it->second, serverIndex);
 		}
 		if (it->second.getIncomingHeaderDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
