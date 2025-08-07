@@ -5,17 +5,21 @@ void	Client::extractBodyFromPendingRequestHolder() {
 	if (_pendingRequestDataHolder.size() < _contentLength) {
 		bytesToExtract = _pendingRequestDataHolder.size();
 		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
-		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
+		// _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
 	}
 	else if (_pendingRequestDataHolder.size() > _contentLength) {
 		bytesToExtract = _contentLength;
 		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_ON;
-		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+		// _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+	}
+	else if (_pendingRequestDataHolder.size() > _contentLength) {
+		bytesToExtract = _contentLength;
+		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
+		// _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
 	}
 	else {
 		bytesToExtract = _contentLength;
 		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
-		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
 	}
 
 	_bodyDataPreloadedFlag = BODY_DATA_PRELOADED_ON;
@@ -65,8 +69,7 @@ void	Client::generateStaticResponse() {
 
 			if (_requestDataPreloadedFlag == REQUEST_DATA_PRELOADED_ON)
 				extractBodyFromPendingRequestHolder();
-			else
-				_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
+			_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
 			_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
 			// std::cout << "got full response (header + body)\n";
 			

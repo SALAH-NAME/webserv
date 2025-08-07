@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/08/07 13:01:17 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/07 18:49:07 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -476,7 +476,7 @@ void				Client::printClientStatus(void) {
 	std::cout << "  ##  _responseSent : " << _responseSent << "  ## \n";
 	std::cout << "--------------------------------------------------------\n\n";
 
-	printRequestAndResponse("Pending data", _pendingRequestDataHolder);
+	// printRequestAndResponse("Pending data", _pendingRequestDataHolder);
 
 	// exit(0);
 }

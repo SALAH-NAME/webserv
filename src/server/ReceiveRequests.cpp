@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/08/07 11:53:21 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/07 18:49:19 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,26 +42,28 @@ void    ServerManager::collectRequestData(Client& client) {
 	try {
 		if (client.getRequestDataPreloadedFlag() == REQUEST_DATA_PRELOADED_ON) {	
 			client.getBufferFromPendingData(_buffer, &readbytes);
-			// std::cout << "  >>> get buffer from Pending Request data  <<<\n";
+			std::cout << "  >>> get buffer from Pending Request data  <<<\n";
 		}
 		else {
 			readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
-			// std::cout << "read bytes ==> " << readbytes << " from : " << client.getSocket().getFd() << "\n";
+			std::cout << "read bytes ==> " << readbytes << " ||  from : " << client.getSocket().getFd() << "\n";
 		}
 		
 		if (readbytes > 0 && readbytes <= BYTES_TO_READ) {
 			client.resetLastConnectionTime();
 			client.appendToHeaderPart(std::string(_buffer, readbytes));
+
+			// printRequestAndResponse("APPended", client.getHeaderPart());
 			
 			if (std::string(_buffer, readbytes) == "\r\n")
 			{
 				// in case of receive empty line (Press Enter) !!
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-				// std::cout << " ==> Empty line\n";
+				std::cout << " ==> Empty line\n";
 			}
 			if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
-				// std::cout << "   ====>> request is completed <<=====\n";
+				std::cout << "   ====>> request is completed <<=====\n";
 				isolateAndRecordBody(client, headerEnd);
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
