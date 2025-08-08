@@ -1,7 +1,8 @@
 #include "HttpRequest.hpp"
 
 HttpRequest::HttpRequest() : state(STATE_START_LINE), valid(false), status_code(0),
-                             _start_line_size(0), _headers_size(0), _start_line_parsed(false) {}
+                             http_version(HTTP_UNKNOWN), _start_line_size(0), _headers_size(0),
+                             _start_line_parsed(false) {}
 
 HttpRequest::State HttpRequest::getState() const
 {
@@ -46,9 +47,7 @@ std::string HttpRequest::toLower(const std::string &str) const
 {
     std::string result = str;
     for (size_t i = 0; i < result.length(); ++i)
-    {
         result[i] = std::tolower(result[i]);
-    }
     return result;
 }
 
@@ -68,7 +67,22 @@ bool HttpRequest::isValidMethod(const std::string &method) const
 
 bool HttpRequest::isValidVersion(const std::string &version) const
 {
-    return version == "HTTP/1.1";
+    return version == "HTTP/1.1" || version == "HTTP/1.0";
+}
+
+HttpRequest::HttpVersion HttpRequest::parseHttpVersion(const std::string &version) const
+{
+    if (version == "HTTP/1.1")
+        return HTTP_1_1;
+    else if (version == "HTTP/1.0")
+        return HTTP_1_0;
+    else
+        return HTTP_UNKNOWN;
+}
+
+HttpRequest::HttpVersion HttpRequest::getHttpVersion() const
+{
+    return http_version;
 }
 
 void HttpRequest::validateHeaderLine(const std::string &line)
@@ -171,6 +185,7 @@ void HttpRequest::parseStartLine(const std::string &line)
     method = method_part;
     uri = uri_part;
     version = version_part;
+    http_version = parseHttpVersion(version_part);
 
     parseUriComponents();
 }
@@ -220,8 +235,134 @@ void HttpRequest::parseHeaderLine(const std::string &line)
 
     // For case-insensitive comparison
     header_name = toLower(header_name);
-
+    if (isDuplicateHeader(header_name))
+        throw HttpRequestException(400, "Bad Request - Duplicate header");
     headers[header_name] = header_value;
+}
+
+bool HttpRequest::isRequiredHeader(const std::string &headerName) const
+{
+    return (headerName == "host" || headerName == "content-length" || headerName == "transfer-encoding" || headerName == "connection");
+}
+
+bool HttpRequest::isDuplicateHeader(const std::string &headerName) const
+{
+    if (headers.find(headerName) != headers.end() && isRequiredHeader(headerName))
+        return true;
+    return false;
+}
+
+bool HttpRequest::isValidContentLength(const std::string &value) const
+{
+    if (value.empty())
+        return false;
+
+    std::string trimmed_value = trim(value);
+    if (trimmed_value.empty())
+        return false;
+
+    for (size_t i = 0; i < trimmed_value.length(); ++i)
+    {
+        if (!std::isdigit(trimmed_value[i]))
+            return false;
+    }
+    
+    std::istringstream iss(trimmed_value);
+    long long content_length;
+    iss >> content_length;
+    
+    if (iss.fail() || !iss.eof() || content_length < 0)
+        return false;
+        
+    return true;
+}
+
+bool HttpRequest::hasConflictingHeaders() const
+{
+    bool hasContentLength = headers.find("content-length") != headers.end();
+    bool hasTransferEncoding = headers.find("transfer-encoding") != headers.end();
+
+    if (hasContentLength && hasTransferEncoding)
+    {
+        std::map<std::string, std::string>::const_iterator it = headers.find("transfer-encoding");
+        if (it != headers.end() && isChunkedEncoding(it->second))
+            return true;
+    }
+    return false;
+}
+
+void HttpRequest::validateVersionSpecificHeaders()
+{
+    if (http_version == HTTP_1_0)
+        validateHttp10Requirements();
+    else if (http_version == HTTP_1_1)
+        validateHttp11Requirements();
+}
+
+void HttpRequest::validateHttp10Requirements()
+{
+    if (method == "POST")
+    {
+        bool hasContentLength = headers.find("content-length") != headers.end();
+        bool hasTransferEncoding = headers.find("transfer-encoding") != headers.end();
+
+        if (hasTransferEncoding)
+            throw HttpRequestException(400, "HTTP/1.0 does not support Transfer-Encoding header");
+
+        if (!hasContentLength)
+            throw HttpRequestException(400, "HTTP/1.0 POST requests require Content-Length header");
+
+        std::map<std::string, std::string>::const_iterator it = headers.find("content-length");
+        if (!isValidContentLength(it->second))
+            throw HttpRequestException(400, "Invalid Content-Length value: must be a non-negative integer");
+    }
+}
+
+void HttpRequest::validateHttp11Requirements()
+{
+    if (headers.find("host") == headers.end())
+        throw HttpRequestException(400, "HTTP/1.1 requests require Host header");
+
+    if (hasConflictingHeaders())
+        throw HttpRequestException(400, "Message cannot contain both Content-Length and Transfer-Encoding: chunked");
+
+    if (method == "POST")
+    {
+        bool hasContentLength = headers.find("content-length") != headers.end();
+        bool hasChunked = false;
+
+        std::map<std::string, std::string>::const_iterator it = headers.find("transfer-encoding");
+        if (it != headers.end())
+            hasChunked = isChunkedEncoding(it->second);
+
+        if (!hasContentLength && !hasChunked)
+            throw HttpRequestException(411, "HTTP/1.1 POST requests require Content-Length or Transfer-Encoding: chunked");
+
+        if (hasContentLength)
+        {
+            std::map<std::string, std::string>::const_iterator cl_it = headers.find("content-length");
+            if (!isValidContentLength(cl_it->second))
+                throw HttpRequestException(400, "Invalid Content-Length value: must be a non-negative integer");
+        }
+    }
+}
+
+void HttpRequest::validateContentLengthLimit(size_t max_body_size) const
+{
+    std::map<std::string, std::string>::const_iterator cl_it = headers.find("content-length");
+    if (cl_it == headers.end())
+        return;
+        
+    if (!isValidContentLength(cl_it->second))
+        return;
+        
+    std::string trimmed_value = trim(cl_it->second);
+    std::istringstream iss(trimmed_value);
+    long long content_length;
+    iss >> content_length;
+    
+    if (static_cast<size_t>(content_length) > max_body_size)
+        throw HttpRequestException(413, "Request entity too large");
 }
 
 bool HttpRequest::shouldContinueParsing() const
@@ -258,7 +399,6 @@ void HttpRequest::handleParsingError(const HttpRequestException &e)
     error_msg = e.what();
 }
 
-
 void HttpRequest::processStartLine(const std::string &line)
 {
     if (!_start_line_parsed)
@@ -269,7 +409,6 @@ void HttpRequest::processStartLine(const std::string &line)
         state = STATE_HEADERS;
     }
 }
-
 
 void HttpRequest::processHeaderLine(const std::string &line)
 {
@@ -282,7 +421,6 @@ void HttpRequest::processHeaderLine(const std::string &line)
     }
 }
 
-
 void HttpRequest::processEndOfHeaders()
 {
     // Empty line so end of headers
@@ -290,8 +428,7 @@ void HttpRequest::processEndOfHeaders()
     valid = true;
     status_code = 200;
 
-    validateRequiredHeaders();
-    validatePostRequest();
+    validateVersionSpecificHeaders();
 }
 
 void HttpRequest::validateRequiredHeaders()
@@ -302,7 +439,6 @@ void HttpRequest::validateRequiredHeaders()
 
 void HttpRequest::validatePostRequest()
 {
-    // For POST requests, validate Content-Length or Transfer-Encoding
     if (method == "POST")
     {
         bool hasContentLength = headers.find("content-length") != headers.end();
@@ -319,7 +455,8 @@ void HttpRequest::validatePostRequest()
 
 bool HttpRequest::isChunkedEncoding(const std::string &transferEncoding) const
 {
-    std::string::size_type pos = transferEncoding.find("chunked");
+    std::string lowerTE = toLower(transferEncoding);
+    std::string::size_type pos = lowerTE.find("chunked");
     return pos != std::string::npos;
 }
 
@@ -383,6 +520,7 @@ void HttpRequest::reset()
     valid = false;
     status_code = 0;
     error_msg.clear();
+    http_version = HTTP_UNKNOWN;
 
     method.clear();
     uri.clear();

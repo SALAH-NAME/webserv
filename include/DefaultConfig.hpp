@@ -18,7 +18,6 @@ const std::string								 ROOT("/var/www/html");
 const std::vector<std::string>	 INDEX(1, "index.html");
 const std::set<HttpMethod>			 ALLOWED_METHODS;
 const int												 AUTOINDEX(false);
-const std::string								 UPLOAD_STORE("");
 
 // GLOBAL
 const unsigned int CONNECTION_TIMEOUT(60);

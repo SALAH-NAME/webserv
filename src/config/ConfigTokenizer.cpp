@@ -24,7 +24,6 @@ void ConfigTokenizer::initializeDirectiveNames()
 																			"allowed_methods",
 																			"autoindex",
 																			"return",
-																			"upload_store",
 																			"cgi_pass",
 																			"cgi_timeout",
 																			"session_enable",

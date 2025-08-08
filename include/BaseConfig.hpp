@@ -16,7 +16,6 @@ protected:
 	std::vector<std::string>	 _index;
 	std::set<HttpMethod>			 _allowed_methods;
 	bool											 _autoindex;
-	std::string								 _upload_store;
 
 	BaseConfig();
 
@@ -31,7 +30,6 @@ public:
 	void setAllowedMethods(const std::set<HttpMethod>& methods);
 	void addAllowedMethod(HttpMethod method);
 	void setAutoindex(bool autoindex);
-	void setUploadStore(const std::string& path);
 	const std::map<int, std::string>& getErrorPages() const;
 	std::string												getErrorPage(int status_code) const;
 	size_t														getClientMaxBodySize() const;
@@ -40,7 +38,6 @@ public:
 	const std::set<HttpMethod>&				getAllowedMethods() const;
 	bool															isMethodAllowed(HttpMethod method) const;
 	bool															getAutoindex() const;
-	const std::string&								getUploadStore() const;
 	virtual void											inheritFrom(const BaseConfig& parent);
 };
 

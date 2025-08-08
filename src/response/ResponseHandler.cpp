@@ -87,6 +87,16 @@ void ResponseHandler::ProccessRequest()
     InitialRequestCheck();
     SetKeepAlive();
     RouteResolver(req->getPath(), req->getMethod());//  set resource_path and loc_config
+    
+    try
+    {
+        req->validateContentLengthLimit(loc_config->getClientMaxBodySize());
+    }
+    catch (const HttpRequestException &e)
+    {
+        throw (ResponseHandlerError("HTTP/1.1 " + NumtoString(e.statusCode()) + " " + e.what(), e.statusCode()));
+    }
+    
     if (NeedToRedirect())
         return (GenerateRedirection());
     if (loc_config->getAllowedMethods().find(stringToHttpMethod(req->getMethod())) == loc_config->getAllowedMethods().end())

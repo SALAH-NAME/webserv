@@ -35,6 +35,13 @@ public:
         STATE_ERROR
     };
 
+    enum HttpVersion
+    {
+        HTTP_1_0,
+        HTTP_1_1,
+        HTTP_UNKNOWN
+    };
+
     void reset();
 
 private:
@@ -52,6 +59,7 @@ private:
     bool valid;
     int status_code;
     std::string error_msg;
+    HttpVersion http_version;
 
     size_t _start_line_size;
     size_t _headers_size;
@@ -71,29 +79,40 @@ private:
     bool isValidMethod(const std::string &method) const;
     bool isValidVersion(const std::string &version) const;
 
-    
+    HttpVersion parseHttpVersion(const std::string &version) const;
+    HttpVersion getHttpVersion() const;
+
+    bool isRequiredHeader(const std::string &headerName) const;
+    bool isDuplicateHeader(const std::string &headerName) const;
+    bool isValidContentLength(const std::string &value) const;
+    bool hasConflictingHeaders() const;
+    void validateVersionSpecificHeaders();
+    void validateHttp10Requirements();
+    void validateHttp11Requirements();
+
     bool shouldContinueParsing() const;
-    std::string extractNextLine(std::string& buffer, std::string::size_type& pos, bool& found);
-    void updateBufferAfterProcessing(std::string& buffer, std::string::size_type pos);
-    void handleParsingError(const HttpRequestException& e);
-    void processStartLine(const std::string& line);
-    void processHeaderLine(const std::string& line);
+    std::string extractNextLine(std::string &buffer, std::string::size_type &pos, bool &found);
+    void updateBufferAfterProcessing(std::string &buffer, std::string::size_type pos);
+    void handleParsingError(const HttpRequestException &e);
+    void processStartLine(const std::string &line);
+    void processHeaderLine(const std::string &line);
     void processEndOfHeaders();
     void validateRequiredHeaders();
     void validatePostRequest();
-    bool isChunkedEncoding(const std::string& transferEncoding) const;
-    bool hasCompleteLineInBuffer(const std::string& buffer, std::string::size_type pos) const;
+    bool isChunkedEncoding(const std::string &transferEncoding) const;
+    bool hasCompleteLineInBuffer(const std::string &buffer, std::string::size_type pos) const;
 
 public:
     HttpRequest();
 
-    void appendAndValidate(std::string& _parsing_buffer);
+    void appendAndValidate(std::string &_parsing_buffer);
     bool hasCompleteRequest() const;
 
     State getState() const;
     std::string getErrorMsg() const;
     bool isValid() const;
     int getStatusCode() const;
+    void validateContentLengthLimit(size_t max_body_size) const;
 
     std::string getMethod() const;
     std::string getUri() const;
