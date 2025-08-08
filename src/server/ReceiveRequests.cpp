@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/08/07 18:49:19 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/08 19:49:57 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,10 +60,10 @@ void    ServerManager::collectRequestData(Client& client) {
 				// in case of receive empty line (Press Enter) !!
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-				std::cout << " ==> Empty line\n";
+				// std::cout << " ==> Empty line\n";
 			}
 			if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
-				std::cout << "   ====>> request is completed <<=====\n";
+				// std::cout << "   ====>> request is completed <<=====\n";
 				isolateAndRecordBody(client, headerEnd);
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);

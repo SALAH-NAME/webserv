@@ -54,6 +54,9 @@
 #define READ_PIPE_COMPLETE true
 #define READ_PIPE_NOT_COMPLETE false
 
+#define AVAILABLE true
+#define NOT_AVAILABLE false
+
 #define SENT true
 #define NOT_SENT false
 
@@ -78,6 +81,7 @@
 #include <algorithm>
 #include <arpa/inet.h> // for inet_addr()
 #include <utility>
+#include <netdb.h>     // for getaddrinfo
 #include "HttpRequest.hpp"
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"

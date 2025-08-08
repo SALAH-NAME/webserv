@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/08/07 18:49:07 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/08 19:49:40 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 											, _pipeReadComplete(READ_PIPE_NOT_COMPLETE)
 											, _setTargetFile(false)
 											, _responseSent(NOT_SENT)
+											, _isOutputAvailable(NOT_AVAILABLE)
 {}
 
 Client::Client(const Client& other) : _socket(other._socket)
@@ -64,6 +65,7 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _pipeReadComplete(other._pipeReadComplete)
 									, _setTargetFile(other._setTargetFile)
 									, _responseSent(other._responseSent)
+									, _isOutputAvailable(other._isOutputAvailable)
 {
 	const_cast<Client&> (other)._responseHandler = NULL;
 }
@@ -210,6 +212,10 @@ bool	Client::getResponseSent(void) {
 	return _responseSent;
 }
 
+bool	Client::getIsOutputAvailable(void) {
+	return _isOutputAvailable;
+}
+
 void Client::appendToBodyPart(const std::string &bodyData)
 {
 	_requestBodyPart += bodyData;
@@ -302,6 +308,10 @@ void	Client::setSetTargetFile(bool value) {
 	_setTargetFile = value;
 }
 
+void	Client::setIsOutputAvailable(bool value) {
+	_isOutputAvailable = value;
+}
+
 bool Client::parseRequest()
 {
 	try
@@ -351,6 +361,9 @@ void	Client::readFileBody(void) {
 
 void	Client::sendFileBody(void) {
 	ssize_t sentBytes;
+
+	if (!_isOutputAvailable)
+		return ;
 	
 	if (_responseHolder.size()) {
 		sentBytes = _socket.send(_responseHolder.c_str(), _responseHolder.size(), MSG_NOSIGNAL);
@@ -508,6 +521,7 @@ void	Client::resetAttributes(void) {
 	_pipeReadComplete =  READ_PIPE_NOT_COMPLETE;
 	_setTargetFile =  false;
 	_responseSent = NOT_SENT;
+	_isOutputAvailable = NOT_AVAILABLE;
 
 	_requestHeaderPart.clear();
 	_requestBodyPart.clear();

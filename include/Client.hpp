@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/08/07 13:00:35 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/08 19:50:25 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,8 @@ class Client {
 		bool				_setTargetFile;
 
 		bool				_responseSent;
-
+		bool				_isOutputAvailable;
+		
 		void				isolateAndRecordExtraBytes(void);
 		void				generateDynamicResponse();
 		void				generateStaticResponse();
@@ -114,6 +115,7 @@ class Client {
 
 		bool				getSetTargetFile(void);
 		bool				getResponseSent(void);
+		bool				getIsOutputAvailable(void);
 
 		void				appendToHeaderPart(const std::string& requestData);
 		void				appendToBodyPart(const std::string& requestData);
@@ -146,6 +148,7 @@ class Client {
 		void				setPipeReadComplete(bool);
 
 		void				setSetTargetFile(bool);
+		void				setIsOutputAvailable(bool value);
 
 		bool				parseRequest(void);
 		void				prinfRequestinfos(void);

@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/08/03 18:52:00 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/08 18:54:07 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 	ClientInfos clientinfos;
 		
 	std::memset(&clientEvent, 0, clientEventLen);
-	clientEvent.events = EPOLLIN | EPOLLET; // make the client socket Edge-Triggered
+	clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET; // make the client socket Edge-Triggered
 	
 	for (size_t i = 0; i < _listeningSockets.size(); i++) {
 		if (_listeningSockets[i].getFd() != NewEvent_fd)
@@ -126,7 +126,7 @@ void	ServerManager::processEvent(int serverIndex) {
 				std::cout << "Connection Error\n";
 				server.closeConnection(_events[i].data.fd);
 				continue ;
-			}			
+			}
 			else if (clientIterator->second.getIsCgiRequired() == CGI_REQUIRED) {
 				if ((_events[i].events & EPOLLHUP) && (_events[i].events & EPOLLIN)) {
 					std::cout << "set pipe to \"PIPE_IS_CLOSED\" (ready to read)\n";	
@@ -137,7 +137,9 @@ void	ServerManager::processEvent(int serverIndex) {
 			}
 			if (clientIterator->second.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_OFF)
 				clientIterator->second.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_ON);
-			clientIterator->second.setEvent(_epfd, _events[i]);	
+
+			clientIterator->second.setIsOutputAvailable(_events[i].events & EPOLLOUT);
+			// clientIterator->second.setEvent(_epfd, _events[i]);
 		}
 	}
 	server.eraseMarked();
