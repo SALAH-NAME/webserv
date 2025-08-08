@@ -71,6 +71,19 @@ private:
     bool isValidMethod(const std::string &method) const;
     bool isValidVersion(const std::string &version) const;
 
+    
+    bool shouldContinueParsing() const;
+    std::string extractNextLine(std::string& buffer, std::string::size_type& pos, bool& found);
+    void updateBufferAfterProcessing(std::string& buffer, std::string::size_type pos);
+    void handleParsingError(const HttpRequestException& e);
+    void processStartLine(const std::string& line);
+    void processHeaderLine(const std::string& line);
+    void processEndOfHeaders();
+    void validateRequiredHeaders();
+    void validatePostRequest();
+    bool isChunkedEncoding(const std::string& transferEncoding) const;
+    bool hasCompleteLineInBuffer(const std::string& buffer, std::string::size_type pos) const;
+
 public:
     HttpRequest();
 

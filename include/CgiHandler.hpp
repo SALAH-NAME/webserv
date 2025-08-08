@@ -54,7 +54,6 @@ class CgiHandler
 		void	StatusValidator();
 		void	AddNewHeader();
 		void	ClearData();
-		void	PreBodyPhraseChecks();
 		void	ContentLengthValidator();
 
 	public:
@@ -74,6 +73,7 @@ class CgiHandler
 		std::string							GetReasonPhrase();
 		int									GetContentLength();
 		void								KillChild();
+		void								PreBodyPhraseChecks();
 		std::vector<std::string>			&GetExtraCookieValues();
 		~CgiHandler();
 	

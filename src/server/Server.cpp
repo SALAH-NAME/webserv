@@ -6,19 +6,44 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/08/04 15:52:59 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/08 18:40:03 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Server.hpp"
 
 void	Server::initAttributes(int id) {
-	_domin = AF_INET;
+	_domain = AF_INET;
 	_type = SOCK_STREAM | SOCK_NONBLOCK;
 	_protocol = 0;
 	_ports = _serverConfig.getListens();
 	_timeOut = _serverConfig.getConnectionTimeout();
 	_id = id;
+}
+
+static void resolveIPv4(const std::string& host, struct in_addr& outAddr) {
+    struct addrinfo hints, *res = NULL;
+
+    std::memset(&hints, 0, sizeof(hints));
+
+    int status = getaddrinfo(host.c_str(), NULL, &hints, &res);
+    if (status != 0 || res == NULL)
+        throw std::runtime_error("getaddrinfo failed: " + std::string(gai_strerror(status)));
+
+    // Extract the IPv4 address
+    struct sockaddr_in* ipv4 = reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
+    outAddr = ipv4->sin_addr;
+
+    freeaddrinfo(res);
+}
+
+void	Server::setup_sockaddr(int port) {
+    _Address.sin_family = _domain;              // AF_INET
+    _Address.sin_port = htons(port);           // Desired port
+
+    struct in_addr resolvedAddr;
+    resolveIPv4(_serverConfig.getHost(), resolvedAddr);       // Resolve IP
+    _Address.sin_addr = resolvedAddr;          // Set resolved IPr;
 }
 
 Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serverConfig), _id(id), _transferSocket() {
@@ -35,18 +60,10 @@ Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serv
 			_listeningSockets[_listeningSockets.size() - 1].setsockopt(SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 			// fixed this problem ==>  the OS keeps the port in a "cool-down" period (TIME_WAIT)
 			// ==> It’s mainly for quick restart development or for binding during graceful restarts.
-			
-			std::memset(&_Address, 0, sizeof(_Address));
-			_Address.sin_family = _domin;
-			_Address.sin_port = htons(_ports[i]);
-			
-			if (inet_pton(AF_INET, serverConfig.getHost().c_str(), &_Address.sin_addr) <= 0) // forebiden
-				throw std::runtime_error(std::string("Invalid IP address: ") + strerror(errno));
 
-			struct sockaddr addr;
-			std::memcpy(&addr, &_Address, sizeof(_Address));
+			setup_sockaddr(_ports[i]);
 
-			_listeningSockets[_listeningSockets.size() - 1].bind(&addr, sizeof(_Address));
+			_listeningSockets[_listeningSockets.size() - 1].bind(reinterpret_cast<sockaddr*>(&_Address), sizeof(struct sockaddr));
 			_listeningSockets[_listeningSockets.size() - 1].listen();
 			std::cout << "Server(" << _id << ") {socket: " << _listeningSockets[_listeningSockets.size() - 1].getFd() << "} is listening on => ";
 			std::cout << serverConfig.getHost() << ":" << _ports[i] << "\n";
@@ -102,7 +119,7 @@ void	Server::closeConnection(int clientSocket) {
 void	Server::eraseMarked() {
 	for (size_t i = 0; i < _markedForEraseClients.size(); i++) {
 		close(_markedForEraseClients[i]);
-		// std::cout << "close connection: " << _markedForEraseClients[i] << "\n";
+		std::cout << "close connection: " << _markedForEraseClients[i] << "\n";
 		_clients.erase(_markedForEraseClients[i]);
 	}
 	_markedForEraseClients.clear();

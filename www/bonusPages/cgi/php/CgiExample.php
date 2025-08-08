@@ -2,11 +2,11 @@
 	$script = $argv[0];
 	$vesion = phpversion();;
 	echo "Status: 200\r\n";
-	echo "Content-Type: text/plain\r\n\r\n";
+	echo "Content-Type: text/html\r\n\r\n";
 ?>
 <html>
 	<head>
-		<title>python CGI</title>
+		<title>php CGI</title>
 	</head>
 	<body>
 		<p>

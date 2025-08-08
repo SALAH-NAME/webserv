@@ -224,96 +224,152 @@ void HttpRequest::parseHeaderLine(const std::string &line)
     headers[header_name] = header_value;
 }
 
-void HttpRequest::appendAndValidate(std::string& _parsing_buffer)
+bool HttpRequest::shouldContinueParsing() const
 {
-    if (state == STATE_ERROR || state == STATE_COMPLETE)
+    return state != STATE_ERROR && state != STATE_COMPLETE;
+}
+
+std::string HttpRequest::extractNextLine(std::string &buffer, std::string::size_type &pos, bool &found)
+{
+    std::string::size_type line_end = buffer.find("\r\n", pos);
+    if (line_end == std::string::npos)
+    {
+        found = false;
+        return "";
+    }
+
+    found = true;
+    std::string line = buffer.substr(pos, line_end - pos);
+    pos = line_end + 2; // Skip \r\n
+    return line;        // Note: line can be empty (empty line) but found will be true
+}
+
+void HttpRequest::updateBufferAfterProcessing(std::string &buffer, std::string::size_type pos)
+{
+    if (pos > 0)
+        buffer = buffer.substr(pos);
+}
+
+void HttpRequest::handleParsingError(const HttpRequestException &e)
+{
+    state = STATE_ERROR;
+    valid = false;
+    status_code = e.statusCode();
+    error_msg = e.what();
+}
+
+
+void HttpRequest::processStartLine(const std::string &line)
+{
+    if (!_start_line_parsed)
+    {
+        validateStartLine(line);
+        parseStartLine(line);
+        _start_line_parsed = true;
+        state = STATE_HEADERS;
+    }
+}
+
+
+void HttpRequest::processHeaderLine(const std::string &line)
+{
+    if (line.empty())
+        processEndOfHeaders();
+    else
+    {
+        validateHeaderLine(line);
+        parseHeaderLine(line);
+    }
+}
+
+
+void HttpRequest::processEndOfHeaders()
+{
+    // Empty line so end of headers
+    state = STATE_BODY; //  STATE_COMPLETE
+    valid = true;
+    status_code = 200;
+
+    validateRequiredHeaders();
+    validatePostRequest();
+}
+
+void HttpRequest::validateRequiredHeaders()
+{
+    if (headers.find("host") == headers.end())
+        throw HttpRequestException(400, "Missing Host header");
+}
+
+void HttpRequest::validatePostRequest()
+{
+    // For POST requests, validate Content-Length or Transfer-Encoding
+    if (method == "POST")
+    {
+        bool hasContentLength = headers.find("content-length") != headers.end();
+        bool hasChunked = false;
+        std::map<std::string, std::string>::const_iterator it = headers.find("transfer-encoding");
+        if (it != headers.end())
+        {
+            hasChunked = isChunkedEncoding(it->second);
+        }
+        if (!hasContentLength && !hasChunked)
+            throw HttpRequestException(411, "Length Required");
+    }
+}
+
+bool HttpRequest::isChunkedEncoding(const std::string &transferEncoding) const
+{
+    std::string::size_type pos = transferEncoding.find("chunked");
+    return pos != std::string::npos;
+}
+
+bool HttpRequest::hasCompleteLineInBuffer(const std::string &buffer, std::string::size_type pos) const
+{
+    return buffer.find("\r\n", pos) != std::string::npos;
+}
+
+void HttpRequest::appendAndValidate(std::string &_parsing_buffer)
+{
+    if (!shouldContinueParsing())
         return;
 
     std::string::size_type pos = 0;
-    std::string::size_type line_end;
+    std::string::size_type original_pos = 0;
 
-    // Process complete lines (ending with \r\n)
-    while ((line_end = _parsing_buffer.find("\r\n", pos)) != std::string::npos)
+    // Process all complete lines in the buffer
+    while (hasCompleteLineInBuffer(_parsing_buffer, pos))
     {
-        std::string line = _parsing_buffer.substr(pos, line_end - pos);
+        original_pos = pos;
+        bool line_found = false;
+        std::string line = extractNextLine(_parsing_buffer, pos, line_found);
+        if (!line_found) // No complete line found
+        {
+            pos = original_pos; // Reset pos to where we started
+            break;
+        }
 
         try
         {
             if (state == STATE_START_LINE)
-            {
-                if (!_start_line_parsed)
-                {
-                    validateStartLine(line);
-                    parseStartLine(line);
-                    _start_line_parsed = true;
-                    state = STATE_HEADERS;
-                }
-            }
+                processStartLine(line);
             else if (state == STATE_HEADERS)
             {
-                if (line.empty())
-                {
-                    // Empty line so end of headers
-                    state = STATE_BODY; //  STATE_COMPLETE
-                    valid = true;
-                    status_code = 200;
-                    
-                    if (headers.find("host") == headers.end())
-                        throw HttpRequestException(400, "Missing Host header");
-                    
-                    // For POST requests, validate Content-Length or Transfer-Encoding
-                    if (method == "POST")
-                    {
-                        bool hasContentLength = headers.find("content-length") != headers.end();
-                        bool hasChunked = false;
-                        std::map<std::string, std::string>::const_iterator it = headers.find("transfer-encoding");
-                        if (it != headers.end())
-                        {
-                            std::string val = it->second;
-                            std::string::size_type pos = val.find("chunked");
-                            if (pos != std::string::npos)
-                                hasChunked = true;
-                        }
-                        if (!hasContentLength && !hasChunked)
-                            throw HttpRequestException(411, "Length Required");
-                    }
+                processHeaderLine(line);
+                if (state == STATE_BODY) // End of headers reached
                     break;
-                }
-                else
-                {
-                    validateHeaderLine(line);
-                    parseHeaderLine(line);
-                }
             }
         }
         catch (const HttpRequestException &e)
         {
-            state = STATE_ERROR;
-            valid = false;
-            status_code = e.statusCode();
-            error_msg = e.what();
+            handleParsingError(e);
             throw;
         }
-
-        pos = line_end + 2; // Skip \r\n
     }
 
-    // Remove processed lines from buffer
-    if (pos > 0)
-        _parsing_buffer = _parsing_buffer.substr(pos);
-    
-    // Handle body if it in STATE_BODY
-    // if (state == STATE_BODY && !_parsing_buffer.empty())
-    // {
-    //     // Remove newlines if present (body starts after \r\n\r\n)
-    //     std::string::size_type body_start = 0;
-    //     while (body_start < _parsing_buffer.length() && (_parsing_buffer[body_start] == '\r' || _parsing_buffer[body_start] == '\n'))
-    //         body_start++;
-    //     body = _parsing_buffer.substr(body_start);
-    //     _parsing_buffer.clear();
-    //     // NOTE: Don't transition to STATE_COMPLETE
-    //     // TODO: Let the caller decide when the request is complete
-    // }
+    // Remove processed data from buffer
+    updateBufferAfterProcessing(_parsing_buffer, pos);
+
+    // state == STATE_BODY when headers are complete
 }
 
 bool HttpRequest::hasCompleteRequest() const
