@@ -294,22 +294,6 @@ void ConfigParser::parseDirective(BaseConfig& config, bool is_server,
 			{
 				parseServerName(server);
 			}
-			else if (directive == "session_enable")
-			{
-				parseSessionEnable(server);
-			}
-			else if (directive == "session_name")
-			{
-				parseSessionName(server);
-			}
-			else if (directive == "session_path")
-			{
-				parseSessionPath(server);
-			}
-			else if (directive == "session_timeout")
-			{
-				parseSessionTimeout(server);
-			}
 			else if (directive == "connection_timeout")
 			{
 				parseConnectionTimeout(server);
@@ -335,10 +319,6 @@ void ConfigParser::parseDirective(BaseConfig& config, bool is_server,
 			else if (directive == "cgi_timeout")
 			{
 				parseCgiTimeout(location);
-			}
-			else if (directive == "session_timeout")
-			{
-				parseSessionTimeout(location);
 			}
 			else
 			{
@@ -567,80 +547,6 @@ void ConfigParser::parseServerName(ServerConfig& server)
 
 	server.setServerNames(names);
 	expectSemicolon("Expected semicolon after server_name directive");
-}
-
-void ConfigParser::parseSessionEnable(ServerConfig& server)
-{
-	std::string value =
-			expectString("Expected 'on' or 'off' for session_enable directive");
-
-	if (value == "on")
-	{
-		server.setSessionEnable(true);
-	}
-	else if (value == "off")
-	{
-		server.setSessionEnable(false);
-	}
-	else
-	{
-		throw ParseError("Invalid session_enable value: " + value +
-												 " (expected 'on' or 'off')",
-										 _tokenizer.front().line, _tokenizer.front().column);
-	}
-
-	expectSemicolon("Expected semicolon after session_enable directive");
-}
-
-void ConfigParser::parseSessionName(ServerConfig& server)
-{
-	std::string name = expectString("Expected name for session_name directive");
-	server.setSessionName(name);
-	expectSemicolon("Expected semicolon after session_name directive");
-}
-
-void ConfigParser::parseSessionPath(ServerConfig& server)
-{
-	std::string path = expectString("Expected path for session_path directive");
-
-	if (!isValidPath(path))
-	{
-		throw ParseError("Invalid path: " + path, _tokenizer.front().line,
-										 _tokenizer.front().column);
-	}
-
-	server.setSessionPath(path);
-	expectSemicolon("Expected semicolon after session_path directive");
-}
-
-void ConfigParser::parseSessionTimeout(ServerConfig& server)
-{
-	int timeout =
-			expectNumber("Expected timeout value for session_timeout directive");
-
-	if (!isValidTimeout(timeout))
-	{
-		throw ParseError("Invalid timeout value: " + to_string(timeout),
-										 _tokenizer.front().line, _tokenizer.front().column);
-	}
-
-	server.setSessionTimeout(timeout);
-	expectSemicolon("Expected semicolon after session_timeout directive");
-}
-
-void ConfigParser::parseSessionTimeout(LocationConfig& location)
-{
-	int timeout =
-			expectNumber("Expected timeout value for session_timeout directive");
-
-	if (!isValidTimeout(timeout))
-	{
-		throw ParseError("Invalid timeout value: " + to_string(timeout),
-										 _tokenizer.front().line, _tokenizer.front().column);
-	}
-
-	location.setSessionTimeout(timeout);
-	expectSemicolon("Expected semicolon after session_timeout directive");
 }
 
 void ConfigParser::parseRedirect(LocationConfig& location)

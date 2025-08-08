@@ -30,10 +30,8 @@ Directive = [WhiteSpace], DirectiveName, {(WhiteSpace, Value)}+, [WhiteSpace], "
 
 (* Directive names *)
 DirectiveName = "listen" | "host" | "server_name" | "error_page" | "client_max_body_size" |
-                "root" | "index" | "allowed_methods" | "autoindex" | "return" |
-                "cgi_pass" | "cgi_timeout" | "session_enable" | 
-                "session_name" | "session_path" | "session_timeout" |
-                "connection_timeout" | "error_log" | "access_log";
+                "root" | "index" | "allowed_methods" | "autoindex" | "return" | "cgi_pass" |
+                "cgi_timeout" | "connection_timeout" | "error_log" | "access_log";
 
 (* Value types *)
 Value = Number | Size | String;

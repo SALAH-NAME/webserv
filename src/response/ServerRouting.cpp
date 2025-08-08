@@ -136,7 +136,6 @@ void ResponseHandler::MakeLocationFromSrvConf()
     tmp->setIndex(conf.getIndex());
     tmp->setPath("/");
     tmp->setRoot(conf.getRoot());
-    tmp->setSessionTimeout(conf.getSessionTimeout());
     loc_config = tmp;
 }
 
