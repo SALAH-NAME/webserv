@@ -52,11 +52,6 @@ void BaseConfig::addAllowedMethod(HttpMethod method)
 
 void BaseConfig::setAutoindex(bool autoindex) { _autoindex = autoindex; }
 
-void BaseConfig::setUploadStore(const std::string& path)
-{
-	_upload_store = path;
-}
-
 const std::map<int, std::string>& BaseConfig::getErrorPages() const
 {
 	return _error_pages;
@@ -92,8 +87,6 @@ bool BaseConfig::isMethodAllowed(HttpMethod method) const
 
 bool BaseConfig::getAutoindex() const { return _autoindex; }
 
-const std::string& BaseConfig::getUploadStore() const { return _upload_store; }
-
 void BaseConfig::inheritFrom(const BaseConfig& parent)
 {
 	if (_error_pages.empty())
@@ -106,6 +99,4 @@ void BaseConfig::inheritFrom(const BaseConfig& parent)
 		_index = parent.getIndex();
 	if (_allowed_methods.empty())
 		_allowed_methods = parent.getAllowedMethods();
-	if (_upload_store.empty())
-		_upload_store = parent.getUploadStore();
 }

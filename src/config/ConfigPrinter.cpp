@@ -197,12 +197,6 @@ void ConfigPrinter::printBaseConfig(std::ostream& out, const BaseConfig& config,
 
 	printIndent(out, indent_level);
 	out << "autoindex " << (config.getAutoindex() ? "on" : "off") << ";\n";
-
-	if (!config.getUploadStore().empty())
-	{
-		printIndent(out, indent_level);
-		out << "upload_store " << config.getUploadStore() << ";\n";
-	}
 }
 
 void ConfigPrinter::printLocationConfig(std::ostream&					out,

@@ -278,10 +278,6 @@ void ConfigParser::parseDirective(BaseConfig& config, bool is_server,
 		{
 			parseAutoindex(config);
 		}
-		else if (directive == "upload_store")
-		{
-			parseUploadStore(config);
-		}
 		else if (is_server)
 		{
 			ServerConfig& server = static_cast<ServerConfig&>(config);
@@ -515,20 +511,6 @@ void ConfigParser::parseAutoindex(BaseConfig& config)
 	}
 
 	expectSemicolon("Expected semicolon after autoindex directive");
-}
-
-void ConfigParser::parseUploadStore(BaseConfig& config)
-{
-	std::string path = expectString("Expected path for upload_store directive");
-
-	if (!isValidPath(path))
-	{
-		throw ParseError("Invalid path: " + path, _tokenizer.front().line,
-										 _tokenizer.front().column);
-	}
-
-	config.setUploadStore(path);
-	expectSemicolon("Expected semicolon after upload_store directive");
 }
 
 void ConfigParser::parseListen(ServerConfig& server)
@@ -860,7 +842,7 @@ bool ConfigParser::isValidPort(int port) { return port > 0 && port <= 65535; }
 
 bool ConfigParser::isValidPath(const std::string& path)
 {
-	return !path.empty() && path[0] == '/';
+	return !path.empty() && (path[0] == '/' || (path.length() >= 2 && path.substr(0, 2) == "./"));
 }
 
 bool ConfigParser::isValidTimeout(int timeout)

@@ -30,7 +30,6 @@ private:
 	void parseIndex(BaseConfig& config);
 	void parseAllowedMethods(BaseConfig& config);
 	void parseAutoindex(BaseConfig& config);
-	void parseUploadStore(BaseConfig& config);
 
 	void parseListen(ServerConfig& server);
 	void parseHost(ServerConfig& server);
