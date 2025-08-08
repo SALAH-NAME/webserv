@@ -476,7 +476,7 @@ void				Client::printClientStatus(void) {
 	std::cout << "  ##  _responseSent : " << _responseSent << "  ## \n";
 	std::cout << "--------------------------------------------------------\n\n";
 
-	printRequestAndResponse("Pending data", _pendingRequestDataHolder);
+	// printRequestAndResponse("Pending data", _pendingRequestDataHolder);
 
 	// exit(0);
 }

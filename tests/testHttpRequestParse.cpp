@@ -101,7 +101,7 @@ static void test_unsupported_method() {
 }
 
 static void test_unsupported_version() {
-    std::string raw = "GET /index.html HTTP/1.0" CRLF "Host: localhost" CRLF CRLF;
+    std::string raw = "GET /index.html HTTP/2.0" CRLF "Host: localhost" CRLF CRLF;
     HttpRequest req;
     std::string buffer = raw;
     try {
@@ -179,12 +179,6 @@ static void test_post_content_length() {
     print_result("POST with Content-Length", ok && req.getMethod() == "POST");
 }
 
-static void test_exception_handling() {
-    std::string raw = "BROKEN REQUEST" CRLF CRLF;
-    HttpRequest req;
-    print_result("Exception thrown on error", true); // Always true, parse() catches internally
-}
-
 static void test_cookie_parsing() {
     std::string raw = "GET / HTTP/1.1" CRLF "Host: localhost" CRLF "Cookie: sessionid=abc123; theme=dark; lang=en" CRLF CRLF;
     HttpRequest req;
@@ -224,41 +218,26 @@ static void test_incremental_parsing() {
     
     try {
         bool pass = true;
-        // std::cout << "1. Adding start line..." << std::endl;
         std::string line1 = "GET /test?param=value HTTP/1.1\r\n";
         req.appendAndValidate(line1);
-        // std::cout << "   State: " << req.getState() << " (should be 1 = STATE_HEADERS)" << std::endl;
         pass = req.getState() == HttpRequest::STATE_HEADERS && req.getMethod() == "GET" && req.getUri() == "/test?param=value" && req.getVersion() == "HTTP/1.1";
         print_result("Adding start line ", pass);
         
-        // std::cout << "2. Adding first header..." << std::endl;
         std::string line2 = "Host: localhost\r\n";
         req.appendAndValidate(line2);
-        // std::cout << "   State: " << req.getState() << std::endl;
         pass = req.getState() == HttpRequest::STATE_HEADERS && req.getHeaders().at("host") == "localhost" && req.getHeaders().size() == 1;
         print_result("Adding first header ", pass);
         
-        // std::cout << "3. Adding second header..." << std::endl;
         std::string line3 = "User-Agent: TestClient/1.0\r\n";
         req.appendAndValidate(line3);
-        // std::cout << "   State: " << req.getState() << std::endl;
         pass = req.getState() == HttpRequest::STATE_HEADERS && req.getHeaders().at("user-agent") == "TestClient/1.0" && req.getHeaders().size() == 2;
         print_result("Adding second header ", pass);
         
-        // std::cout << "4. Adding end of headers..." << std::endl;
         std::string line4 = "\r\n";
         req.appendAndValidate(line4);
-        // std::cout << "   State: " << req.getState() << " (should be 2 = STATE_BODY, 3 = STATE_COMPLETE)" << std::endl;
         pass = req.getState() == HttpRequest::STATE_BODY && req.getHeaders().size() == 2;
         print_result("Adding end of headers ", pass);
         
-        // std::cout << "5. Checking parsed data:" << std::endl;
-        // std::cout << "   Method: " << req.getMethod() << std::endl;
-        // std::cout << "   Path: " << req.getPath() << std::endl;
-        // std::cout << "   Query: " << req.getQueryString() << std::endl;
-        // std::cout << "   Version: " << req.getVersion() << std::endl;
-        // std::cout << "   Is Valid: " << req.isValid() << std::endl;
-        // std::cout << "   Has Complete Request: " << req.hasCompleteRequest() << std::endl;
         pass = req.getState() == HttpRequest::STATE_BODY && req.getHeaders().size() == 2 && req.getMethod() == "GET" && req.getUri() == "/test?param=value" && req.getVersion() == "HTTP/1.1" && req.isValid() \
             && req.getPath() == "/test" && req.getQueryString() == "param=value" && req.getQueryParams().size() == 1 && req.getQueryParams().at("param")[0] == "value" && req.getQueryParams().at("param").size() == 1;
         print_result("Checking parsed data ", pass);
@@ -274,28 +253,403 @@ static void test_incremental_error_detection() {
     HttpRequest req;
     
     try {
-        // std::cout << "1. Adding invalid method..." << std::endl;
         std::string invalidLine = "INVALID /test HTTP/1.1\r\n";
         req.appendAndValidate(invalidLine);
         std::cout << "   This should not be reached!" << std::endl;
     } catch (const HttpRequestException& e) {
-        // std::cout << "   CAUGHT ERROR (expected): " << e.what() << " (Status: " << e.statusCode() << ")" << std::endl;
         print_result("Adding invalid method ", e.statusCode() == 405);
     }
     
     req.reset();
     
     try {
-        // std::cout << "2. Adding too large start line..." << std::endl;
         std::string large_request = "GET ";
         large_request += std::string(5000, 's');
         large_request += " HTTP/1.1\r\n";
         req.appendAndValidate(large_request);
         std::cout << "   This should not be reached!" << std::endl;
     } catch (const HttpRequestException& e) {
-        // std::cout << "   CAUGHT ERROR (expected): " << e.what() << " (Status: " << e.statusCode() << ")" << std::endl;
         print_result("Adding too large start line ", e.statusCode() == 414);
     }
+}
+
+static void test_http10_getWithoutHost() 
+{
+    std::string raw = "GET /index.html HTTP/1.0" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.0 GET without Host", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.0 GET without Host", false);
+    }
+}
+
+static void test_http10_getWithHost()
+{
+    std::string raw = "GET /index.html HTTP/1.0" CRLF "Host: localhost" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.0 GET with Host", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.0 GET with Host", false);
+    }
+}
+
+static void test_http10_postWithContentLength()
+{
+    std::string raw = "POST /submit HTTP/1.0" CRLF "Content-Length: 5" CRLF CRLF "hello";
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.0 POST with Content-Length", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.0 POST with Content-Length", false);
+    }
+}
+
+static void test_http10_postWithoutContentLength()
+{
+    std::string raw = "POST /submit HTTP/1.0" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.0 POST without Content-Length", !req.isValid() && req.getStatusCode() == 400);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.0 POST without Content-Length", ex.statusCode() == 400);
+    }
+}
+static void test_http10_withTransferEncoding()
+{
+    std::string raw = "POST /submit HTTP/1.0" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.0 with Transfer-Encoding", !req.isValid() && req.getStatusCode() == 400);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.0 with Transfer-Encoding", ex.statusCode() == 400);
+    }
+}
+
+static void test_http10_compliance() {
+    std::cout << "\n=== Testing HTTP/1.0 Compliance ===" << std::endl;
+    
+    test_http10_getWithoutHost();
+    test_http10_getWithHost();
+    test_http10_postWithContentLength();
+    test_http10_postWithoutContentLength();
+    test_http10_withTransferEncoding();
+}
+
+
+static void test_http11_getWithoutHost()
+{
+    std::string raw = "GET /index.html HTTP/1.1" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.1 GET without Host", !req.isValid() && req.getStatusCode() == 400);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.1 GET without Host", ex.statusCode() == 400);
+    }
+}
+
+static void test_http11_getWithHost()
+{
+    std::string raw = "GET /index.html HTTP/1.1" CRLF "Host: localhost" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.1 GET with Host", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.1 GET with Host", false);
+    }
+}
+
+
+static void test_http11_postWithContentLength()
+{
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Content-Length: 5" CRLF CRLF "hello";
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.1 POST with Content-Length", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.1 POST with Content-Length", false);
+    }
+}
+
+static void test_http11_postWithTransferEncoding()
+{
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.1 POST with Transfer-Encoding", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.1 POST with Transfer-Encoding", false);
+    }
+}
+
+static void test_http11_postWithoutLengthInfo()
+{
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.1 POST without length info", !req.isValid() && req.getStatusCode() == 411);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.1 POST without length info", ex.statusCode() == 411);
+    }
+}
+
+
+
+static void test_http11_compliance() {
+    std::cout << "\n=== Testing HTTP/1.1 Compliance ===" << std::endl;
+    
+    test_http11_getWithoutHost();
+    test_http11_getWithHost();
+    test_http11_postWithContentLength();
+    test_http11_postWithTransferEncoding();
+    test_http11_postWithoutLengthInfo();
+}
+
+static void test_conflicting_headers() {
+    std::cout << "\n=== Testing Conflicting Headers ===" << std::endl;
+    
+    {
+        std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF 
+                         "Content-Length: 5" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+        HttpRequest req;
+        std::string buffer = raw;
+        try {
+            req.appendAndValidate(buffer);
+            print_result("Content-Length + Transfer-Encoding conflict", !req.isValid() && req.getStatusCode() == 400);
+        } catch (const HttpRequestException &ex) {
+            print_result("Content-Length + Transfer-Encoding conflict", ex.statusCode() == 400);
+        }
+    }
+}
+
+static void test_duplicate_headers() {
+    std::cout << "\n=== Testing Duplicate Headers ===" << std::endl;
+    
+    {
+        std::string raw = "GET /index.html HTTP/1.1" CRLF "Host: localhost" CRLF 
+                         "Content-Length: 30" CRLF "Content-Length: 20" CRLF CRLF;
+        HttpRequest req;
+        std::string buffer = raw;
+        try {
+            req.appendAndValidate(buffer);
+            print_result("Duplicate headers handling", false);
+        } catch (const HttpRequestException &ex) {
+            print_result("Duplicate headers handling", ex.statusCode() == 400);
+        }
+    }
+}
+
+static void test_http11_postWithInvalidLength()
+{
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF 
+                     "Content-Length: invalid" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("Invalid Content-Length value", !req.isValid() && req.getStatusCode() == 400);
+    } catch (const HttpRequestException &ex) {
+        print_result("Invalid Content-Length value", ex.statusCode() == 400);
+    }
+}
+
+static void test_http11_postWithEmptyLength()
+{
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF 
+                     "Content-Length: " CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("Empty Content-Length value", !req.isValid() && req.getStatusCode() == 400);
+    } catch (const HttpRequestException &ex) {
+        print_result("Empty Content-Length value", ex.statusCode() == 400);
+    }
+}
+
+static void test_http11_postWithNegativeLength()
+{
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF 
+                     "Content-Length: -5" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("Negative Content-Length value", !req.isValid() && req.getStatusCode() == 400);
+    } catch (const HttpRequestException &ex) {
+        print_result("Negative Content-Length value", ex.statusCode() == 400);
+    }
+}
+
+static void test_invalid_header_values() {
+    std::cout << "\n=== Testing Invalid Header Values ===" << std::endl;
+
+    test_http11_postWithInvalidLength();
+    test_http11_postWithEmptyLength();
+    test_http11_postWithNegativeLength();
+}
+
+static void test_http10_postWithValidLengthNoBody()
+{
+    std::string raw = "POST /submit HTTP/1.0" CRLF "Content-Length: 123" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.0 valid Content-Length", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.0 valid Content-Length", false);
+    }
+}
+
+static void test_http11_postWithValidLengthNoBody()
+{
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF 
+                     "Content-Length: 456" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.1 valid Content-Length", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.1 valid Content-Length", false);
+    }
+}
+
+static void test_http11_postWithTransferEncodingMany()
+{
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF 
+                     "Transfer-Encoding: gzip, chunked" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.1 Transfer-Encoding with chunked", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.1 Transfer-Encoding with chunked", false);
+    }
+}
+
+static void test_version_specific_requirements() {
+    std::cout << "\n=== Testing Version-Specific Requirements ===" << std::endl;
+    
+    test_http10_postWithValidLengthNoBody();
+    test_http11_postWithValidLengthNoBody();
+    test_http11_postWithTransferEncodingMany();
+}
+
+static void test_http10_postWithLengthZero()
+{
+    std::string raw = "POST /submit HTTP/1.0" CRLF "Content-Length: 0" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.0 POST Content-Length: 0", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.0 POST Content-Length: 0", false);
+    }
+}
+
+static void test_http11_postWithLengthZero()
+{
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF 
+                     "Content-Length: 0" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("HTTP/1.1 POST Content-Length: 0", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("HTTP/1.1 POST Content-Length: 0", false);
+    }
+}
+
+static void test_http11_postWithLengthTrimmed()
+{
+    std::string raw = "POST /submit HTTP/1.0" CRLF "Content-Length:  123  " CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("Content-Length with spaces", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("Content-Length with spaces", false);
+    }
+}
+
+static void test_http11_postWithChunkedCase()
+{
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF 
+                     "Transfer-Encoding: CHUNKED" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("Transfer-Encoding case insensitive", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("Transfer-Encoding case insensitive", false);
+    }
+}
+
+static void test_http11_postLargeLength()
+{
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF 
+                     "Content-Length: 999999999" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("Large Content-Length value", req.isValid() && req.getStatusCode() == 200);
+    } catch (const HttpRequestException &ex) {
+        print_result("Large Content-Length value", false);
+    }
+}
+
+static void test_http11_postWithAlphaLength()
+{
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF 
+                     "Content-Length: 123abc" CRLF CRLF;
+    HttpRequest req;
+    std::string buffer = raw;
+    try {
+        req.appendAndValidate(buffer);
+        print_result("Content-Length with alphanumeric", !req.isValid() && req.getStatusCode() == 400);
+    } catch (const HttpRequestException &ex) {
+        print_result("Content-Length with alphanumeric", ex.statusCode() == 400);
+    }
+}
+
+static void test_edge_cases() {
+    std::cout << "\n=== Testing Edge Cases ===" << std::endl;
+    
+    test_http10_postWithLengthZero();
+    test_http11_postWithLengthZero();
+    test_http11_postWithLengthTrimmed();
+    test_http11_postWithChunkedCase();
+    test_http11_postLargeLength();
+    test_http11_postWithAlphaLength();
 }
 
 void testHttpRequestParse() {
@@ -315,12 +669,21 @@ void testHttpRequestParse() {
     test_post_411_length_required();
     test_post_chunked();
     test_post_content_length();
-    test_exception_handling();
     test_cookie_parsing();
     test_session_id();
     test_cookie_edge_cases();
 
     test_incremental_parsing();
     test_incremental_error_detection();
+    
+    test_http10_compliance();
+    test_http11_compliance();
+    test_conflicting_headers();
+    test_duplicate_headers();
+    test_invalid_header_values();
+    test_version_specific_requirements();
+    
+    test_edge_cases();
+    
     std::cout << "=== End HttpRequest Parse Tests ===\n";
 }

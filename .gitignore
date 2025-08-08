@@ -10,8 +10,10 @@ compile_commands.json
 webserv
 unit
 intra_test/
-.vscode
+.vscode/
 deleteme/
 ./*.txt
 build/
 *.log
+tags
+__pycache__/
