@@ -4,6 +4,7 @@ CgiHandler::CgiHandler()
 {
 	content_length = -1;
 	child_pid = 0;
+	prev_buf_l_char = 0;
 	exec_t0 = -1;
 	Body_phase = false;
 }
@@ -70,6 +71,11 @@ std::time_t	CgiHandler::GetExecutionStartTime(){return exec_t0;}
 
 std::string	CgiHandler::GetPreservedBody(){return preserved_body;}
 
+bool CgiHandler::PostReq()
+{
+	return is_POST;
+}
+
 int	CgiHandler::GetStatusCode(){return status_code;}
 
 int CgiHandler::GetContentLength(){return content_length;}
@@ -104,6 +110,7 @@ void CgiHandler::ClearData()
 	preserved_body.clear();
 	key_holder.clear();
 	value_holder.clear();
+	prev_buf_l_char = 0;
 }
 
 void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,

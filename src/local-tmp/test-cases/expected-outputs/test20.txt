@@ -1,0 +1,14 @@
+CGI CHILD EXIT STATUS = -1
+=== RESPONSE HEADER ===
+HTTP/1.1 200 OK
+Date: Fri, 08 Aug 2025 22:42:52 GMT
+Server: Ed, Edd n Eddy/1.0
+Connection: close
+content-type: text/plain
+Content-Length: 24
+
+=== RESPONSE BODY (from tmpfile) ===
+line1
+line2
+line3
+line4

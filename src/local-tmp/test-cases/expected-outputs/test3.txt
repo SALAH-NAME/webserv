@@ -1,0 +1,23 @@
+=== RESPONSE HEADER ===
+HTTP/1.1 200 OK
+Server: Ed, Edd n Eddy/1.0
+Date: Thu, 07 Aug 2025 13:13:46 GMT
+Connection: close
+Content-Type: text/html
+Content-Length: 957
+
+
+<html>
+	<head><title>Index of /</title></head>
+	<body>
+		<h1>Index of /</h1><hr>
+		<pre>
+<a href="..">..</a>                                                 07-Aug-2025 13:09                4096
+<a href="cgi">cgi</a>                                                07-Aug-2025 13:06                4096
+<a href="error">error</a>                                              07-Aug-2025 13:06                4096
+<a href="index.htm">index.htm</a>                                          07-Aug-2025 13:06                 144
+<a href="media">media</a>                                              07-Aug-2025 13:06                4096
+<a href="modmodamodmodmodmodmodmodmodmodmodfsfgfgdfgdfgsfksjgjhfgsjgfjgfjghsdfkjghsfjksghdf">modmodamodmodmodmodmodmodmodmodmodfsfgfgdfgdfgs..&gt;</a> 07-Aug-2025 13:06                   0
+<a href="pouic">pouic</a>                                              07-Aug-2025 13:06                4096</pre><hr>
+	</body>
+</html>

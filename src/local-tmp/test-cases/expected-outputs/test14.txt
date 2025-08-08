@@ -1,0 +1,19 @@
+CGI CHILD EXIT STATUS = 0
+=== CGI RAW OUTPUT ===
+Content-Type: text/plain
+Content-Length: 310
+Server: Ed, Edd n Eddy
+Status: 200 OK
+
+'GATEWAY_INTERFACE': 'CGI/1.1'
+'HTTP_host': '127.0.0.1'
+'PATH_INFO': ''
+'QUERY_STRING': ''
+'REMOTE_ADDR': '0.0.0.0'
+'REQUEST_METHOD': 'GET'
+'SCRIPT_NAME': '/py/PrintEnv.py'
+'SERVER_NAME': '127.0.0.2'
+'SERVER_PORT': '8000'
+'SERVER_PROTOCOL': 'HTTP/1.1'
+'SERVER_SOFTWARE': 'Ed Edd n Eddy/1.0'
+'LC_CTYPE': 'C.UTF-8'

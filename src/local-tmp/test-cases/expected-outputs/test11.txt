@@ -1,0 +1,17 @@
+=== RESPONSE HEADER ===
+HTTP/1.1 404 Not Found
+Server: Ed, Edd n Eddy/1.0
+Date: Thu, 07 Aug 2025 13:23:13 GMT
+Connection: close
+Content-Type: text/html
+Content-Length: 152
+
+
+=== FILE CONTENT ===
+<html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+<hr><center>Ed, Edd n Eddy/1.0</center>
+</body>
+</html>

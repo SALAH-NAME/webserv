@@ -33,6 +33,7 @@ class CgiHandler
 		Pipe								output_pipe;
 		Pipe								input_pipe;
 		Environment							env;
+		char 								prev_buf_l_char;//last char from buffer
 		int									child_pid;
 		bool								Body_phase;
 		std::time_t							exec_t0;
@@ -73,8 +74,12 @@ class CgiHandler
 		std::string							GetReasonPhrase();
 		int									GetContentLength();
 		void								KillChild();
+		bool								PostReq();
 		void								PreBodyPhraseChecks();
 		std::vector<std::string>			&GetExtraCookieValues();
+		void								SyntaxErrorsCheck(const std::string &buff,
+													unsigned int i, bool key_phase);
+
 		~CgiHandler();
 	
 		class BadCgiOutput : public std::exception

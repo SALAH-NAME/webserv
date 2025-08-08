@@ -1,0 +1,9 @@
+=== RESPONSE HEADER ===
+HTTP/1.1 201 Created
+Server: Ed, Edd n Eddy/1.0
+Date: Thu, 07 Aug 2025 13:19:23 GMT
+Connection: close
+
+
+target File: '/home/midbella/Desktop/webserv/src/local-tmp/www///from_client.txt'
+is ready for input

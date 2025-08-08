@@ -1,0 +1,12 @@
+CGI CHILD EXIT STATUS = 0
+=== RESPONSE HEADER ===
+HTTP/1.1 200 OK
+Date: Thu, 07 Aug 2025 13:26:15 GMT
+Connection: close
+content-length: 83
+content-type: text/txt
+server: Ed, Edd n Eddy
+
+=== RESPONSE BODY (from tmpfile) ===
+Cgi current working dir:
+	 /home/midbella/Desktop/webserv/src/local-tmp/www/cgi/py

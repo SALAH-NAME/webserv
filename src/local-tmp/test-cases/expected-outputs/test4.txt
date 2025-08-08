@@ -1,0 +1,17 @@
+=== RESPONSE HEADER ===
+HTTP/1.1 301 Moved Permanently
+Server: Ed, Edd n Eddy/1.0
+Date: Thu, 07 Aug 2025 13:14:45 GMT
+Connection: close
+Content-Type: text/html
+Content-Length: 167
+Location: http://127.0.0.1/visuals/
+
+
+<html>
+<head><title>301 Moved Permanently</title></head>
+<body>
+<center><h1>301 Moved Permanently</h1></center>
+<hr><center>Ed, Edd n Eddy/1.0</center>
+</body>
+</html>

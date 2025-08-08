@@ -1,0 +1,21 @@
+=== RESPONSE HEADER ===
+HTTP/1.1 200 OK
+Server: Ed, Edd n Eddy/1.0
+Date: Thu, 07 Aug 2025 13:21:44 GMT
+Connection: close
+Content-Type: text/html
+Content-Length: 144
+
+
+=== FILE CONTENT ===
+<html>
+	<Head>
+		<title>Webserver</title>
+	</Head>
+	<body>
+		<h1>lorem ipsum</h1>
+		<p>
+			Mus, nec orci platea cum dis?
+		</p>
+	</body>
+</html>

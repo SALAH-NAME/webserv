@@ -1,0 +1,24 @@
+CGI CHILD EXIT STATUS = 0
+=== RESPONSE HEADER ===
+HTTP/1.1 200 OK
+Date: Thu, 07 Aug 2025 13:26:38 GMT
+Server: Ed, Edd n Eddy/1.0
+Connection: close
+content-type: text/plain
+Content-Length: 318
+
+=== RESPONSE BODY (from tmpfile) ===
+SERVER_NAME=127.0.0.2
+SCRIPT_NAME=/PrintEnv.sh
+GATEWAY_INTERFACE=CGI/1.1
+SERVER_SOFTWARE=Ed Edd n Eddy/1.0
+PATH_INFO=
+PWD=/home/midbella/Desktop/webserv/src/local-tmp/www/cgi/bash
+QUERY_STRING=
+HTTP_host=127.0.0.1
+SHLVL=1
+SERVER_PROTOCOL=HTTP/1.1
+SERVER_PORT=8000
+REMOTE_ADDR=0.0.0.0
+REQUEST_METHOD=GET
+_=/usr/bin/env

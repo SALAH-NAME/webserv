@@ -31,7 +31,7 @@ std::string ResponseHandler::GetResponseBody(){return response_body;}
 
 std::fstream *ResponseHandler::GetTargetFilePtr(){return target_file;}
 
-bool ResponseHandler::IsPost(){return is_post;}
+bool ResponseHandler::IsPost(){return (is_post || CgiObj.PostReq());}
 
 std::string ResponseHandler::GetResourcePath() {return resource_path;}
 

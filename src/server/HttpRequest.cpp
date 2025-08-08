@@ -1,6 +1,6 @@
 #include "HttpRequest.hpp"
 
-HttpRequest::HttpRequest() : state(STATE_START_LINE), valid(false), status_code(0),
+HttpRequest::HttpRequest() : state(STATE_START_LINE), valid(true), status_code(0),
                              _start_line_size(0), _headers_size(0), _start_line_parsed(false) {}
 
 HttpRequest::State HttpRequest::getState() const
