@@ -257,11 +257,23 @@ bool HttpRequest::isValidContentLength(const std::string &value) const
     if (value.empty())
         return false;
 
-    for (size_t i = 0; i < value.length(); ++i)
+    std::string trimmed_value = trim(value);
+    if (trimmed_value.empty())
+        return false;
+
+    for (size_t i = 0; i < trimmed_value.length(); ++i)
     {
-        if (!std::isdigit(value[i]))
+        if (!std::isdigit(trimmed_value[i]))
             return false;
     }
+    
+    std::istringstream iss(trimmed_value);
+    long long content_length;
+    iss >> content_length;
+    
+    if (iss.fail() || !iss.eof() || content_length < 0)
+        return false;
+        
     return true;
 }
 
@@ -333,6 +345,24 @@ void HttpRequest::validateHttp11Requirements()
                 throw HttpRequestException(400, "Invalid Content-Length value: must be a non-negative integer");
         }
     }
+}
+
+void HttpRequest::validateContentLengthLimit(size_t max_body_size) const
+{
+    std::map<std::string, std::string>::const_iterator cl_it = headers.find("content-length");
+    if (cl_it == headers.end())
+        return;
+        
+    if (!isValidContentLength(cl_it->second))
+        return;
+        
+    std::string trimmed_value = trim(cl_it->second);
+    std::istringstream iss(trimmed_value);
+    long long content_length;
+    iss >> content_length;
+    
+    if (static_cast<size_t>(content_length) > max_body_size)
+        throw HttpRequestException(413, "Request entity too large");
 }
 
 bool HttpRequest::shouldContinueParsing() const
