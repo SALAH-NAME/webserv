@@ -4,10 +4,6 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 
 	(void)serverIndex;
 
-	if (client.getIsPipeClosedByPeer() == PIPE_IS_NOT_CLOSED)
-		return ;
-	
-	// if (client.getIsPipeReadable() == PIPE_IS_READABLE) {
 	ResponseHandler* responseHandler = client.getResponseHandler();
 	Pipe& cgiOutPipe = responseHandler->GetCgiOutPipe();
 	ssize_t readBytes;
@@ -83,6 +79,7 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 			try {
 				responseHandler->FinishCgiResponse();
 				client.setResponseHolder(responseHandler->GetResponseHeader());
+				// printRequestAndResponse("response header", client.getResponseHolder());
 				client.setResponseHeaderFlag(RESPONSE_HEADER_READY);
 				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
 				client.closeAndDeregisterPipe();

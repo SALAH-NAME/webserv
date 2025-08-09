@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/08/06 16:11:13 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/08 19:50:25 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@
 
 class Client {
 	private:
-		// TO DO : 1.client addr || 2. port
 		Socket				_socket;
 		int					_epfd;
 		const ServerConfig&	_conf;
@@ -42,12 +41,11 @@ class Client {
 		HttpRequest			_httpRequest;
 		ResponseHandler*	_responseHandler;
 		
-		bool				_incomingHeaderDataDetected;
+		bool				_incomingHeaderDataDetectedFlag;
 		bool				_incomingBodyDataDetectedFlag;
 		bool				_responseHeaderFlag;
 		bool				_responseBodyFlag;
 		bool				_fullResponseFlag;
-		bool				_isKeepAlive;
 		bool				_generateInProcess;
 		bool				_isResponseBodySendable;
 		bool				_isRequestBodyWritable;
@@ -62,7 +60,8 @@ class Client {
 		bool				_setTargetFile;
 
 		bool				_responseSent;
-
+		bool				_isOutputAvailable;
+		
 		void				isolateAndRecordExtraBytes(void);
 		void				generateDynamicResponse();
 		void				generateStaticResponse();
@@ -93,7 +92,6 @@ class Client {
 		std::string&		getResponseHolder(void);
 		ResponseHandler*	getResponseHandler(void);
 
-		bool				getIsKeepAlive(void);
 		int					getBytesToSendNow(void);
 		bool				getGenerateInProcess(void);
 		HttpRequest&		getHttpRequest(void);
@@ -103,7 +101,7 @@ class Client {
 		bool				getIncomingBodyDataDetectedFlag(void);
 		size_t				getUploadedBytes(void);
 		bool				getBodyDataPreloadedFlag(void);
-		bool				setRequestDataPreloadedFlag(void);
+		bool				getRequestDataPreloadedFlag(void);
 		size_t				getContentLength(void);
 
 		bool				getIsResponseBodySendable(void);
@@ -117,6 +115,7 @@ class Client {
 
 		bool				getSetTargetFile(void);
 		bool				getResponseSent(void);
+		bool				getIsOutputAvailable(void);
 
 		void				appendToHeaderPart(const std::string& requestData);
 		void				appendToBodyPart(const std::string& requestData);
@@ -149,6 +148,7 @@ class Client {
 		void				setPipeReadComplete(bool);
 
 		void				setSetTargetFile(bool);
+		void				setIsOutputAvailable(bool value);
 
 		bool				parseRequest(void);
 		void				prinfRequestinfos(void);
@@ -169,6 +169,7 @@ class Client {
 		void				resetAttributes(void);
 		void				handleKeepAlive(void);
 		void				printClientStatus(void);
+		void				getBufferFromPendingData(char* buffer, ssize_t*);
 };
 
 #endif

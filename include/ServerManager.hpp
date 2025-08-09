@@ -9,7 +9,7 @@
 #define RESPONSESIZE 746 // Fix size for the temp response
 
 #define INCOMING_HEADER_DATA_ON true
-#define INCOMING_DATA_HEADER_OFF false
+#define INCOMING_HEADER_DATA_OFF false
 #define CONNECTION_ERROR (EPOLLIN | EPOLLERR | EPOLLHUP)
 
 #define INCOMING_BODY_DATA_ON true
@@ -42,9 +42,6 @@
 #define REQUEST_DATA_PRELOADED_ON true
 #define REQUEST_DATA_PRELOADED_OFF false
 
-#define ENABLE_KEEP_ALIVE true
-#define DISABLE_KEEP_ALIVE false
-
 #define PIPE_IS_READABLE true
 #define PIPE_IS_NOT_READABLE false
 
@@ -56,6 +53,9 @@
 
 #define READ_PIPE_COMPLETE true
 #define READ_PIPE_NOT_COMPLETE false
+
+#define AVAILABLE true
+#define NOT_AVAILABLE false
 
 #define SENT true
 #define NOT_SENT false
@@ -81,6 +81,7 @@
 #include <algorithm>
 #include <arpa/inet.h> // for inet_addr()
 #include <utility>
+#include <netdb.h>     // for getaddrinfo
 #include "HttpRequest.hpp"
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"

@@ -18,7 +18,6 @@ const std::string								 ROOT("/var/www/html");
 const std::vector<std::string>	 INDEX(1, "index.html");
 const std::set<HttpMethod>			 ALLOWED_METHODS;
 const int												 AUTOINDEX(false);
-const std::string								 UPLOAD_STORE("");
 
 // GLOBAL
 const unsigned int CONNECTION_TIMEOUT(60);
@@ -30,10 +29,6 @@ const std::string	 ACCESS_LOG;
 const std::vector<unsigned int>	LISTEN(0);
 const std::string								HOST("");
 const std::vector<std::string>	SERVER_NAMES(1, "");
-const int												SESION_ENABLE(false);
-const std::string								SESSION_NAME;
-const std::string								SESSION_PATH;
-const unsigned int							SESSION_TIMEOUT(1800);
 
 // LOCATION
 const RedirectInfo REDIRECT;

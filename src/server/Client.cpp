@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/08/06 16:13:00 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/08 19:49:40 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,12 +21,11 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 											, _contentLength(0)
 											, _uploadedBytes(0)
 											, _responseHandler(new ResponseHandler(clientInfos, conf))
-											, _incomingHeaderDataDetected(INCOMING_DATA_HEADER_OFF)
+											, _incomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF)
 											, _incomingBodyDataDetectedFlag(INCOMING_BODY_DATA_OFF)
 											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)
 											, _responseBodyFlag(RESPONSE_BODY_NOT_READY)
 											, _fullResponseFlag(FULL_RESPONSE_NOT_READY)
-											, _isKeepAlive(DISABLE_KEEP_ALIVE)
 											, _generateInProcess(GENERATE_RESPONSE_OFF)
 											, _isResponseBodySendable(NOT_SENDABLE)
 											, _isRequestBodyWritable(NOT_WRITABLE)
@@ -38,6 +37,7 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 											, _pipeReadComplete(READ_PIPE_NOT_COMPLETE)
 											, _setTargetFile(false)
 											, _responseSent(NOT_SENT)
+											, _isOutputAvailable(NOT_AVAILABLE)
 {}
 
 Client::Client(const Client& other) : _socket(other._socket)
@@ -49,12 +49,11 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _contentLength(other._contentLength)
 									, _uploadedBytes(other._uploadedBytes)
 									, _responseHandler(other._responseHandler)
-									, _incomingHeaderDataDetected(other._incomingHeaderDataDetected)
+									, _incomingHeaderDataDetectedFlag(other._incomingHeaderDataDetectedFlag)
 									, _incomingBodyDataDetectedFlag(other._incomingBodyDataDetectedFlag)
 									, _responseHeaderFlag(other._responseHeaderFlag)
 									, _responseBodyFlag(other._responseBodyFlag)
 									, _fullResponseFlag(other._fullResponseFlag)
-									, _isKeepAlive(other._isKeepAlive)
 									, _generateInProcess(other._generateInProcess)
 									, _isResponseBodySendable(other._isResponseBodySendable)
 									, _isRequestBodyWritable(other._isRequestBodyWritable)
@@ -66,6 +65,7 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _pipeReadComplete(other._pipeReadComplete)
 									, _setTargetFile(other._setTargetFile)
 									, _responseSent(other._responseSent)
+									, _isOutputAvailable(other._isOutputAvailable)
 {
 	const_cast<Client&> (other)._responseHandler = NULL;
 }
@@ -91,7 +91,7 @@ time_t Client::getLastConnectionTime(void)
 }
 
 bool	Client::getIncomingHeaderDataDetectedFlag(void) {
-	return _incomingHeaderDataDetected;
+	return _incomingHeaderDataDetectedFlag;
 }
 
 std::string&	Client::getRequestBodyPart(void) {
@@ -184,7 +184,7 @@ bool	Client::getBodyDataPreloadedFlag(void) {
 	return _bodyDataPreloadedFlag;
 }
 
-bool	Client::setRequestDataPreloadedFlag(void) {
+bool	Client::getRequestDataPreloadedFlag(void) {
 	return _requestDataPreloadedFlag;
 }
 
@@ -204,16 +204,16 @@ void		Client::appendToHeaderPart(const std::string& headerData) {
 	_requestHeaderPart += headerData;
 }
 
-bool	Client::getIsKeepAlive(void) {
-	return _isKeepAlive;
-}
-
 bool	Client::getIsResponseBodySendable(void) {
 	return _isResponseBodySendable;
 }
 
 bool	Client::getResponseSent(void) {
 	return _responseSent;
+}
+
+bool	Client::getIsOutputAvailable(void) {
+	return _isOutputAvailable;
 }
 
 void Client::appendToBodyPart(const std::string &bodyData)
@@ -232,7 +232,7 @@ void	Client::resetLastConnectionTime(void){
 }
 
 void	Client::setIncomingHeaderDataDetectedFlag(int mode) {
-	_incomingHeaderDataDetected = mode;
+	_incomingHeaderDataDetectedFlag = mode;
 }
 
 void Client::setGenerateResponseInProcess(bool value)
@@ -308,6 +308,10 @@ void	Client::setSetTargetFile(bool value) {
 	_setTargetFile = value;
 }
 
+void	Client::setIsOutputAvailable(bool value) {
+	_isOutputAvailable = value;
+}
+
 bool Client::parseRequest()
 {
 	try
@@ -339,18 +343,6 @@ void	Client::updateHeaderStateAfterSend(size_t sentBytes) {
 			_responseBodyFlag = RESPONSE_BODY_NOT_READY;
 			_responseSent = SENT;
 			std::cout << " ==> Sent Full Response Successfully <==\n";
-
-			
-			// printRequestAndResponse("left request data", _pendingRequestDataHolder);
-			
-			// if (_isKeepAlive == DISABLE_KEEP_ALIVE)
-			// return true;
-			// else {
-				
-			// 	resetAttributes();
-			// 	printClientStatus();
-			// 	return false;
-			// }
 		}
 	}
 }
@@ -369,6 +361,9 @@ void	Client::readFileBody(void) {
 
 void	Client::sendFileBody(void) {
 	ssize_t sentBytes;
+
+	if (!_isOutputAvailable)
+		return ;
 	
 	if (_responseHolder.size()) {
 		sentBytes = _socket.send(_responseHolder.c_str(), _responseHolder.size(), MSG_NOSIGNAL);
@@ -383,18 +378,9 @@ void	Client::sendFileBody(void) {
 		_responseSent = SENT;
 		std::cout << " ==>> Send response body Successfully \n";
 		return ;
-	
-		// if (_isKeepAlive == DISABLE_KEEP_ALIVE)
-		// 	return true;
-		// else {
-		// 	resetAttributes();
-		// 	printClientStatus();
-		// 	return false;
-		// }
 	}
 	
 	_isResponseBodySendable = NOT_SENDABLE;
-	// return false;
 }
 
 void	Client::receiveRequestBody(void) {
@@ -503,6 +489,8 @@ void				Client::printClientStatus(void) {
 	std::cout << "  ##  _responseSent : " << _responseSent << "  ## \n";
 	std::cout << "--------------------------------------------------------\n\n";
 
+	// printRequestAndResponse("Pending data", _pendingRequestDataHolder);
+
 	// exit(0);
 }
 
@@ -514,12 +502,15 @@ void	Client::resetAttributes(void) {
 	_httpRequest.reset();
 	delete _responseHandler;
 	_responseHandler = new ResponseHandler(_clientInfos, _conf);
-	_incomingHeaderDataDetected =  INCOMING_DATA_HEADER_OFF;
+	
+	if (_requestDataPreloadedFlag == REQUEST_DATA_PRELOADED_ON)
+		_incomingHeaderDataDetectedFlag = INCOMING_HEADER_DATA_ON;
+	else
+		_incomingHeaderDataDetectedFlag =  INCOMING_HEADER_DATA_OFF;
 	_incomingBodyDataDetectedFlag =  INCOMING_BODY_DATA_OFF;
 	_responseHeaderFlag =  RESPONSE_HEADER_NOT_READY;
 	_responseBodyFlag =  RESPONSE_BODY_NOT_READY;
 	_fullResponseFlag =  FULL_RESPONSE_NOT_READY;
-	_isKeepAlive =  DISABLE_KEEP_ALIVE;
 	_generateInProcess =  GENERATE_RESPONSE_OFF;
 	_isResponseBodySendable =  NOT_SENDABLE;
 	_isRequestBodyWritable =  NOT_WRITABLE;
@@ -530,6 +521,7 @@ void	Client::resetAttributes(void) {
 	_pipeReadComplete =  READ_PIPE_NOT_COMPLETE;
 	_setTargetFile =  false;
 	_responseSent = NOT_SENT;
+	_isOutputAvailable = NOT_AVAILABLE;
 
 	_requestHeaderPart.clear();
 	_requestBodyPart.clear();
@@ -537,4 +529,16 @@ void	Client::resetAttributes(void) {
 
 
 	std::cout << " ## RESETED ##\n";
+}
+
+void	Client::getBufferFromPendingData(char* buffer, ssize_t* readBytes) {
+	size_t i;
+	for (i = 0; i < _pendingRequestDataHolder.size(); i++) {
+		buffer[i] = _pendingRequestDataHolder[i];
+ 	}
+	buffer[i] = 0;
+	*readBytes = i;
+
+	_pendingRequestDataHolder.clear();
+	_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
 }

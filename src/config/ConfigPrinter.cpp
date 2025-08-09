@@ -98,27 +98,6 @@ void ConfigPrinter::printServerConfig(std::ostream&				out,
 		out << server.getConnectionTimeout() << ";\n";
 	}
 
-	if (server.getSessionEnable())
-	{
-		printIndent(out, 1);
-		out << "session_enable on;\n";
-
-		if (!server.getSessionName().empty())
-		{
-			printIndent(out, 1);
-			out << "session_name " << server.getSessionName() << ";\n";
-		}
-
-		if (!server.getSessionPath().empty())
-		{
-			printIndent(out, 1);
-			out << "session_path " << server.getSessionPath() << ";\n";
-		}
-
-		printIndent(out, 1);
-		out << "session_timeout " << server.getSessionTimeout() << ";\n";
-	}
-
 	printBaseConfig(out, server, 1);
 
 	const std::map<std::string, LocationConfig>& locations =
@@ -197,12 +176,6 @@ void ConfigPrinter::printBaseConfig(std::ostream& out, const BaseConfig& config,
 
 	printIndent(out, indent_level);
 	out << "autoindex " << (config.getAutoindex() ? "on" : "off") << ";\n";
-
-	if (!config.getUploadStore().empty())
-	{
-		printIndent(out, indent_level);
-		out << "upload_store " << config.getUploadStore() << ";\n";
-	}
 }
 
 void ConfigPrinter::printLocationConfig(std::ostream&					out,
@@ -228,12 +201,6 @@ void ConfigPrinter::printLocationConfig(std::ostream&					out,
 			printIndent(out, indent_level);
 			out << "cgi_timeout " << location.getCgiTimeout() << ";\n";
 		}
-	}
-
-	if (location.getSessionTimeout() > 0)
-	{
-		printIndent(out, indent_level);
-		out << "session_timeout " << location.getSessionTimeout() << ";\n";
 	}
 }
 

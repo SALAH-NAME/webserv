@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/08/06 16:01:57 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/08 19:50:03 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,22 +15,22 @@
 
 void	ServerManager::handleKeepAlive(Client& client, int serverIndex) {
 
-	std::cout << "   ###################### Is keep alive: " << client.getIsKeepAlive() << " ##############\n";
-
-	if (client.getIsKeepAlive() == DISABLE_KEEP_ALIVE)
-		_servers[serverIndex].closeConnection(client.getSocket().getFd());
-	else {
+	std::cout << "   ###################### Is keep alive: " << client.getResponseHandler()->KeepConnectioAlive() << " ##############\n";
+	if (client.getResponseHandler()->KeepConnectioAlive())
 		client.resetAttributes();
-		// client.printClientStatus();
-	}
+	else
+		_servers[serverIndex].closeConnection(client.getSocket().getFd());
 }
 
 void	ServerManager::transmitResponseHeader(Client& client, int serverIndex) {
 
+	if (!client.getIsOutputAvailable())
+		return ; // socket is not available "!EPOLLOUT"
+
 	std::string& response = client.getResponseHolder();
 
 	int bytesToSendNow =  client.getBytesToSendNow();
-	// std::cout << "Bytes to send now: " << bytesToSendNow << "\n";
+	std::cout << "Bytes to send now: " << bytesToSendNow << "\n";
 
 	size_t sentBytes;
 	try {

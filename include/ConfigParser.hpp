@@ -30,21 +30,15 @@ private:
 	void parseIndex(BaseConfig& config);
 	void parseAllowedMethods(BaseConfig& config);
 	void parseAutoindex(BaseConfig& config);
-	void parseUploadStore(BaseConfig& config);
 
 	void parseListen(ServerConfig& server);
 	void parseHost(ServerConfig& server);
 	void parseServerName(ServerConfig& server);
-	void parseSessionEnable(ServerConfig& server);
-	void parseSessionName(ServerConfig& server);
-	void parseSessionPath(ServerConfig& server);
-	void parseSessionTimeout(ServerConfig& server);
 	void parseConnectionTimeout(ServerConfig& server);
 
 	void parseRedirect(LocationConfig& location);
 	void parseCgiPass(LocationConfig& location);
 	void parseCgiTimeout(LocationConfig& location);
-	void parseSessionTimeout(LocationConfig& location);
 
 	void parseConnectionTimeout(GlobalConfig& global);
 	void parseErrorLog(GlobalConfig& global);
