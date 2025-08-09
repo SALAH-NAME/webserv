@@ -3,8 +3,8 @@
 
 #define EPOLLTIMEOUT 100
 #define MAX_EVENTS 100
-#define BYTES_TO_READ 100 * 1023
-#define BYTES_TO_SEND 100 * 1023
+#define BYTES_TO_READ 1000 * 1023
+#define BYTES_TO_SEND 1000 * 1023
 #define BUFFERSIZE (((BYTES_TO_READ > BYTES_TO_SEND) ? BYTES_TO_READ : BYTES_TO_SEND) + 1)
 #define RESPONSESIZE 746 // Fix size for the temp response
 

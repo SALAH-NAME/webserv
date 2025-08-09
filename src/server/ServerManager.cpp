@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ServerManager.cpp                                  :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/25 10:25:03 by karim             #+#    #+#             */
-/*   Updated: 2025/08/04 16:28:58 by karim            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "ServerManager.hpp"
 
@@ -38,6 +27,16 @@ void ServerManager::checkTimeOut(void)
 			{
 				std::cout << "Time out: " << _servers[x].getTimeOut() << "\n";
 				_servers[x].closeConnection(it->first);
+			}
+
+			if (it->second.getIsCgiRequired()) {
+				try {
+					it->second.getResponseHandler()->CheckCgiChildState();
+				} catch (ResponseHandler::ResponseHandlerError& e) {
+					std::cout << e.what() << std::endl;
+					it->second.getResponseHandler()->LoadErrorPage(e.what(), e.getStatusCode());
+					it->second.CgiExceptionHandler();
+				}
 			}
 		}
 		_servers[x].eraseMarked();
