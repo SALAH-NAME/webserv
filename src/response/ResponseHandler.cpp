@@ -48,6 +48,7 @@ void ResponseHandler::RefreshData()
     keep_alive = false;
     req = NULL;
     cgi_buffer_size = 0;
+    child_status = -1;
     cgi_tmpfile_id = -1;
     if (is_location_allocated){
         delete loc_config;
