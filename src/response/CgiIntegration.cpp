@@ -21,7 +21,7 @@ bool ResponseHandler::IsCgiChildRunning()
 
 bool ResponseHandler::CheckCgiTimeOut()
 {
-	if (IsCgiChildRunning())
+	if (!IsCgiChildRunning())
 		return false;
 	return (std::time(NULL) - CgiObj.GetExecutionStartTime()
                 >= loc_config->getCgiTimeout());
@@ -42,13 +42,13 @@ std::string	ResponseHandler::GenerateCgiStatusLine()
 	std::string	reason_phrase = CgiObj.GetReasonPhrase();
 
 	if (status_code == 0)
-		return ("HTTP/1.1 200 OK");
+		return (req->getVersion() + " 200 OK");
 	if (!reason_phrase.empty())
-		return ("HTTP/1.1 " + NumtoString(status_code) + reason_phrase);
+		return (req->getVersion() + " " + NumtoString(status_code) + reason_phrase);
 	else if (status_phrases.find(status_code) != status_phrases.end())
-		return ("HTTP/1.1 " + NumtoString(status_code) + ' ' + status_phrases[status_code]);
+		return (req->getVersion() + " " + NumtoString(status_code) + ' ' + status_phrases[status_code]);
 	else
-		return "HTTP/1.1 " + NumtoString(status_code) + ' ' + "Unknown";
+		return req->getVersion() + " " + NumtoString(status_code) + ' ' + "Unknown";
 }
 
 void ResponseHandler::GenerateHeaderFromCgiData()
@@ -75,8 +75,9 @@ void ResponseHandler::FinishCgiResponse()//if an exception is thrown call loadEr
 	if (returned_length == -1)
 		response_header += "Content-Length: " + NumtoString(cgi_buffer_size + response_body.size())+CRLF+CRLF;
 	else if (cgi_buffer_size + response_body.size() != (unsigned)returned_length){
+		DeleteCgiTargetFile();
 		CgiObj.KillChild();
-		throw (ResponseHandlerError("HTTP/1.1 502 Bad Gateway", 502));
+		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
 	else
 		response_header += CRLF;
@@ -89,10 +90,12 @@ void ResponseHandler::AppendCgiOutput(const std::string &buffer)
 	}
 	catch (std::runtime_error &ex){
 		CgiObj.KillChild();
-		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));}
+		throw (ResponseHandlerError(req->getVersion() + " 500 Internal Server Error", 500));
+	}
 	catch (CgiHandler::BadCgiOutput &ex){
-		CgiObj.KillChild();
-		throw (ResponseHandlerError("HTTP/1.1 502 Bad Gateway", 502));}
+		DeleteCgiTargetFile();
+		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
+	}
     if (ReachedCgiBodyPhase()){
 		GenerateHeaderFromCgiData();
 		response_body = CgiObj.GetPreservedBody();
@@ -104,36 +107,43 @@ void ResponseHandler::CheckCgiChildState() // use only if cgi is required
 	int exit_status = GetCgiChildExitStatus();
 
 	if (CheckCgiTimeOut()){
+		DeleteCgiTargetFile();
 		CgiObj.KillChild();
-		throw (ResponseHandlerError("HTTP/1.1 504 Gateway Timeout", 504));
+		throw (ResponseHandlerError(req->getVersion() + " 504 Gateway Timeout", 504));
 	}
-	else if (!IsCgiChildRunning() && exit_status != 0)
-		throw (ResponseHandlerError("HTTP/1.1 502 Bad Gateway", 502));
+	else if (!IsCgiChildRunning() && exit_status != 0){
+		DeleteCgiTargetFile();		
+		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
+	}
 }
 
 void ResponseHandler::SetTargetFileForCgi(int id)
 {
 	std::string filename = TMP_FILE_PREFIX + NumtoString(id);
 
+	cgi_tmpfile_id = id;
 	CgiObj.PreBodyPhraseChecks();
 	int fd = open(filename.c_str(), O_CREAT, 0644);
 	close(fd);
 	target_file = new std::fstream(filename.c_str(), std::ios::out | std::ios::in | std::ios::trunc | std::ios::binary);
 	if (!target_file || fd == -1 || !target_file->is_open()){
 		CgiObj.KillChild();
-		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));}
+		throw (ResponseHandlerError(req->getVersion() + " 500 Internal Server Error", 500));}
 	*target_file << response_body;
 	cgi_buffer_size += response_body.size();
 	if (target_file->bad() || target_file->fail()){
+		DeleteCgiTargetFile();		
 		CgiObj.KillChild();
-		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));}
+		throw (ResponseHandlerError(req->getVersion() + " 500 Internal Server Error", 500));
+	}
 	response_body.clear();
 }
 
-void	ResponseHandler::DeleteCgiTargetFile(int id)
+void	ResponseHandler::DeleteCgiTargetFile()
 {
-	std::string filename = TMP_FILE_PREFIX + NumtoString(id);
-
+	if (cgi_tmpfile_id == -1)
+		return ;
+	std::string filename = TMP_FILE_PREFIX + NumtoString(cgi_tmpfile_id);
 	std::remove(filename.c_str());
 }
 
@@ -141,14 +151,19 @@ void ResponseHandler::AppendBufferToTmpFile(const std::string &buf)
 {
 	if (!target_file || !target_file->is_open()){
 		CgiObj.KillChild();
-		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
+		DeleteCgiTargetFile();
+		throw (ResponseHandlerError(req->getVersion() + " 500 Internal Server Error", 500));
 	}
 	else if (CgiObj.GetContentLength() != -1 && cgi_buffer_size + buf.size() > (unsigned)CgiObj.GetContentLength()){
+		DeleteCgiTargetFile();		
 		CgiObj.KillChild();
-		throw (ResponseHandlerError("HTTP/1.1 502 Bad Gateway", 502));}
+		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
+	}
 	target_file->write(buf.c_str(), buf.size());
 	if (target_file->fail() || target_file->bad()){
+		DeleteCgiTargetFile();
 		CgiObj.KillChild();
-		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));}
+		throw (ResponseHandlerError(req->getVersion() + " 500 Internal Server Error", 500));
+	}
 	cgi_buffer_size += buf.size();
 }

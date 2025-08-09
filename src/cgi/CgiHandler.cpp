@@ -35,7 +35,7 @@ void	CgiHandler::SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &co
 	env.Add("SCRIPT_NAME", http_req.getPath());
 	env.Add("SERVER_NAME", conf.getHost());
 	env.Add("SERVER_PORT", client_info.port);//
-	env.Add("SERVER_PROTOCOL", "HTTP/1.1");
+	env.Add("SERVER_PROTOCOL", http_req.getVersion());
 	env.Add("SERVER_SOFTWARE", "Ed Edd n Eddy/1.0");	
 	if (http_headers.find("content-length") != http_headers.end())
 		env.Add("CONTENT_LENGTH", http_headers["content-length"]); 

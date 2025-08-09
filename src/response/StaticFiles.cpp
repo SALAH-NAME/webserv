@@ -37,15 +37,17 @@ std::string ResponseHandler::GenerateContentType(std::string file_name)
     return ("Content-Type: " + default_type);
 }
 
-void	ResponseHandler::LoadStaticFile(const std::string &file_path, const std::string &status_line)
+void	ResponseHandler::LoadStaticFile(const std::string &file_path, std::string status_line)
 {
     struct stat path_info;
 
-	resource_path = file_path;
+    resource_path = file_path;
+    if (status_line == ""){
+        status_line = req->getVersion() + " 200 OK";}
 	if (stat(file_path.c_str(), &path_info) != 0)
-		throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
+		throw (ResponseHandlerError(req->getVersion() + " 500 Internal Server Error", 500));
 	SetResponseHeader(status_line, path_info.st_size, true);
 	target_file = new std::fstream(resource_path.c_str(), std::ios::in | std::ios::binary);
     if (!target_file || !target_file->is_open())
-        throw(ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
+        throw(ResponseHandlerError(req->getVersion() + " 500 Internal Server Error", 500));
 }
