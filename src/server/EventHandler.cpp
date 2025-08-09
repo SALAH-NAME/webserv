@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 19:01:35 by karim             #+#    #+#             */
-/*   Updated: 2025/08/08 18:54:07 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/09 12:34:15 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,36 +110,52 @@ void	Server::incomingConnection(int NewEvent_fd) {
 }
 
 void	ServerManager::processEvent(int serverIndex) {
-	int clientSocket;
-	Server& server =_servers[serverIndex];
-	std::map<int, Client>::iterator clientIterator;
+	int								event_fd;
+	uint32_t						events;
+	Server&							server =_servers[serverIndex];
+	std::map<int, Client>::iterator	clientIterator;
 
 	for (int i = 0; i < _nfds; i++) {
-		clientSocket = _events[i].data.fd;
-		if (server.verifyServerSocketsFDs(clientSocket)) {
-			// std::cout << "########### got an event on the server socket {" << clientSocket << "} ##############\n";
-			server.incomingConnection(clientSocket);
+		event_fd = _events[i].data.fd;
+		events = _events[i].events;
+		
+		// std::cout << "  ### Event on: " << event_fd << " ###\n";
+		if (server.verifyServerSocketsFDs(event_fd)) {
+			// std::cout << "########### got an event on the server socket {" << event_fd << "} ##############\n";
+			server.incomingConnection(event_fd);
 		}
-		else if ((clientIterator = server.verifyClientsFD(clientSocket)) != server.getClients().end()) {
-			// std::cout << "############  got an event on an existing client socket or pipe fd " << clientSocket << " #############\n";
-			if (_events[i].events == CONNECTION_ERROR) {
-				std::cout << "Connection Error\n";
-				server.closeConnection(_events[i].data.fd);
-				continue ;
-			}
-			else if (clientIterator->second.getIsCgiRequired() == CGI_REQUIRED) {
-				if ((_events[i].events & EPOLLHUP) && (_events[i].events & EPOLLIN)) {
-					std::cout << "set pipe to \"PIPE_IS_CLOSED\" (ready to read)\n";	
-					clientIterator->second.setIsPipeClosedByPeer(PIPE_IS_CLOSED);
-					clientIterator->second.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
+		else if ((clientIterator = server.verifyClientsFD(event_fd)) != server.getClients().end()) {
+			// std::cout << "############  got an event on an existing client socket or pipe fd " << event_fd << " #############\n";
+			Client& client = clientIterator->second;
+			if (clientIterator->first == event_fd) {
+				
+				// event on client socket
+				if (events == CONNECTION_ERROR) {
+					std::cout << "Connection Error\n";
+					server.closeConnection(event_fd);
+					continue ;
 				}
-				return ;
-			}
-			if (clientIterator->second.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_OFF)
-				clientIterator->second.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_ON);
+				if (client.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_OFF)
+					client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_ON);
 
-			clientIterator->second.setIsOutputAvailable(_events[i].events & EPOLLOUT);
-			// clientIterator->second.setEvent(_epfd, _events[i]);
+				client.setIsOutputAvailable(events & EPOLLOUT);
+			}
+			else {
+				// event on one of client pipes
+				
+				if (event_fd == client.getCGI_InpipeFD())
+					client.setIsCgiInputAvailable(events & EPOLLOUT); // check if PIPE is available for writing
+
+				else if (event_fd == client.getCGI_OutpipeFD()
+							&& client.getIsCgiRequired() == CGI_REQUIRED) { // check if PIPE is ready from reading
+				
+					if ((events & EPOLLHUP) && (events & EPOLLIN)) {
+						std::cout << "set pipe to \"PIPE_IS_CLOSED\" (ready to read)\n";	
+						client.setIsPipeClosedByPeer(PIPE_IS_CLOSED);
+						client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
+					}
+				}
+			}
 		}
 	}
 	server.eraseMarked();

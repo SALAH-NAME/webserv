@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/08/08 19:52:45 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/08 21:26:25 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,7 @@ std::vector<Socket>&		Server::getListeningSockets() {
 
 std::map<int, Client>::iterator	Server::verifyClientsFD(int client_fd) {
 	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++) {
-		if (client_fd == it->first || client_fd == it->second.getCGI_pipeFD())
+		if (client_fd == it->first || client_fd == it->second.getCGI_OutpipeFD() || client_fd == it->second.getCGI_InpipeFD())
 			return it ;
 	}
 	return _clients.end();

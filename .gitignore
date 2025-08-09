@@ -9,6 +9,7 @@ compile_commands.json
 .cache/
 webserv
 unit
+unit_test
 intra_test/
 .vscode/
 deleteme/

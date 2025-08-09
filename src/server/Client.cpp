@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/08/08 19:49:40 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/09 12:34:46 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,8 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 											, _epfd(epfd)
 											, _conf(conf)
 											, _clientInfos(clientInfos)
-											, _CGI_pipeFD(-1)
+											, _CGI_OutPipeFD(-1)
+											, _CGI_InPipeFD(-1)
 											, _lastTimeConnection(std::time(NULL))
 											, _contentLength(0)
 											, _uploadedBytes(0)
@@ -38,13 +39,15 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 											, _setTargetFile(false)
 											, _responseSent(NOT_SENT)
 											, _isOutputAvailable(NOT_AVAILABLE)
+											, _isCgiInputAvailable(NOT_AVAILABLE)
 {}
 
 Client::Client(const Client& other) : _socket(other._socket)
 									, _epfd(other._epfd)
 									, _conf(other._conf)
 									, _clientInfos(other._clientInfos)
-									, _CGI_pipeFD(other._CGI_pipeFD)
+									, _CGI_OutPipeFD(other._CGI_OutPipeFD)
+									, _CGI_InPipeFD(other._CGI_InPipeFD)
 									, _lastTimeConnection(other._lastTimeConnection)
 									, _contentLength(other._contentLength)
 									, _uploadedBytes(other._uploadedBytes)
@@ -66,6 +69,7 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _setTargetFile(other._setTargetFile)
 									, _responseSent(other._responseSent)
 									, _isOutputAvailable(other._isOutputAvailable)
+									, _isCgiInputAvailable(other._isCgiInputAvailable)
 {
 	const_cast<Client&> (other)._responseHandler = NULL;
 }
@@ -81,8 +85,12 @@ Socket &Client::getSocket()
 	return _socket;
 }
 
-int	Client::getCGI_pipeFD(void) {
-	return _CGI_pipeFD;
+int	Client::getCGI_OutpipeFD(void) {
+	return _CGI_OutPipeFD;
+}
+
+int	Client::getCGI_InpipeFD(void) {
+	return _CGI_InPipeFD;
 }
 
 time_t Client::getLastConnectionTime(void)
@@ -312,6 +320,10 @@ void	Client::setIsOutputAvailable(bool value) {
 	_isOutputAvailable = value;
 }
 
+void	Client::setIsCgiInputAvailable(bool value) {
+	_isCgiInputAvailable = value;
+}
+
 bool Client::parseRequest()
 {
 	try
@@ -455,10 +467,10 @@ void	Client::writeBodyToTargetFile(void) {
 
 void	Client::closeAndDeregisterPipe(void) {
 	std::cout << "============================================================\n";
-	epoll_ctl(_epfd, EPOLL_CTL_DEL, _CGI_pipeFD, NULL);
-	std::cout << "  ## Removed Pipe fd: " << _CGI_pipeFD << " from epoll  ## \n";
-	close(_CGI_pipeFD);
-	std::cout << "  ## closed Pipe fd: " << _CGI_pipeFD << "              ## \n";
+	epoll_ctl(_epfd, EPOLL_CTL_DEL, _CGI_OutPipeFD, NULL);
+	std::cout << "  ## Removed Pipe fd: " << _CGI_OutPipeFD << " from epoll  ## \n";
+	close(_CGI_OutPipeFD);
+	std::cout << "  ## closed Pipe fd: " << _CGI_OutPipeFD << "              ## \n";
 	std::cout << "============================================================\n\n";
 	
 }
@@ -478,7 +490,7 @@ void	Client::CgiExceptionHandler(void) {
 
 void				Client::printClientStatus(void) {
 	std::cout << "\n ------------------------------------------------------\n";
-	std::cout << "  ## _CGI_pipeFD: " <<  _CGI_pipeFD << " ## \n";
+	std::cout << "  ## _CGI_OutPipeFD: " <<  _CGI_OutPipeFD << " ## \n";
 	std::cout << "  ##  _requestHeaderPart size : " << _requestHeaderPart.size() << "  ## \n";
 	std::cout << "  ##  _requestBodyPart size : " << _requestBodyPart.size() << "  ## \n";
 	std::cout << "  ##  _responseHolder size : " << _responseHolder.size() << "  ## \n";
@@ -495,7 +507,7 @@ void				Client::printClientStatus(void) {
 }
 
 void	Client::resetAttributes(void) {
-	_CGI_pipeFD =  -1;
+	_CGI_OutPipeFD =  -1;
 	_lastTimeConnection =  std::time(NULL);
 	_contentLength =  0;
 	_uploadedBytes =  0;
@@ -528,7 +540,7 @@ void	Client::resetAttributes(void) {
 	_responseHolder.clear();
 
 
-	std::cout << " ## RESETED ##\n";
+	// std::cout << " ## RESETED ##\n";
 }
 
 void	Client::getBufferFromPendingData(char* buffer, ssize_t* readBytes) {

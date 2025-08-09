@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/08/08 19:50:25 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/09 12:34:15 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,8 @@ class Client {
 		int					_epfd;
 		const ServerConfig&	_conf;
 		ClientInfos			_clientInfos;
-		int					_CGI_pipeFD;
+		int					_CGI_OutPipeFD;
+		int					_CGI_InPipeFD;
 
 		std::string			_requestHeaderPart;
 		std::string			_requestBodyPart;
@@ -61,6 +62,7 @@ class Client {
 
 		bool				_responseSent;
 		bool				_isOutputAvailable;
+		bool				_isCgiInputAvailable;
 		
 		void				isolateAndRecordExtraBytes(void);
 		void				generateDynamicResponse();
@@ -78,7 +80,8 @@ class Client {
 		std::string					temp_header;
 		
 		Socket&				getSocket();
-		int					getCGI_pipeFD(void);
+		int					getCGI_OutpipeFD(void);
+		int					getCGI_InpipeFD(void);
 		time_t				getLastConnectionTime(void);
 		bool				getIncomingHeaderDataDetectedFlag(void);
 		
@@ -149,6 +152,7 @@ class Client {
 
 		void				setSetTargetFile(bool);
 		void				setIsOutputAvailable(bool value);
+		void				setIsCgiInputAvailable(bool value);
 
 		bool				parseRequest(void);
 		void				prinfRequestinfos(void);
