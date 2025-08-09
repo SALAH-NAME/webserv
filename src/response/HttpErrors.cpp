@@ -3,7 +3,7 @@
 void ResponseHandler::InitialRequestCheck()
 {
 	if (!req->isValid()){
-		std::string full_status_line =	"HTTP/1.1 " + NumtoString(req->getStatusCode()) +
+		std::string full_status_line =	req->getVersion() + " " + NumtoString(req->getStatusCode()) +
 											' ' + req->getErrorMsg();
 		keep_alive = false;
 		throw (ResponseHandlerError(full_status_line, req->getStatusCode()));

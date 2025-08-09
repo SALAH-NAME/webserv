@@ -64,7 +64,7 @@ void    ResponseHandler::GenerateDirListing()
 
     dir = opendir(resource_path.c_str());
     if (!dir)
-        throw (ResponseHandlerError("HTTP/1.1 500 Internal Server Error", 500));
+        throw (ResponseHandlerError(req->getVersion() + " 500 Internal Server Error", 500));
     while ((dir_iter = readdir(dir)) != NULL)
         if (static_cast <std::string>(dir_iter->d_name) != ".")
             dir_entries.push_back(dir_iter->d_name);
@@ -82,7 +82,7 @@ void    ResponseHandler::GenerateDirListing()
         }
     }
     response_body += "</pre><hr>\n\t</body>\n</html>";
-    SetResponseHeader("HTTP/1.1 200 OK", response_body.size(), false);
+    SetResponseHeader(req->getVersion() + " 200 OK", response_body.size(), false);
     closedir(dir); 
 }
 
@@ -104,5 +104,5 @@ void ResponseHandler::GenerateRedirection()
         "</title></head>\n<body>\n<center><h1>" + status_code + http_message +
         "</h1></center>\n<hr><center>" + std::string(SRV_NAME) + "</center>\n"
         "</body>\n</html>";
-    SetResponseHeader("HTTP/1.1 " + status_code + http_message, response_body.size(), false, location);
+    SetResponseHeader(req->getVersion() + " " + status_code + http_message, response_body.size(), false, location);
 }

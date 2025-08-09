@@ -29,10 +29,6 @@ const std::string	 ACCESS_LOG;
 const std::vector<unsigned int>	LISTEN(0);
 const std::string								HOST("");
 const std::vector<std::string>	SERVER_NAMES(1, "");
-const int												SESION_ENABLE(false);
-const std::string								SESSION_NAME;
-const std::string								SESSION_PATH;
-const unsigned int							SESSION_TIMEOUT(1800);
 
 // LOCATION
 const RedirectInfo REDIRECT;

@@ -4,7 +4,9 @@ CgiHandler::CgiHandler()
 {
 	content_length = -1;
 	child_pid = 0;
+	prev_buf_l_char = 0;
 	exec_t0 = -1;
+	is_POST = false;
 	Body_phase = false;
 }
 
@@ -33,7 +35,7 @@ void	CgiHandler::SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &co
 	env.Add("SCRIPT_NAME", http_req.getPath());
 	env.Add("SERVER_NAME", conf.getHost());
 	env.Add("SERVER_PORT", client_info.port);//
-	env.Add("SERVER_PROTOCOL", "HTTP/1.1");
+	env.Add("SERVER_PROTOCOL", http_req.getVersion());
 	env.Add("SERVER_SOFTWARE", "Ed Edd n Eddy/1.0");	
 	if (http_headers.find("content-length") != http_headers.end())
 		env.Add("CONTENT_LENGTH", http_headers["content-length"]); 
@@ -70,6 +72,11 @@ std::time_t	CgiHandler::GetExecutionStartTime(){return exec_t0;}
 
 std::string	CgiHandler::GetPreservedBody(){return preserved_body;}
 
+bool CgiHandler::PostReq()
+{
+	return is_POST;
+}
+
 int	CgiHandler::GetStatusCode(){return status_code;}
 
 int CgiHandler::GetContentLength(){return content_length;}
@@ -89,6 +96,7 @@ void CgiHandler::KillChild()
 
 void CgiHandler::ClearData()
 {
+	is_POST = false;
 	output_pipe.closeRead();
 	output_pipe.closeWrite();
 	input_pipe.closeRead();
@@ -104,6 +112,7 @@ void CgiHandler::ClearData()
 	preserved_body.clear();
 	key_holder.clear();
 	value_holder.clear();
+	prev_buf_l_char = 0;
 }
 
 void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,

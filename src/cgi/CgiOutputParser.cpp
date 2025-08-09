@@ -74,13 +74,74 @@ void	CgiHandler::PreBodyPhraseChecks()
 	else if (output_headers.find("content-length") != output_headers.end() 
 			&& content_length < (signed)preserved_body.size())
 		throw (BadCgiOutput("Content-Length value smaller than body size"));
+	else if (prev_buf_l_char != '\n')
+	{
+			std::cout << "last char val: " << prev_buf_l_char << std::endl;
+			throw (CgiHandler::BadCgiOutput("syntax error"));
+	}
+}
+
+void	CgiHandler::SyntaxErrorsCheck(const std::string &buff, unsigned int i, bool key_phase)
+{
+	char prev_char = (i > 0) ? buff[i - 1] : prev_buf_l_char;
+	char next_char = (i < buff.size() - 1) ? buff[i + 1] : 0;
+
+// //debugg block
+// 	if ((!std::isprint(buff[i]) && buff[i] != '\r'))
+// 	{
+// 			std::cout << "----first----\n";
+// 			std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
+// 					<< "\nnext-char: " << (int)next_char << std::endl;
+// 			std::cout << "char index: " << i << std::endl;
+// 			throw (CgiHandler::BadCgiOutput("syntax error"));
+// 	}
+
+// 	if (std::isspace(buff[i]) && key_phase)
+// 	{
+// 			std::cout << "----second----\n";
+// 			std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
+// 					<< "\nnext-char: " << (int)next_char << std::endl;
+// 			std::cout << "char index: " << i << std::endl;
+// 			throw (CgiHandler::BadCgiOutput("syntax error"));
+// 	}
+
+
+// 	if (buff[i] == '\n' && prev_char != '\r')
+// 	{
+// 			std::cout << "----third----\n";
+// 			std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
+// 					<< "\nnext-char: " << (int)next_char << std::endl;
+// 			std::cout << "char index: " << i << std::endl;
+// 			throw (CgiHandler::BadCgiOutput("syntax error"));
+// 	}
+
+// 	if (buff[i] == '\r' && next_char != '\n')
+// 	{
+// 			std::cout << "----last----\n";
+// 			std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
+// 					<< "\nnext-char: " << (int)next_char << std::endl;
+// 			std::cout << "char index: " << i << std::endl;
+// 			throw (CgiHandler::BadCgiOutput("syntax error"));
+// 	}
+
+// //end of debugg block
+
+	if ((!std::isprint(buff[i]) && buff[i] != '\r') || (std::isspace(buff[i]) && key_phase)  
+		|| (buff[i] == '\n' && prev_char != '\r') || (buff[i] == '\r' && next_char != '\n'))
+	{
+			// std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
+			// 		<< "\nnext-char: " << (int)next_char << std::endl;
+			// std::cout << "char index: " << i << std::endl;
+			throw (CgiHandler::BadCgiOutput("syntax error"));
+	}
 }
 
 void	CgiHandler::ParseOutputBuffer(const std::string &cgi_output_buff)
 {
 	bool	key_phase = (value_holder.empty()) ? true : false;
 
-	for (unsigned int i = 0;i < cgi_output_buff.size();i++)
+	unsigned int i = 0;
+	for (i = 0; i < cgi_output_buff.size();i++)
 	{
 		if (parsed_bytes_count >= HEADER_SIZE_LIMIT)
 			throw (BadCgiOutput("passed header size limit"));
@@ -95,6 +156,7 @@ void	CgiHandler::ParseOutputBuffer(const std::string &cgi_output_buff)
 			AddNewHeader();
 			key_phase = true;
 			if (Crlf_check(cgi_output_buff, i + 2)){//end of header
+				prev_buf_l_char = '\n';
 				parsed_bytes_count += 4;
 				preserved_body = cgi_output_buff.substr(i + 4);
 				PreBodyPhraseChecks();
@@ -103,7 +165,7 @@ void	CgiHandler::ParseOutputBuffer(const std::string &cgi_output_buff)
 			}
 			i += 1;
 			parsed_bytes_count += 2;
-			continue;
+			continue ;
 		}
 		if (key_phase)
 			AppendCharToKey(key_holder, cgi_output_buff[i]);

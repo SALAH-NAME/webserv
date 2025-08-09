@@ -26,10 +26,6 @@ void ConfigTokenizer::initializeDirectiveNames()
 																			"return",
 																			"cgi_pass",
 																			"cgi_timeout",
-																			"session_enable",
-																			"session_name",
-																			"session_path",
-																			"session_timeout",
 																			"connection_timeout",
 																			"error_log",
 																			"access_log" };

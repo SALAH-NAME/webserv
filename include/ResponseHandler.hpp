@@ -25,8 +25,7 @@ typedef std::map<std::string, std::vector<std::string> > STRINGS_MAP;
 class ResponseHandler 
 {
 	private:
-		const ServerConfig				&conf;
-		// std::vector<ServerConfig>	&servers;
+		const ServerConfig			&conf;
 		ClientInfos					client_info;
 		HttpRequest					*req;
 		std::string					response_header;
@@ -42,14 +41,13 @@ class ResponseHandler
 		LocationConfig const		*loc_config;
 		std::fstream				*target_file;
 		unsigned int				cgi_buffer_size;
+		int							cgi_tmpfile_id;
 		bool						keep_alive;
 		
 		void		InitialRequestCheck();
 		void		SetKeepAlive(); 
 		void		ProccessRequest();
 		void 		RouteResolver(const std::string &path, const std::string &method);
-		// void		SetUsedServer();
-		std::string	GetConnectionValue();
 		bool 		CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations);
 		void 		InitializeStandardContentTypes();
 		void		InitializeStatusPhrases();
@@ -59,25 +57,23 @@ class ResponseHandler
 		void 		ProccessHttpDELETE();
 		void		RefreshData();
 		std::string GenerateContentType(const std::string file_extension);
-		void		LoadStaticFile(const std::string &file_path,
-						const std::string &status_line = "HTTP/1.1 200 OK");
+		void		LoadStaticFile(const std::string &file_path, std::string status_line = "");
 		void 		GenerateDirListing();
 		bool 		NeedToRedirect();
 		void 		GenerateRedirection();
 		void		GenerateErrorPage( const std::string &status_line);
-		void		SetConnectioHeader();
 		std::string GenerateCgiStatusLine();
 		void   		MakeLocationFromSrvConf();
 		void		GenerateHeaderFromCgiData();
 		void 		SetResponseHeader( const std::string &status_line, int len,
-						bool is_static, std::string location = "");
-		bool			CheckCgiTimeOut();
-		int				GetCgiChildExitStatus();
+			bool is_static, std::string location = "");
+			bool		CheckCgiTimeOut();
+			int			GetCgiChildExitStatus();
 			
-	public:
-		ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf); // edited
-		void			CheckForContentType();
-		void			LoadErrorPage(const std::string &status_line, int status_code);
+			public:
+			ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf); // edited
+			void			CheckForContentType();
+			void			LoadErrorPage(const std::string &status_line, int status_code);
 		void 			Run(HttpRequest &request);
 		bool			IsPost();		
 		Pipe			&GetCgiInPipe();
@@ -90,25 +86,25 @@ class ResponseHandler
 		bool			RequireCgi();//only flags that cgiobj.run() is used
 		bool			IsCgiChildRunning();
 		bool			ReachedCgiBodyPhase();
-		bool			KeepConnectioAlive();//should be named http error
+		bool			KeepConnectioAlive();
 		void			AppendCgiOutput(const std::string &buffer);
 		void			FinishCgiResponse();
 		void			CheckCgiChildState();
 		void			SetTargetFileForCgi(int id);
-		void			DeleteCgiTargetFile(int id);
 		void			AppendBufferToTmpFile(const std::string &buf);
+		void			DeleteCgiTargetFile();
 		~ResponseHandler();
-
+		
 		class ResponseHandlerError : public std::exception
 		{
 			private:
-				int 		status_code;
-				std::string error;
+			int 		status_code;
+			std::string error;
 			public:
-				int getStatusCode();
-				ResponseHandlerError(const std::string &Errmsg, int statusCode);
-				const char *what() const throw();
-				~ResponseHandlerError() throw();
+			int getStatusCode();
+			ResponseHandlerError(const std::string &Errmsg, int statusCode);
+			const char *what() const throw();
+			~ResponseHandlerError() throw();
 		};
 };
 
