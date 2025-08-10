@@ -16,7 +16,9 @@ bool ResponseHandler::RequireCgi()
 
 bool ResponseHandler::IsCgiChildRunning()
 {
-	return (GetCgiChildExitStatus() == -1);
+	UpdateCgiChildExitStatus();
+
+	return (child_status == -1);
 }
 
 bool ResponseHandler::CheckCgiTimeOut()
@@ -27,13 +29,37 @@ bool ResponseHandler::CheckCgiTimeOut()
                 >= loc_config->getCgiTimeout());
 }
 
-int ResponseHandler::GetCgiChildExitStatus()//returns -1 if cgi child still running 
+void	ResponseHandler::UpdateCgiChildExitStatus()//returns -1 if cgi child still running 
 {
-	int exit_status;
-	if (waitpid(GetCgiChildPid(), &exit_status, WNOHANG) == GetCgiChildPid())
-		return exit_status;
+	int		exit_status;
+	pid_t	child_pid = GetCgiChildPid();
+	int		wait_rval;
+
+	if (child_status != -1)
+		return ;
+	wait_rval = waitpid(child_pid, &exit_status, WNOHANG);
+	if (wait_rval == 0)// child still running
+		child_status = -1;
+	else if (wait_rval == child_pid) // child exited
+		child_status = WEXITSTATUS(exit_status);
 	else
-		return -1;
+		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
+}
+
+void ResponseHandler::CheckCgiChildState() // use only if cgi is required
+{
+	UpdateCgiChildExitStatus();
+	std::cout << "after update: child exist status: " << child_status << std::endl;
+	if (!IsCgiChildRunning() && child_status != 0){
+		DeleteCgiTargetFile();
+		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
+	}
+	else if (CheckCgiTimeOut()){
+		std::cout << "time out" << std::endl;
+		DeleteCgiTargetFile(); 
+		CgiObj.KillChild();
+		throw (ResponseHandlerError(req->getVersion() + " 504 Gateway Timeout", 504));
+	}
 }
 
 std::string	ResponseHandler::GenerateCgiStatusLine()
@@ -100,21 +126,6 @@ void ResponseHandler::AppendCgiOutput(const std::string &buffer)
 		GenerateHeaderFromCgiData();
 		response_body = CgiObj.GetPreservedBody();
     }
-}
-
-void ResponseHandler::CheckCgiChildState() // use only if cgi is required
-{
-	int exit_status = GetCgiChildExitStatus();
-
-	if (CheckCgiTimeOut()){
-		DeleteCgiTargetFile();
-		CgiObj.KillChild();
-		throw (ResponseHandlerError(req->getVersion() + " 504 Gateway Timeout", 504));
-	}
-	else if (!IsCgiChildRunning() && exit_status != 0){
-		DeleteCgiTargetFile();		
-		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
-	}
 }
 
 void ResponseHandler::SetTargetFileForCgi(int id)

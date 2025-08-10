@@ -30,6 +30,7 @@ class ResponseHandler
 		HttpRequest					*req;
 		std::string					response_header;
 		std::string 				resource_path;
+		int							child_status;
 		bool						require_cgi;
 		bool						cgi_running;
 		bool						is_post;
@@ -66,14 +67,13 @@ class ResponseHandler
 		void   		MakeLocationFromSrvConf();
 		void		GenerateHeaderFromCgiData();
 		void 		SetResponseHeader( const std::string &status_line, int len,
-			bool is_static, std::string location = "");
-			bool		CheckCgiTimeOut();
-			int			GetCgiChildExitStatus();
+						bool is_static, std::string location = "");
+		bool		CheckCgiTimeOut();
+		void		UpdateCgiChildExitStatus();
 			
-			public:
-			ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf); // edited
-			void			CheckForContentType();
-			void			LoadErrorPage(const std::string &status_line, int status_code);
+	public:
+		ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf); // edited
+		void			CheckForContentType();			void			LoadErrorPage(const std::string &status_line, int status_code);
 		void 			Run(HttpRequest &request);
 		bool			IsPost();		
 		Pipe			&GetCgiInPipe();
