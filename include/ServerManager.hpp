@@ -60,6 +60,9 @@
 #define SENT true
 #define NOT_SENT false
 
+#define PIPE_TO_CGI true
+#define NO_PIPE false
+
 #define _2CRLF "\r\n\r\n"
 
 #include <netinet/in.h> // For sockaddr_in
@@ -118,6 +121,7 @@ class ServerManager {
 		void								transferBodyToFile(Client&, int);
 		void								transmitFileResponse(Client& , int);
 		void								consumeCgiOutput(Client& , int);
+		void								transferBodyToCgi(Client& client, int serverIndex);
 
 		void								processEvent(int);
 		void								receiveClientsData(int);

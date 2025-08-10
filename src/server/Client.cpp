@@ -29,6 +29,7 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 											, _responseSent(NOT_SENT)
 											, _isOutputAvailable(NOT_AVAILABLE)
 											, _isCgiInputAvailable(NOT_AVAILABLE)
+											, _pipeBodyToCgi(NO_PIPE)
 {}
 
 Client::Client(const Client& other) : _socket(other._socket)
@@ -59,6 +60,7 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _responseSent(other._responseSent)
 									, _isOutputAvailable(other._isOutputAvailable)
 									, _isCgiInputAvailable(other._isCgiInputAvailable)
+									, _pipeBodyToCgi(other._pipeBodyToCgi)
 {
 	const_cast<Client&> (other)._responseHandler = NULL;
 }
@@ -211,6 +213,10 @@ bool	Client::getResponseSent(void) {
 
 bool	Client::getIsOutputAvailable(void) {
 	return _isOutputAvailable;
+}
+
+bool	Client::getPipeBodyToCgi(void) {
+	return _pipeBodyToCgi;
 }
 
 void Client::appendToBodyPart(const std::string &bodyData)
@@ -387,17 +393,16 @@ void	Client::sendFileBody(void) {
 void	Client::receiveRequestBody(void) {
 
 	char buffer[BYTES_TO_READ+1];
-
+	
 	std::memset(buffer, 0, sizeof(buffer));
-
-	if (!_contentLength) {
+	
+	if (!_pipeBodyToCgi && !_contentLength) {
 		_isRequestBodyWritable = NOT_WRITABLE;
 		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
 		_fullResponseFlag = FULL_RESPONSE_READY;
 		return ;
 	}
-
-	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
+	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, 0); // Enable NON_Blocking for recv()
 	if (readBytes > 0 && readBytes <= BYTES_TO_READ) {
 		resetLastConnectionTime();
 		if (_uploadedBytes + readBytes >= _contentLength) {
@@ -435,8 +440,13 @@ void	Client::writeBodyToTargetFile(void) {
 		BytesToWrite =_contentLength - _uploadedBytes;
 	}
 	
-	targetFile->write(_requestBodyPart.c_str(), BytesToWrite);
-	targetFile->flush();
+	if (_pipeBodyToCgi) {
+		write(_CGI_InPipeFD, _requestBodyPart.c_str(), BytesToWrite);
+ 	}
+	else {
+		targetFile->write(_requestBodyPart.c_str(), BytesToWrite);
+		targetFile->flush();
+	}
 
 	_uploadedBytes += BytesToWrite;
 	_requestBodyPart = _requestBodyPart.substr(BytesToWrite);
@@ -449,7 +459,13 @@ void	Client::writeBodyToTargetFile(void) {
 	if (_uploadedBytes == _contentLength) {
 		_isRequestBodyWritable = NOT_WRITABLE;
 		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
-		_fullResponseFlag = FULL_RESPONSE_READY;
+		if (_pipeBodyToCgi) {
+			_pipeBodyToCgi = NO_PIPE;
+			close(_CGI_InPipeFD);
+			_CGI_InPipeFD = -1;
+		}
+		else
+			_fullResponseFlag = FULL_RESPONSE_READY;
 		return ;
 	}
 }
@@ -483,16 +499,11 @@ void				Client::printClientStatus(void) {
 	std::cout << "  ##  _requestHeaderPart size : " << _requestHeaderPart.size() << "  ## \n";
 	std::cout << "  ##  _requestBodyPart size : " << _requestBodyPart.size() << "  ## \n";
 	std::cout << "  ##  _responseHolder size : " << _responseHolder.size() << "  ## \n";
-	// std::cout << "Response Holder {" << _responseHolder << "}\n";
 	std::cout << "  ##  _pendingRequestDataHolder size : " << _pendingRequestDataHolder.size() << "  ## \n";
 	std::cout << "  ##  _contentLength : " << _contentLength << "  ## \n";
 	std::cout << "  ##  _uploadedBytes : " << _uploadedBytes << "  ## \n";
 	std::cout << "  ##  _responseSent : " << _responseSent << "  ## \n";
 	std::cout << "--------------------------------------------------------\n\n";
-
-	// printRequestAndResponse("Pending data", _pendingRequestDataHolder);
-
-	// exit(0);
 }
 
 void	Client::resetAttributes(void) {
@@ -523,11 +534,12 @@ void	Client::resetAttributes(void) {
 	_setTargetFile =  false;
 	_responseSent = NOT_SENT;
 	_isOutputAvailable = NOT_AVAILABLE;
+	_isCgiInputAvailable = NOT_AVAILABLE;
+	_pipeBodyToCgi = NO_PIPE;
 
 	_requestHeaderPart.clear();
 	_requestBodyPart.clear();
 	_responseHolder.clear();
-
 
 	// std::cout << " ## RESETED ##\n";
 }

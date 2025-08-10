@@ -53,16 +53,22 @@ void	Client::generateDynamicResponse() {
 	
 
 	if (_responseHandler->IsPost()) {
+
+		std::cout << " ===>> CGI POST <<===\n";
+		std::stringstream ss(_httpRequest.getHeaders()["content-length"]);
+			ss >> _contentLength;
 		_CGI_InPipeFD = _responseHandler->GetCgiInPipe().getWriteFd();
 		_event.events = EPOLLOUT | EPOLLET;
 		_event.data.fd = _CGI_InPipeFD;
-
-
 		try {
 			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, _CGI_InPipeFD, &_event) == -1)
 				throw std::string("epoll_ctl failed");
-			std::cout << "Pipe fd: " << _CGI_InPipeFD << " Added successfully to epoll: " << _epfd << "\n";
-			
+			std::cout << "CGI Input Pipe fd: " << _CGI_InPipeFD << " Added successfully to epoll: " << _epfd << "\n";
+
+			if (_requestDataPreloadedFlag == REQUEST_DATA_PRELOADED_ON)
+				extractBodyFromPendingRequestHolder();
+			_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
+			_pipeBodyToCgi = PIPE_TO_CGI;
 		}
 		catch(std::string e)
 		{

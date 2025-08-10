@@ -52,6 +52,7 @@ class Client {
 		bool				_responseSent;
 		bool				_isOutputAvailable;
 		bool				_isCgiInputAvailable;
+		bool				_pipeBodyToCgi;
 		
 		void				isolateAndRecordExtraBytes(void);
 		void				generateDynamicResponse();
@@ -108,6 +109,7 @@ class Client {
 		bool				getSetTargetFile(void);
 		bool				getResponseSent(void);
 		bool				getIsOutputAvailable(void);
+		bool				getPipeBodyToCgi(void);
 
 		void				appendToHeaderPart(const std::string& requestData);
 		void				appendToBodyPart(const std::string& requestData);
@@ -166,3 +168,4 @@ class Client {
 };
 
 #endif
+

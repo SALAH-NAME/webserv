@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ReceiveRequests.cpp                                :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/08/08 21:35:09 by karim            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "ServerManager.hpp"
 
@@ -60,10 +49,10 @@ void    ServerManager::collectRequestData(Client& client) {
 				// in case of receive empty line (Press Enter) !!
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-				// std::cout << " ==> Empty line\n";
+				std::cout << " ==> Empty line\n";
 			}
 			if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
-				// std::cout << "   ====>> request is completed <<=====\n";
+				std::cout << "   ====>> request is completed <<=====\n";
 				isolateAndRecordBody(client, headerEnd);
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
@@ -106,12 +95,15 @@ void    ServerManager::collectRequestData(Client& client) {
 }
 
 void	ServerManager::transferBodyToFile(Client& client, int serverIndex) {
-
 	try {
-		if (client.getIsRequestBodyWritable() == NOT_WRITABLE)
+		if (client.getIsRequestBodyWritable() == NOT_WRITABLE) {
+			std::cout << "  ----- READ THE BODY FROM CLIENT SOCKET -----\n";
 			client.receiveRequestBody();
-		else if (client.getIsRequestBodyWritable() == WRITABLE)
+		}
+		else if (client.getIsRequestBodyWritable() == WRITABLE) {
+			std::cout << "  ----- WRITE THE BODY TO CGI INPUT PIPE-----\n";
 			client.writeBodyToTargetFile();
+		}
 	} catch (const std::runtime_error& e) {
 		perror(e.what());
 		_servers[serverIndex].closeConnection(client.getSocket().getFd());
@@ -126,7 +118,7 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 			// std::cout << " ***** input is ready to read from Pipe : " << it->second.getResponseHandler()->GetCgiOutPipe().getReadFd() << "  ****\n";
 			consumeCgiOutput(it->second, serverIndex);
 		}
-		if (it->second.getIncomingHeaderDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
+		else if (it->second.getIncomingHeaderDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
 			// std::cout << " ***** incoming Header data from : " << it->second.getSocket().getFd() << "  ****\n";
 			collectRequestData(it->second);
 		}
@@ -135,6 +127,5 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 			transferBodyToFile(it->second, serverIndex);
 		}
 	}
-	
 	_servers[serverIndex].eraseMarked();
 }
