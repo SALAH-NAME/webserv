@@ -5,10 +5,17 @@ void	Client::extractBodyFromPendingRequestHolder() {
 	if (_pendingRequestDataHolder.size() < _contentLength) {
 		bytesToExtract = _pendingRequestDataHolder.size();
 		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
+		// _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
 	}
 	else if (_pendingRequestDataHolder.size() > _contentLength) {
 		bytesToExtract = _contentLength;
 		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_ON;
+		// _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+	}
+	else if (_pendingRequestDataHolder.size() > _contentLength) {
+		bytesToExtract = _contentLength;
+		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
+		// _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
 	}
 	else {
 		bytesToExtract = _contentLength;
@@ -23,14 +30,18 @@ void	Client::extractBodyFromPendingRequestHolder() {
 }
 
 void	Client::generateDynamicResponse() {
-	_CGI_pipeFD = _responseHandler->GetCgiOutPipe().getReadFd();
+	_isCgiRequired = CGI_REQUIRED;
+	std::cout << "Is CGI required: " << _isCgiRequired << std::endl;
+
+	_CGI_OutPipeFD = _responseHandler->GetCgiOutPipe().getReadFd();
 	struct epoll_event					_event;
 	_event.events = EPOLLIN | EPOLLHUP | EPOLLET;
-	_event.data.fd = _CGI_pipeFD;
+	_event.data.fd = _CGI_OutPipeFD;
 	
 	try {
-		if (epoll_ctl(_epfd, EPOLL_CTL_ADD, _CGI_pipeFD, &_event) == -1)
+		if (epoll_ctl(_epfd, EPOLL_CTL_ADD, _CGI_OutPipeFD, &_event) == -1)
 			throw std::string("epoll_ctl failed");
+		std::cout << "Pipe fd: " << _CGI_OutPipeFD << " Added successfully to epoll: " << _epfd << "\n";
 	}
 	catch(std::string e)
 	{
@@ -38,9 +49,33 @@ void	Client::generateDynamicResponse() {
 		return ;
 	}
 
-	_isCgiRequired = CGI_REQUIRED;
-	std::cout << "Pipe fd: " << _CGI_pipeFD << " Added successfully to epoll: " << _epfd << "\n";
-	std::cout << "Is CGI required: " << _isCgiRequired << std::endl;
+	
+	
+
+	if (_responseHandler->IsPost()) {
+
+		std::cout << " ===>> CGI POST <<===\n";
+		std::stringstream ss(_httpRequest.getHeaders()["content-length"]);
+			ss >> _contentLength;
+		_CGI_InPipeFD = _responseHandler->GetCgiInPipe().getWriteFd();
+		_event.events = EPOLLOUT | EPOLLET;
+		_event.data.fd = _CGI_InPipeFD;
+		try {
+			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, _CGI_InPipeFD, &_event) == -1)
+				throw std::string("epoll_ctl failed");
+			std::cout << "CGI Input Pipe fd: " << _CGI_InPipeFD << " Added successfully to epoll: " << _epfd << "\n";
+
+			if (_requestDataPreloadedFlag == REQUEST_DATA_PRELOADED_ON)
+				extractBodyFromPendingRequestHolder();
+			_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
+			_pipeBodyToCgi = PIPE_TO_CGI;
+		}
+		catch(std::string e)
+		{
+			std::cout << e << "\n";
+			return ;
+		}
+	}
 
 }
 

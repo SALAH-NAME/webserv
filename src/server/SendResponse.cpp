@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/08/07 12:59:29 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/10 18:56:48 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,10 +24,13 @@ void	ServerManager::handleKeepAlive(Client& client, int serverIndex) {
 
 void	ServerManager::transmitResponseHeader(Client& client, int serverIndex) {
 
+	if (!client.getIsOutputAvailable())
+		return ; // socket is not available "!EPOLLOUT"
+
 	std::string& response = client.getResponseHolder();
 
 	int bytesToSendNow =  client.getBytesToSendNow();
-	std::cout << "Bytes to send now: " << bytesToSendNow << "\n";
+	// std::cout << "Bytes to send now: " << bytesToSendNow << "\n";
 
 	size_t sentBytes;
 	try {

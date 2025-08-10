@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ReceiveRequests.cpp                                :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/05/02 19:32:22 by karim             #+#    #+#             */
-/*   Updated: 2025/08/07 18:36:20 by karim            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "ServerManager.hpp"
 
@@ -31,22 +20,22 @@ void	isolateAndRecordBody(Client& client, size_t headerEnd) {
 	client.setHeaderPart(headerPart.substr(0, headerEnd + 4));
 	// client.setBodyDataPreloaded(BODY_DATA_PRELOADED_ON);
 	client.setRequestDataPreloadedFlag(REQUEST_DATA_PRELOADED_ON);
-	std::cout << "ISOLATED\n";
+	// std::cout << "ISOLATED\n";
 }
 
 void    ServerManager::collectRequestData(Client& client) {
 	ssize_t	readbytes;
-	size_t	headerEnd;
+	ssize_t	headerEnd;
 
 	std::memset(_buffer, 0, sizeof(_buffer));
 	try {
-		if (client.getRequestDataPreloadedFlag() == REQUEST_DATA_PRELOADED_ON) {	
+		if (client.getRequestDataPreloadedFlag() == REQUEST_DATA_PRELOADED_ON)
 			client.getBufferFromPendingData(_buffer, &readbytes);
-			std::cout << "  >>> get buffer from Pending Request data  <<<\n";
-		}
-		else {
+		else
 			readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
-			std::cout << "read bytes ==> " << readbytes << " ||  from : " << client.getSocket().getFd() << "\n";
+
+		if (readbytes > 0) {
+			// std::cout << "read bytes ==> " << readbytes << " ||  from : " << client.getSocket().getFd() << "\n";
 		}
 		
 		if (readbytes > 0 && readbytes <= BYTES_TO_READ) {
@@ -60,10 +49,11 @@ void    ServerManager::collectRequestData(Client& client) {
 				// in case of receive empty line (Press Enter) !!
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-				std::cout << " ==> Empty line\n";
+				// std::cout << " ==> Empty line\n";
 			}
-			if ((headerEnd = client.getHeaderPart().find(_2CRLF)) != std::string::npos) {
-				std::cout << "   ====>> request is completed <<=====\n";
+			headerEnd = (ssize_t)client.getHeaderPart().find(_2CRLF);
+			if ((size_t)headerEnd != std::string::npos) {
+				// std::cout << "   ====>> request is completed <<=====\n";
 				isolateAndRecordBody(client, headerEnd);
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
@@ -71,6 +61,15 @@ void    ServerManager::collectRequestData(Client& client) {
 			
 			HttpRequest &req = client.getHttpRequest();
 			req.appendAndValidate(client.getHeaderPart());
+
+			if (!client.getRequestDataPreloadedFlag() && req.getState() == HttpRequest::STATE_BODY) {
+				// std::cout << "   ====>> request is completed <<=====\n";
+				headerEnd = -4;
+				isolateAndRecordBody(client, headerEnd);
+				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
+				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+			}
+
 			if (req.getState() == HttpRequest::STATE_ERROR)
 			{
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
@@ -106,12 +105,13 @@ void    ServerManager::collectRequestData(Client& client) {
 }
 
 void	ServerManager::transferBodyToFile(Client& client, int serverIndex) {
-
 	try {
-		if (client.getIsRequestBodyWritable() == NOT_WRITABLE)
+		if (client.getIsRequestBodyWritable() == NOT_WRITABLE) {
 			client.receiveRequestBody();
-		else if (client.getIsRequestBodyWritable() == WRITABLE)
+		}
+		else if (client.getIsRequestBodyWritable() == WRITABLE) {
 			client.writeBodyToTargetFile();
+		}
 	} catch (const std::runtime_error& e) {
 		perror(e.what());
 		_servers[serverIndex].closeConnection(client.getSocket().getFd());
@@ -126,7 +126,7 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 			// std::cout << " ***** input is ready to read from Pipe : " << it->second.getResponseHandler()->GetCgiOutPipe().getReadFd() << "  ****\n";
 			consumeCgiOutput(it->second, serverIndex);
 		}
-		if (it->second.getIncomingHeaderDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
+		else if (it->second.getIncomingHeaderDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
 			// std::cout << " ***** incoming Header data from : " << it->second.getSocket().getFd() << "  ****\n";
 			collectRequestData(it->second);
 		}
@@ -135,6 +135,5 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 			transferBodyToFile(it->second, serverIndex);
 		}
 	}
-	
 	_servers[serverIndex].eraseMarked();
 }

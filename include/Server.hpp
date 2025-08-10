@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/08/01 10:58:39 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/08 18:37:39 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ class Server {
 		int 						_id;
 		sockaddr_in					_Address;
 		std::vector<unsigned int>	_ports;
-		int							_domin;
+		int							_domain;
 		int							_type;
 		int							_protocol;
 		int							_nMaxBacklog;
@@ -35,6 +35,7 @@ class Server {
 		
 		void						initAttributes(int);
 		void						setEventStatus(struct epoll_event&, int);
+		void						setup_sockaddr(int port);
 	public:
 		/**/						Server(const ServerConfig&, size_t);
 		/**/						~Server(void);

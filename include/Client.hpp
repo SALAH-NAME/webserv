@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Client.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/05/06 12:38:44 by karim             #+#    #+#             */
-/*   Updated: 2025/08/07 13:00:35 by karim            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
@@ -27,7 +16,8 @@ class Client {
 		int					_epfd;
 		const ServerConfig&	_conf;
 		ClientInfos			_clientInfos;
-		int					_CGI_pipeFD;
+		int					_CGI_OutPipeFD;
+		int					_CGI_InPipeFD;
 
 		std::string			_requestHeaderPart;
 		std::string			_requestBodyPart;
@@ -60,7 +50,10 @@ class Client {
 		bool				_setTargetFile;
 
 		bool				_responseSent;
-
+		bool				_isOutputAvailable;
+		bool				_isCgiInputAvailable;
+		bool				_pipeBodyToCgi;
+		
 		void				isolateAndRecordExtraBytes(void);
 		void				generateDynamicResponse();
 		void				generateStaticResponse();
@@ -77,7 +70,8 @@ class Client {
 		std::string					temp_header;
 		
 		Socket&				getSocket();
-		int					getCGI_pipeFD(void);
+		int					getCGI_OutpipeFD(void);
+		int					getCGI_InpipeFD(void);
 		time_t				getLastConnectionTime(void);
 		bool				getIncomingHeaderDataDetectedFlag(void);
 		
@@ -114,6 +108,8 @@ class Client {
 
 		bool				getSetTargetFile(void);
 		bool				getResponseSent(void);
+		bool				getIsOutputAvailable(void);
+		bool				getPipeBodyToCgi(void);
 
 		void				appendToHeaderPart(const std::string& requestData);
 		void				appendToBodyPart(const std::string& requestData);
@@ -146,6 +142,8 @@ class Client {
 		void				setPipeReadComplete(bool);
 
 		void				setSetTargetFile(bool);
+		void				setIsOutputAvailable(bool value);
+		void				setIsCgiInputAvailable(bool value);
 
 		bool				parseRequest(void);
 		void				prinfRequestinfos(void);
@@ -170,3 +168,4 @@ class Client {
 };
 
 #endif
+

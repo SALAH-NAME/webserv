@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Client.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/05/06 12:42:11 by karim             #+#    #+#             */
-/*   Updated: 2025/08/07 18:36:17 by karim            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "Client.hpp"
 
@@ -16,7 +5,8 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 											, _epfd(epfd)
 											, _conf(conf)
 											, _clientInfos(clientInfos)
-											, _CGI_pipeFD(-1)
+											, _CGI_OutPipeFD(-1)
+											, _CGI_InPipeFD(-1)
 											, _lastTimeConnection(std::time(NULL))
 											, _contentLength(0)
 											, _uploadedBytes(0)
@@ -37,13 +27,17 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 											, _pipeReadComplete(READ_PIPE_NOT_COMPLETE)
 											, _setTargetFile(false)
 											, _responseSent(NOT_SENT)
+											, _isOutputAvailable(NOT_AVAILABLE)
+											, _isCgiInputAvailable(NOT_AVAILABLE)
+											, _pipeBodyToCgi(NO_PIPE)
 {}
 
 Client::Client(const Client& other) : _socket(other._socket)
 									, _epfd(other._epfd)
 									, _conf(other._conf)
 									, _clientInfos(other._clientInfos)
-									, _CGI_pipeFD(other._CGI_pipeFD)
+									, _CGI_OutPipeFD(other._CGI_OutPipeFD)
+									, _CGI_InPipeFD(other._CGI_InPipeFD)
 									, _lastTimeConnection(other._lastTimeConnection)
 									, _contentLength(other._contentLength)
 									, _uploadedBytes(other._uploadedBytes)
@@ -64,6 +58,9 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _pipeReadComplete(other._pipeReadComplete)
 									, _setTargetFile(other._setTargetFile)
 									, _responseSent(other._responseSent)
+									, _isOutputAvailable(other._isOutputAvailable)
+									, _isCgiInputAvailable(other._isCgiInputAvailable)
+									, _pipeBodyToCgi(other._pipeBodyToCgi)
 {
 	const_cast<Client&> (other)._responseHandler = NULL;
 }
@@ -79,8 +76,12 @@ Socket &Client::getSocket()
 	return _socket;
 }
 
-int	Client::getCGI_pipeFD(void) {
-	return _CGI_pipeFD;
+int	Client::getCGI_OutpipeFD(void) {
+	return _CGI_OutPipeFD;
+}
+
+int	Client::getCGI_InpipeFD(void) {
+	return _CGI_InPipeFD;
 }
 
 time_t Client::getLastConnectionTime(void)
@@ -210,6 +211,14 @@ bool	Client::getResponseSent(void) {
 	return _responseSent;
 }
 
+bool	Client::getIsOutputAvailable(void) {
+	return _isOutputAvailable;
+}
+
+bool	Client::getPipeBodyToCgi(void) {
+	return _pipeBodyToCgi;
+}
+
 void Client::appendToBodyPart(const std::string &bodyData)
 {
 	_requestBodyPart += bodyData;
@@ -302,6 +311,14 @@ void	Client::setSetTargetFile(bool value) {
 	_setTargetFile = value;
 }
 
+void	Client::setIsOutputAvailable(bool value) {
+	_isOutputAvailable = value;
+}
+
+void	Client::setIsCgiInputAvailable(bool value) {
+	_isCgiInputAvailable = value;
+}
+
 bool Client::parseRequest()
 {
 	try
@@ -351,6 +368,9 @@ void	Client::readFileBody(void) {
 
 void	Client::sendFileBody(void) {
 	ssize_t sentBytes;
+
+	if (!_isOutputAvailable)
+		return ;
 	
 	if (_responseHolder.size()) {
 		sentBytes = _socket.send(_responseHolder.c_str(), _responseHolder.size(), MSG_NOSIGNAL);
@@ -373,17 +393,16 @@ void	Client::sendFileBody(void) {
 void	Client::receiveRequestBody(void) {
 
 	char buffer[BYTES_TO_READ+1];
-
+	
 	std::memset(buffer, 0, sizeof(buffer));
-
-	if (!_contentLength) {
+	
+	if (!_pipeBodyToCgi && !_contentLength) {
 		_isRequestBodyWritable = NOT_WRITABLE;
 		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
 		_fullResponseFlag = FULL_RESPONSE_READY;
 		return ;
 	}
-
-	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
+	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, 0); // Enable NON_Blocking for recv()
 	if (readBytes > 0 && readBytes <= BYTES_TO_READ) {
 		resetLastConnectionTime();
 		if (_uploadedBytes + readBytes >= _contentLength) {
@@ -421,8 +440,15 @@ void	Client::writeBodyToTargetFile(void) {
 		BytesToWrite =_contentLength - _uploadedBytes;
 	}
 	
-	targetFile->write(_requestBodyPart.c_str(), BytesToWrite);
-	targetFile->flush();
+	if (_pipeBodyToCgi) {
+		if (!_isCgiInputAvailable) // the pipe isn't available yet to write in	
+			return ;
+		write(_CGI_InPipeFD, _requestBodyPart.c_str(), BytesToWrite);
+ 	}
+	else {
+		targetFile->write(_requestBodyPart.c_str(), BytesToWrite);
+		targetFile->flush();
+	}
 
 	_uploadedBytes += BytesToWrite;
 	_requestBodyPart = _requestBodyPart.substr(BytesToWrite);
@@ -435,17 +461,23 @@ void	Client::writeBodyToTargetFile(void) {
 	if (_uploadedBytes == _contentLength) {
 		_isRequestBodyWritable = NOT_WRITABLE;
 		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
-		_fullResponseFlag = FULL_RESPONSE_READY;
+		if (_pipeBodyToCgi) {
+			_pipeBodyToCgi = NO_PIPE;
+			close(_CGI_InPipeFD);
+			_CGI_InPipeFD = -1;
+		}
+		else
+			_fullResponseFlag = FULL_RESPONSE_READY;
 		return ;
 	}
 }
 
 void	Client::closeAndDeregisterPipe(void) {
 	std::cout << "============================================================\n";
-	epoll_ctl(_epfd, EPOLL_CTL_DEL, _CGI_pipeFD, NULL);
-	std::cout << "  ## Removed Pipe fd: " << _CGI_pipeFD << " from epoll  ## \n";
-	close(_CGI_pipeFD);
-	std::cout << "  ## closed Pipe fd: " << _CGI_pipeFD << "              ## \n";
+	epoll_ctl(_epfd, EPOLL_CTL_DEL, _CGI_OutPipeFD, NULL);
+	std::cout << "  ## Removed Pipe fd: " << _CGI_OutPipeFD << " from epoll  ## \n";
+	close(_CGI_OutPipeFD);
+	std::cout << "  ## closed Pipe fd: " << _CGI_OutPipeFD << "              ## \n";
 	std::cout << "============================================================\n\n";
 	
 }
@@ -465,24 +497,19 @@ void	Client::CgiExceptionHandler(void) {
 
 void				Client::printClientStatus(void) {
 	std::cout << "\n ------------------------------------------------------\n";
-	std::cout << "  ## _CGI_pipeFD: " <<  _CGI_pipeFD << " ## \n";
+	std::cout << "  ## _CGI_OutPipeFD: " <<  _CGI_OutPipeFD << " ## \n";
 	std::cout << "  ##  _requestHeaderPart size : " << _requestHeaderPart.size() << "  ## \n";
 	std::cout << "  ##  _requestBodyPart size : " << _requestBodyPart.size() << "  ## \n";
 	std::cout << "  ##  _responseHolder size : " << _responseHolder.size() << "  ## \n";
-	// std::cout << "Response Holder {" << _responseHolder << "}\n";
 	std::cout << "  ##  _pendingRequestDataHolder size : " << _pendingRequestDataHolder.size() << "  ## \n";
 	std::cout << "  ##  _contentLength : " << _contentLength << "  ## \n";
 	std::cout << "  ##  _uploadedBytes : " << _uploadedBytes << "  ## \n";
 	std::cout << "  ##  _responseSent : " << _responseSent << "  ## \n";
 	std::cout << "--------------------------------------------------------\n\n";
-
-	// printRequestAndResponse("Pending data", _pendingRequestDataHolder);
-
-	// exit(0);
 }
 
 void	Client::resetAttributes(void) {
-	_CGI_pipeFD =  -1;
+	_CGI_OutPipeFD =  -1;
 	_lastTimeConnection =  std::time(NULL);
 	_contentLength =  0;
 	_uploadedBytes =  0;
@@ -508,13 +535,14 @@ void	Client::resetAttributes(void) {
 	_pipeReadComplete =  READ_PIPE_NOT_COMPLETE;
 	_setTargetFile =  false;
 	_responseSent = NOT_SENT;
+	_isCgiInputAvailable = NOT_AVAILABLE;
+	_pipeBodyToCgi = NO_PIPE;
 
 	_requestHeaderPart.clear();
 	_requestBodyPart.clear();
 	_responseHolder.clear();
 
-
-	std::cout << " ## RESETED ##\n";
+	// std::cout << " ## RESETED ##\n";
 }
 
 void	Client::getBufferFromPendingData(char* buffer, ssize_t* readBytes) {

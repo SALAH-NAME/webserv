@@ -3,8 +3,8 @@
 
 #define EPOLLTIMEOUT 100
 #define MAX_EVENTS 100
-#define BYTES_TO_READ 100 * 1023
-#define BYTES_TO_SEND 100 * 1023
+#define BYTES_TO_READ 1000 * 1023
+#define BYTES_TO_SEND 1000 * 1023
 #define BUFFERSIZE (((BYTES_TO_READ > BYTES_TO_SEND) ? BYTES_TO_READ : BYTES_TO_SEND) + 1)
 #define RESPONSESIZE 746 // Fix size for the temp response
 
@@ -54,8 +54,14 @@
 #define READ_PIPE_COMPLETE true
 #define READ_PIPE_NOT_COMPLETE false
 
+#define AVAILABLE true
+#define NOT_AVAILABLE false
+
 #define SENT true
 #define NOT_SENT false
+
+#define PIPE_TO_CGI true
+#define NO_PIPE false
 
 #define _2CRLF "\r\n\r\n"
 
@@ -78,6 +84,7 @@
 #include <algorithm>
 #include <arpa/inet.h> // for inet_addr()
 #include <utility>
+#include <netdb.h>     // for getaddrinfo
 #include "HttpRequest.hpp"
 #include "ConfigManager.hpp"
 #include "ConfigPrinter.hpp"
@@ -114,6 +121,7 @@ class ServerManager {
 		void								transferBodyToFile(Client&, int);
 		void								transmitFileResponse(Client& , int);
 		void								consumeCgiOutput(Client& , int);
+		void								transferBodyToCgi(Client& client, int serverIndex);
 
 		void								processEvent(int);
 		void								receiveClientsData(int);

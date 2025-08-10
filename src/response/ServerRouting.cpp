@@ -6,23 +6,26 @@ bool ResponseHandler::NeedToRedirect(){
             loc_config->hasRedirect());
 }
 
-// void ResponseHandler::SetUsedServer()
-// {
-//     std::vector<ServerConfig> servers = std::vector<ServerConfig>();//tmp
-
-//     if (servers.size() <= 1 || req->getHeaders().find("host") == req->getHeaders().end())
-//        return ;
-//     for (std::vector<ServerConfig>::iterator it = servers.begin(); it != servers.end();it++)
-//     {
-//         if (it->getServerNames().empty())
-//             continue;
-//         if (std::find(it->getServerNames().begin(), it->getServerNames().end(),
-//             req->getHeaders()["host"]) != it->getServerNames().end()){
-//             conf = *it;
-//             break;
-//         }
-//     }
-// }
+ServerConfig &MatcheServerNameToHost(std::vector<ServerConfig> servers, const std::string &host,
+    ServerConfig &current)
+{
+    //only returns the first server that has a name that matches with the host header
+    //you must also provide the ip and port that was used for the connection to compair
+    //with other servers
+    if (servers.size() <= 1 || host.empty())
+       return current;
+    for (std::vector<ServerConfig>::iterator it = servers.begin(); it != servers.end();it++)
+    {
+        if (it->getServerNames().empty())
+            continue;
+        //check ip and port
+        if (std::find(it->getServerNames().begin(), it->getServerNames().end(),
+            host) != it->getServerNames().end()){
+            return *it;
+        }
+    }
+    return current;
+}
 
 bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations)
 {
@@ -35,9 +38,9 @@ bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_lo
         {
             //the requested file extension matched with a cgi location
             if (access((it->second.getRoot() + req_path).c_str(), F_OK) != 0)
-                throw (ResponseHandlerError("HTTP/1.1 404 Not Found", 404));
+                throw (ResponseHandlerError(req->getVersion() + " 404 Not Found", 404));
             if (IsDir((it->second.getRoot()+req_path).c_str()))//if the path exist but as a directory
-                throw (ResponseHandlerError("HTTP/1.1 403 Forbidden", 403));
+                throw (ResponseHandlerError(req->getVersion() + " 403 Forbidden", 403));
             resource_path = it->second.getRoot() + '/' + req_path;
             loc_config = &it->second;
             require_cgi = true;
@@ -136,8 +139,6 @@ void ResponseHandler::MakeLocationFromSrvConf()
     tmp->setIndex(conf.getIndex());
     tmp->setPath("/");
     tmp->setRoot(conf.getRoot());
-    tmp->setSessionTimeout(conf.getSessionTimeout());
-    tmp->setUploadStore(conf.getUploadStore());
     loc_config = tmp;
 }
 
@@ -172,5 +173,5 @@ void ResponseHandler::RouteResolver(const std::string &req_path, const std::stri
         resource_path = conf.getRoot() + req_path;
     }
     if (!loc_config)
-        throw (ResponseHandlerError("HTTP/1.1 404 Not Found", 404));//the request path didn't match with any location
+        throw (ResponseHandlerError(req->getVersion() + " 404 Not Found", 404));//the request path didn't match with any location
 }

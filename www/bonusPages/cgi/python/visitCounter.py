@@ -29,6 +29,8 @@ def SetVisiCount():
 	pairs = Cookies.split(';')
 	for pair in pairs:
 		key_value = pair.split('=')
+		if len(key_value) != 2:
+			continue
 		key = key_value[0]
 		value = key_value[1]
 		if key == "visit-counter":
