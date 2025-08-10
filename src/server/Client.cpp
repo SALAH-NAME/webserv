@@ -441,6 +441,8 @@ void	Client::writeBodyToTargetFile(void) {
 	}
 	
 	if (_pipeBodyToCgi) {
+		if (!_isCgiInputAvailable) // the pipe isn't available yet to write in	
+			return ;
 		write(_CGI_InPipeFD, _requestBodyPart.c_str(), BytesToWrite);
  	}
 	else {
@@ -533,7 +535,6 @@ void	Client::resetAttributes(void) {
 	_pipeReadComplete =  READ_PIPE_NOT_COMPLETE;
 	_setTargetFile =  false;
 	_responseSent = NOT_SENT;
-	_isOutputAvailable = NOT_AVAILABLE;
 	_isCgiInputAvailable = NOT_AVAILABLE;
 	_pipeBodyToCgi = NO_PIPE;
 
