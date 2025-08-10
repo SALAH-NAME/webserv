@@ -1,4 +1,5 @@
 #include "HttpRequest.hpp"
+#include <climits>
 
 HttpRequest::HttpRequest() : state(STATE_START_LINE), valid(false), status_code(0),
                              http_version(HTTP_UNKNOWN), _start_line_size(0), _headers_size(0),
@@ -610,4 +611,111 @@ std::string HttpRequest::getCookieValue(const std::string &key) const
     if (it != cookies.end())
         return it->second;
     return "";
+}
+
+
+bool HttpRequest::isCunked() const
+{
+    std::map<std::string, std::string>::const_iterator it = headers.find("transfer-encoding");
+    if (it != headers.end())
+        return isChunkedEncoding(it->second);
+    return false;
+}
+
+bool HttpRequest::isValidHexDigit(char c) const
+{
+    return (c >= '0' && c <= '9') || 
+           (c >= 'A' && c <= 'F') || 
+           (c >= 'a' && c <= 'f');
+}
+
+int HttpRequest::hexCharToDecimal(char c) const
+{
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    return -1;
+}
+
+std::size_t HttpRequest::findCRLF(const std::string& buffer) const
+{
+    if (buffer.empty())
+        throw HttpRequestException(400, "Bad Request: Empty buffer");
+
+    std::size_t crlf_pos = buffer.find("\r\n");
+    if (crlf_pos == std::string::npos)
+        throw HttpRequestException(400, "Bad Request: Missing CRLF in chunk size line");
+
+    if (crlf_pos == 0)
+        throw HttpRequestException(400, "Bad Request: Empty chunk size line");
+
+    return crlf_pos;
+}
+
+std::string HttpRequest::extractHexString(const std::string& chunk_line) const
+{
+    std::size_t hex_end = 0;
+    while (hex_end < chunk_line.length() && isValidHexDigit(chunk_line[hex_end]))
+        hex_end++;
+
+    if (hex_end == 0)
+        throw HttpRequestException(400, "Bad Request: Invalid chunk size - no hex digits found");
+
+    if (hex_end < chunk_line.length())
+        throw HttpRequestException(400, "Bad Request: Invalid characters after chunk size");
+
+    std::string hex_string = chunk_line.substr(0, hex_end);
+
+    if (hex_string.length() > 8)
+        throw HttpRequestException(413, "Payload Too Large: Chunk size too large");
+
+    return hex_string;
+}
+
+long HttpRequest::convertHexToDecimal(const std::string& hex_string)
+{
+    long chunk_size = 0;
+    
+    for (std::size_t i = 0; i < hex_string.length(); i++)
+    {
+        int hex_val = hexCharToDecimal(hex_string[i]);
+        if (hex_val == -1)
+            throw HttpRequestException(400, "Bad Request: Invalid hex digit in chunk size");
+        
+        if (chunk_size > (LONG_MAX - hex_val) / 16)
+            throw HttpRequestException(413, "Payload Too Large: Chunk size overflow");
+        
+        chunk_size = chunk_size * 16 + hex_val;
+    }
+    
+    return chunk_size;
+}
+
+int HttpRequest::validateIntRange(long chunk_size) const
+{
+    if (chunk_size > INT_MAX)
+        throw HttpRequestException(413, "Payload Too Large: Chunk size exceeds integer range");
+    return static_cast<int>(chunk_size);
+}
+
+void HttpRequest::consumeChunkSizeLine(std::string& buffer, std::size_t crlf_pos) const
+{
+    buffer.erase(0, crlf_pos + 2); // +2 for \r\n
+}
+
+int HttpRequest::validateChunkSize(std::string& buffer)
+{
+    std::size_t crlf_pos = findCRLF(buffer);
+    
+    std::string chunk_line = buffer.substr(0, crlf_pos);
+    
+    std::string hex_string = extractHexString(chunk_line);
+    
+    long chunk_size_long = convertHexToDecimal(hex_string);
+    
+    int chunk_size = validateIntRange(chunk_size_long);
+    
+    consumeChunkSizeLine(buffer, crlf_pos);
+    
+    return chunk_size;
 }

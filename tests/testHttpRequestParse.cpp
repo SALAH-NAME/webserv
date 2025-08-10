@@ -1179,6 +1179,321 @@ static void test_postWitoutContentLength()
     }
 }
 
+static void test_chunk_basic_hex_numbers()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF "5\r\nHello\r\n";
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        int size = req.validateChunkSize(buffer);
+        bool pass = req.isValid() && size == 5;
+        print_result("Chunk basic hex numbers", pass);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk basic hex numbers", false);
+    }
+}
+
+static void test_chunk_mixed_case_hex()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF "AbC\r\ntest\r\n";
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        int size = req.validateChunkSize(buffer);
+        bool pass = req.isValid() && size == 2748; // ABC ==> 2748
+        print_result("Chunk mixed case hex", pass);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk mixed case hex", false);
+    }
+}
+
+static void test_chunk_extensions()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF "5;name=value\r\nHello\r\n";
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        int size = req.validateChunkSize(buffer);
+        (void)size;
+        bool pass = !req.isValid();
+        print_result("Chunk with extensions", pass);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk with extensions (exception)", true);
+    }
+}
+
+static void test_chunk_quoted_extensions()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF "B;name=\"quoted value\"\r\ntest\r\n";
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        int size = req.validateChunkSize(buffer);
+        (void)size;
+        bool pass = !req.isValid();
+        print_result("Chunk with quoted extensions", pass);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk with quoted extensions (exception)", true);
+    }
+}
+
+static void test_chunk_empty_buffer()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        std::string empty_buffer = "";
+        req.validateChunkSize(empty_buffer);
+        print_result("Chunk empty buffer", false);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk empty buffer", ex.statusCode() == 400);
+    }
+}
+
+static void test_chunk_missing_crlf()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        std::string chunk_buffer = "5Hello";
+        req.validateChunkSize(chunk_buffer);
+        print_result("Chunk missing CRLF", false);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk missing CRLF", ex.statusCode() == 400);
+    }
+}
+
+static void test_chunk_empty_size_line()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        std::string chunk_buffer = "\r\ndata";
+        req.validateChunkSize(chunk_buffer);
+        print_result("Chunk empty size line", false);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk empty size line", ex.statusCode() == 400);
+    }
+}
+
+static void test_chunk_invalid_hex_chars()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        std::string chunk_buffer = "5G\r\ndata";
+        req.validateChunkSize(chunk_buffer);
+        print_result("Chunk invalid hex characters", false);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk invalid hex characters", ex.statusCode() == 400);
+    }
+}
+
+static void test_chunk_no_hex_digits()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        std::string chunk_buffer = "xyz\r\ndata";
+        req.validateChunkSize(chunk_buffer);
+        print_result("Chunk no hex digits at start", false);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk no hex digits at start", ex.statusCode() == 400);
+    }
+}
+
+static void test_chunk_size_too_large()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        std::string chunk_buffer = "123456789\r\ndata";
+        req.validateChunkSize(chunk_buffer);
+        print_result("Chunk size too large", false);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk size too large", ex.statusCode() == 413);
+    }
+}
+
+static void test_chunk_invalid_extension()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        std::string chunk_buffer = "5; \r\ndata";
+        req.validateChunkSize(chunk_buffer);
+        print_result("Chunk invalid extension", false);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk invalid extension", ex.statusCode() == 400);
+    }
+}
+
+static void test_chunk_unterminated_quoted_string()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        std::string chunk_buffer = "5;name=\"unterminated\r\ndata";
+        req.validateChunkSize(chunk_buffer);
+        print_result("Chunk unterminated quoted string", false);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk unterminated quoted string", ex.statusCode() == 400);
+    }
+}
+
+static void test_chunk_invalid_chars_after_size()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        std::string chunk_buffer = "5xyz\r\ndata";
+        req.validateChunkSize(chunk_buffer);
+        print_result("Chunk invalid chars after size", false);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk invalid chars after size", ex.statusCode() == 400);
+    }
+}
+
+static void test_chunk_whitespace_handling()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        std::string chunk_buffer1 = "5 \r\ndata";
+        int size1 = req.validateChunkSize(chunk_buffer1);
+
+        bool pass = !req.isValid() && size1 == -1;
+        print_result("Chunk whitespace handling", pass);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk whitespace handling (exception)", true);
+    }
+}
+
+static void test_chunk_max_size()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        std::string chunk_buffer = "FFFFFFFF\r\ndata";
+        req.validateChunkSize(chunk_buffer);
+        print_result("Chunk maximum size", req.isValid());
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk maximum size (overflow protection)", ex.statusCode() == 413);
+    }
+}
+
+static void test_chunk_zero_size()
+{
+    HttpRequest req;
+    std::string raw = "POST /submit HTTP/1.1" CRLF "Host: localhost" CRLF "Transfer-Encoding: chunked" CRLF CRLF;
+    std::string buffer = raw;
+    try
+    {
+        req.appendAndValidate(buffer);
+        std::string chunk_buffer = "0\r\n\r\n";
+        int size = req.validateChunkSize(chunk_buffer);
+        bool pass = req.isValid() && size == 0;
+        print_result("Chunk zero size", pass);
+    }
+    catch (const HttpRequestException &ex)
+    {
+        print_result("Chunk zero size", false);
+    }
+}
+
+static void test_chunk_validation()
+{
+    std::cout << "\n=== Chunk Size Validation Tests ===" << std::endl;
+
+    test_chunk_basic_hex_numbers();
+    test_chunk_mixed_case_hex();
+    test_chunk_extensions();
+    test_chunk_quoted_extensions();
+    test_chunk_empty_buffer();
+    test_chunk_missing_crlf();
+    test_chunk_empty_size_line();
+    test_chunk_invalid_hex_chars();
+    test_chunk_no_hex_digits();
+    test_chunk_size_too_large();
+    test_chunk_invalid_extension();
+    test_chunk_unterminated_quoted_string();
+    test_chunk_invalid_chars_after_size();
+    test_chunk_whitespace_handling();
+    test_chunk_max_size();
+    test_chunk_zero_size();
+}
+
 static void test_body_size_limit_validation()
 {
     std::cout << "\n=== Content-Length vs Body Size Limit Tests ===\n";
@@ -1263,6 +1578,7 @@ void testHttpRequestParse()
     test_content_length_rfc_compliance();
 
     test_edge_cases();
+    test_chunk_validation();
 
     std::cout << "=== End HttpRequest Parse Tests ===\n";
 }

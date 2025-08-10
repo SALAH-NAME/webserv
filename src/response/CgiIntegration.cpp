@@ -49,9 +49,9 @@ void	ResponseHandler::UpdateCgiChildExitStatus()//returns -1 if cgi child still 
 void ResponseHandler::CheckCgiChildState() // use only if cgi is required
 {
 	UpdateCgiChildExitStatus();
-	std::cout << "after update: child exist status: " << child_status << std::endl;
 	if (!IsCgiChildRunning() && child_status != 0){
 		DeleteCgiTargetFile();
+		// std::cout << "script failed" << std::endl;//logger
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
 	else if (CheckCgiTimeOut()){
@@ -103,6 +103,7 @@ void ResponseHandler::FinishCgiResponse()//if an exception is thrown call loadEr
 	else if (cgi_buffer_size + response_body.size() != (unsigned)returned_length){
 		DeleteCgiTargetFile();
 		CgiObj.KillChild();
+		// std::cout << "cgi returned content-lenght not true" << std::endl;//logger
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
 	else
@@ -168,6 +169,7 @@ void ResponseHandler::AppendBufferToTmpFile(const std::string &buf)
 	else if (CgiObj.GetContentLength() != -1 && cgi_buffer_size + buf.size() > (unsigned)CgiObj.GetContentLength()){
 		DeleteCgiTargetFile();		
 		CgiObj.KillChild();
+		// std::cout << "current content-lenght passed returend one" << std::endl;//logger
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
 	target_file->write(buf.c_str(), buf.size());

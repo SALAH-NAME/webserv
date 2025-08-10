@@ -19,11 +19,13 @@ std::string NumtoString(int num){
 void	CgiHandler::SetCgiChildFileDescriptors()
 {
 	output_pipe.closeRead();
-	dup2(output_pipe.getWriteFd(), 1);
+	dup2(output_pipe.getWriteFd(), STDOUT_FILENO);
 	if (is_POST){
 		input_pipe.closeWrite();
-		dup2(input_pipe.getReadFd(), 0);
+		dup2(input_pipe.getReadFd(), STDIN_FILENO);
 	}
+	else
+		close(STDIN_FILENO);
 }
 
 void	CgiHandler::SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &conf,
@@ -160,6 +162,8 @@ CgiHandler::~CgiHandler()
 }
 
 CgiHandler::BadCgiOutput::BadCgiOutput(const std::string &err_msg){
+	// std::cout << "cgi handler internal exception" << std::endl;//logger
+	// std::cout << err_msg << std::endl;//logger
 	error = err_msg;
 }
 

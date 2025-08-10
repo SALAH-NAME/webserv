@@ -9,9 +9,12 @@ compile_commands.json
 .cache/
 webserv
 unit
+unit_test
 intra_test/
-.vscode
+.vscode/
 deleteme/
 ./*.txt
 build/
 *.log
+tags
+__pycache__/
