@@ -136,6 +136,19 @@ public:
     void printInfos() const;
     std::map<std::string, std::string> getCookies() const;
     std::string getCookieValue(const std::string &key) const;
+
+    bool isCunked() const;
+    int validateChunkSize(std::string& buffer);
+
+private:
+    int hexCharToDecimal(char c) const;
+    bool isValidHexDigit(char c) const;
+    std::size_t findCRLF(const std::string& buffer) const;
+    std::string extractHexString(const std::string& chunk_line) const;
+    long convertHexToDecimal(const std::string& hex_string);
+    int validateIntRange(long chunk_size) const;
+    void consumeChunkSizeLine(std::string& buffer, std::size_t crlf_pos) const;
+
 };
 
 #endif
