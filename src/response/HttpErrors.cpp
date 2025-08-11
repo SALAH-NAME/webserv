@@ -23,11 +23,7 @@ void	ResponseHandler::GenerateErrorPage( const std::string &status_line)
 
 void	ResponseHandler::LoadErrorPage( const std::string &status_line, int status_code)
 {
-	require_cgi = false;
-	if (target_file){
-		delete target_file;
-		target_file = NULL;
-	}
+	RefreshData();
 	std::string error_page = conf.getErrorPage(status_code);
 
 	if (error_page == "" || access(error_page.c_str(), R_OK) != 0)

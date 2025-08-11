@@ -35,11 +35,11 @@ void	ResponseHandler::UpdateCgiChildExitStatus()//returns -1 if cgi child still 
 	pid_t	child_pid = GetCgiChildPid();
 	int		wait_rval;
 
-	if (child_status != -1)
+	if (child_status != -1)//child has been already reaped
 		return ;
 	wait_rval = waitpid(child_pid, &exit_status, WNOHANG);
 	if (wait_rval == 0)// child still running
-		child_status = -1;
+		child_status = -1;//keep -1 to signify that the child is not reaped yet
 	else if (wait_rval == child_pid) // child exited
 		child_status = WEXITSTATUS(exit_status);
 	else
@@ -55,7 +55,7 @@ void ResponseHandler::CheckCgiChildState() // use only if cgi is required
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
 	else if (CheckCgiTimeOut()){
-		std::cout << "time out" << std::endl;
+		// std::cout << "time out" << std::endl;//logger
 		DeleteCgiTargetFile(); 
 		CgiObj.KillChild();
 		throw (ResponseHandlerError(req->getVersion() + " 504 Gateway Timeout", 504));
