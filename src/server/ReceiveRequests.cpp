@@ -1,10 +1,10 @@
 
 #include "ServerManager.hpp"
 
-void	isolateAndRecordBody(Client& client, size_t headerEnd) {
+void	isolateAndRecordBody(Client& client) {
 	std::string& headerPart = client.getHeaderPart();
 
-	if (headerPart.size() == headerEnd + 4) {
+	if (!headerPart.size()) {
 		// no body-data received after header ==> no need to save
 		client.setRequestDataPreloadedFlag(REQUEST_DATA_PRELOADED_OFF);
 		client.setBodyDataPreloadedFlag(BODY_DATA_PRELOADED_OFF);
@@ -13,15 +13,14 @@ void	isolateAndRecordBody(Client& client, size_t headerEnd) {
 	
 	// some body-data received after header-data ==> it needs to be saved and removed from header part
 	
-	client.setPendingRequestData(headerPart.substr(headerEnd + 4)); // here we save the data ('next request' or 'current request body')
-	client.setHeaderPart(headerPart.substr(0, headerEnd + 4));
+	client.setPendingRequestData(headerPart); // here we save the data ('next request' or 'current request body')
+	client.getHeaderPart().clear();
 	client.setRequestDataPreloadedFlag(REQUEST_DATA_PRELOADED_ON);
-	std::cout << "ISOLATED\n";
+	// std::cout << "ISOLATED\n";
 }
 
 void    ServerManager::collectRequestData(Client& client) {
 	ssize_t	readbytes;
-	ssize_t	headerEnd;
 
 	std::memset(_buffer, 0, sizeof(_buffer));
 	try {
@@ -29,12 +28,16 @@ void    ServerManager::collectRequestData(Client& client) {
 			client.getBufferFromPendingData(_buffer, &readbytes);
 		else
 			readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
+
+		if (readbytes < 0)
+			return ;
 		
-		if (readbytes > 0) {
-			// std::cout << "read bytes ==> " << readbytes << " ||  from : " << client.getSocket().getFd() << "\n";
+		// std::cout << "read bytes ==> " << readbytes << " ||  from : " << client.getSocket().getFd() << "\n";
+		
+		if (readbytes > 0 && readbytes <= BYTES_TO_READ) {
 			client.resetLastConnectionTime();
 			client.appendToHeaderPart(std::string(_buffer, readbytes));
-			
+
 			if (std::string(_buffer, readbytes) == "\r\n")
 			{
 				// in case of receive empty line (Press Enter) !!
@@ -42,25 +45,17 @@ void    ServerManager::collectRequestData(Client& client) {
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 				// std::cout << " ==> Empty line\n";
 			}
-			headerEnd = (ssize_t)client.getHeaderPart().find(_2CRLF);
-			if ((size_t)headerEnd != std::string::npos) {
-				// std::cout << "   ====>> request is completed 1 <<=====\n";
-				isolateAndRecordBody(client, headerEnd);
-				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
-				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-			}
-			
+
 			HttpRequest &req = client.getHttpRequest();
 			req.appendAndValidate(client.getHeaderPart());
-
-			
-
-			if (!client.getRequestDataPreloadedFlag() && req.getState() == HttpRequest::STATE_BODY) {
-				// std::cout << "   ====>> request is completed 2 <<=====\n";
-				headerEnd = -4;
-				isolateAndRecordBody(client, headerEnd);
+	
+			if (req.getState() == HttpRequest::STATE_BODY) {
+				// std::cout << "   ====>> request is completed <<=====\n";
+				isolateAndRecordBody(client);
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+
+				// printRequestAndResponse("Pending data", client.getPendingRequestData());
 			}
 
 			if (req.getState() == HttpRequest::STATE_ERROR)
@@ -86,7 +81,6 @@ void    ServerManager::collectRequestData(Client& client) {
 		std::cerr << error_msg << std::endl;
 		client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
 		client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-		// perror(e.what());
 	}
 	catch (const std::exception &e) {
 		std::string error_msg = "Parsing error: ";

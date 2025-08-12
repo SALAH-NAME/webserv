@@ -19,6 +19,7 @@ void	Client::receiveFromSocket(void) {
 	ssize_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
 	if (readBytes == -1)
 		return ;
+
 	if (readBytes > 0) {
 		resetLastConnectionTime();
 		buffer[readBytes] = 0;
