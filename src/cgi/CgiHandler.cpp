@@ -121,6 +121,7 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 				const LocationConfig &cgi_conf, std::string &script_path,
 					ClientInfos &client_info)
 {
+// 	std::cout << "called run cgi" << std::endl;//logger
 	int 	id;
 	char	**argv = new char*[3];
 
@@ -132,18 +133,22 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 	if (this->is_POST)
 		input_pipe.create();
 	SetCgiEnvironment(current_req, conf, client_info);
+// 	std::cout << "child args, env vars and pipes are created" << std::endl;//logger
 	id = fork();
 	if (id == -1)
 		throw (std::runtime_error("failed to spawn child"));
 	if (id == 0)
 	{
+// 		std::cout << "inside the spawned child code" << std::endl;//logger
 		if (chdir(GetFileDirectoryPath(script_path).c_str()) != 0){
 			delete_strings(argv);
+// 			std::cout << "chdir failed" << std::endl;//logger
 			std::exit(1); // Fixed: free memory before exit
 		}
 		SetCgiChildFileDescriptors();
 		execve(cgi_conf.getCgiPass().c_str(), argv, this->env.GetRawEnv());
 		delete_strings(argv);
+// 		std::cout << "execve failed" << std::endl;//logger
 		std::exit(1);
 	}
 	this->exec_t0 = std::time(NULL);
@@ -152,6 +157,7 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 	input_pipe.closeRead();
 	delete_strings(argv);
 	env.clear();
+	std::cout << "a CGI child is running in the back ground" << std::endl;
 }
 
 CgiHandler::~CgiHandler()
@@ -162,8 +168,8 @@ CgiHandler::~CgiHandler()
 }
 
 CgiHandler::BadCgiOutput::BadCgiOutput(const std::string &err_msg){
-	// std::cout << "cgi handler internal exception" << std::endl;//logger
-	// std::cout << err_msg << std::endl;//logger
+// 	std::cout << "-------------cgi handler internal exception------------" << std::endl;//logger
+// 	std::cout << err_msg << std::endl;//logger
 	error = err_msg;
 }
 

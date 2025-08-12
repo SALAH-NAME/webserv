@@ -51,11 +51,11 @@ void ResponseHandler::CheckCgiChildState() // use only if cgi is required
 	UpdateCgiChildExitStatus();
 	if (!IsCgiChildRunning() && child_status != 0){
 		DeleteCgiTargetFile();
-		// std::cout << "script failed" << std::endl;//logger
+// 		// std::cout << "script failed" << std::endl;//logger
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
 	else if (CheckCgiTimeOut()){
-		// std::cout << "time out" << std::endl;//logger
+// 		// std::cout << "time out" << std::endl;//logger
 		DeleteCgiTargetFile(); 
 		CgiObj.KillChild();
 		throw (ResponseHandlerError(req->getVersion() + " 504 Gateway Timeout", 504));
@@ -97,13 +97,14 @@ void ResponseHandler::GenerateHeaderFromCgiData()
 
 void ResponseHandler::FinishCgiResponse()//if an exception is thrown call loadErrorPage
 {
+// 	std::cout << "-------------Finish Cgi response is called---------------" << std::endl;//logger
 	int returned_length = CgiObj.GetContentLength();
 	if (returned_length == -1)
 		response_header += "Content-Length: " + NumtoString(cgi_buffer_size + response_body.size())+CRLF+CRLF;
 	else if (cgi_buffer_size + response_body.size() != (unsigned)returned_length){
 		DeleteCgiTargetFile();
 		CgiObj.KillChild();
-		// std::cout << "cgi returned content-lenght not true" << std::endl;//logger
+// 		// std::cout << "cgi returned content-lenght not true" << std::endl;//logger
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
 	else
@@ -133,6 +134,7 @@ void ResponseHandler::SetTargetFileForCgi(int id)
 {
 	std::string filename = TMP_FILE_PREFIX + NumtoString(id);
 
+// 	std::cout << "--------------will set a target file for cgi ----------------" << std::endl;//logger
 	cgi_tmpfile_id = id;
 	CgiObj.PreBodyPhraseChecks();
 	int fd = open(filename.c_str(), O_CREAT, 0644);
@@ -148,6 +150,7 @@ void ResponseHandler::SetTargetFileForCgi(int id)
 		CgiObj.KillChild();
 		throw (ResponseHandlerError(req->getVersion() + " 500 Internal Server Error", 500));
 	}
+// 	std::cout << "----------target file is set-----------" << std::endl;//logger
 	response_body.clear();
 }
 
@@ -169,7 +172,7 @@ void ResponseHandler::AppendBufferToTmpFile(const std::string &buf)
 	else if (CgiObj.GetContentLength() != -1 && cgi_buffer_size + buf.size() > (unsigned)CgiObj.GetContentLength()){
 		DeleteCgiTargetFile();		
 		CgiObj.KillChild();
-		// std::cout << "current content-lenght passed returend one" << std::endl;//logger
+// 		// std::cout << "current content-lenght passed returend one" << std::endl;//logger
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
 	target_file->write(buf.c_str(), buf.size());

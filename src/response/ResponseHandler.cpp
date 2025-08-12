@@ -60,10 +60,14 @@ void ResponseHandler::RefreshData()
         delete target_file;
         target_file = NULL;
     }
+//     std::cout << "REFRESH DATA ??????????????" << std::endl;//logger
 }
 
 void ResponseHandler::Run(HttpRequest &request)
 {
+//     std::cout << "/////////////// RESPONSE RUN \n";//logger
+//     std::cout << "=========> passed request to run <========\n" << "method: "//logger
+//         << request.getMethod() << std::endl << "path: " << request.getPath() << std::endl;//logger
     RefreshData();
     keep_alive = false;
     req = &request;
@@ -71,16 +75,13 @@ void ResponseHandler::Run(HttpRequest &request)
         ProccessRequest();
     }
     catch (ResponseHandlerError &my_exception){
-        RefreshData();
         LoadErrorPage(my_exception.what(), my_exception.getStatusCode());
     }
     catch (std::bad_alloc &insuficcent_mem){
-        RefreshData();
         LoadErrorPage(req->getVersion() + " 503 Service Unavailable", 503);
     }
     catch (std::exception &ex){
-        RefreshData();
-        LoadErrorPage(req->getVersion() + "500 Internal Server Error", 500);
+        LoadErrorPage(req->getVersion() + " 500 Internal Server Error", 500);
     }
 }
 
@@ -94,9 +95,12 @@ void ResponseHandler::SetKeepAlive()
 
 void ResponseHandler::ProccessRequest()
 {
+//     std::cout << "inside process request" << std::endl; //logger
     InitialRequestCheck();
+//     std::cout << "passed initial error checks" << std::endl; //logger
     SetKeepAlive();
     RouteResolver(req->getPath(), req->getMethod());//  set resource_path and loc_config
+    std::cout << "route resoulved to " << resource_path << std::endl;
     try {
         req->validateContentLengthLimit(loc_config->getClientMaxBodySize());
     }
@@ -104,9 +108,10 @@ void ResponseHandler::ProccessRequest()
     {
         throw (ResponseHandlerError(req->getVersion() + " " + NumtoString(e.statusCode()) + " " + e.what(), e.statusCode()));
     }
-    
+//     std::cout << "content length validated" << std::endl;//logger
     if (NeedToRedirect())
         return (GenerateRedirection());
+//     std::cout << "no need for redirection" << std::endl;//logger
     if (loc_config->getAllowedMethods().find(stringToHttpMethod(req->getMethod())) == loc_config->getAllowedMethods().end())
         throw (ResponseHandlerError(req->getVersion() + " 405 Not Allowed", 405));//req method is not allowed on the route
     switch (stringToHttpMethod(req->getMethod()))
@@ -155,6 +160,7 @@ void ResponseHandler::ProccessHttpGET()
 
 void ResponseHandler::ProccessHttpPOST()
 {
+//     std::cout << "inside post processor" << std::endl;//logger
     if (require_cgi)
         return (CgiObj.RunCgi(*req, conf, *loc_config, resource_path, client_info));
     if (access(resource_path.c_str(), F_OK) == 0){
@@ -162,7 +168,7 @@ void ResponseHandler::ProccessHttpPOST()
         throw (ResponseHandlerError(req->getVersion() + " 409 Conflict", 409));
     }
     if (access(GetFileDirectoryPath(resource_path).c_str(), W_OK | X_OK) != 0 ||
-            req->getPath()[req->getPath().size() - 1] == '/'){\
+            req->getPath()[req->getPath().size() - 1] == '/'){
         keep_alive = false;
         throw (ResponseHandlerError(req->getVersion() + " 403 Forbidden", 403));}
     SetResponseHeader(req->getVersion() + " 201 Created", -1, false);

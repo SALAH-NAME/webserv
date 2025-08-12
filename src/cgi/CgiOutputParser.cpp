@@ -86,43 +86,43 @@ void	CgiHandler::SyntaxErrorsCheck(const std::string &buff, unsigned int i, bool
 	char prev_char = (i > 0) ? buff[i - 1] : prev_buf_l_char;
 	char next_char = (i < buff.size() - 1) ? buff[i + 1] : 0;
 
-// //debugg block
-// 	if ((!std::isprint(buff[i]) && buff[i] != '\r'))
-// 	{
-// 			std::cout << "----first----\n";
-// 			std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
-// 					<< "\nnext-char: " << (int)next_char << std::endl;
-// 			std::cout << "char index: " << i << std::endl;
-// 			throw (CgiHandler::BadCgiOutput("syntax error"));
-// 	}
+//debugg block
+	// if ((!std::isprint(buff[i]) && buff[i] != '\r'))
+	// {
+	// 		std::cout << "----first----\n";
+	// 		std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
+	// 				<< "\nnext-char: " << (int)next_char << std::endl;
+	// 		std::cout << "char index: " << i << std::endl;
+	// 		throw (CgiHandler::BadCgiOutput("syntax error"));
+	// }
 
-// 	if (std::isspace(buff[i]) && key_phase)
-// 	{
-// 			std::cout << "----second----\n";
-// 			std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
-// 					<< "\nnext-char: " << (int)next_char << std::endl;
-// 			std::cout << "char index: " << i << std::endl;
-// 			throw (CgiHandler::BadCgiOutput("syntax error"));
-// 	}
+	// if (std::isspace(buff[i]) && key_phase)
+	// {
+	// 		std::cout << "----second----\n";
+	// 		std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
+	// 				<< "\nnext-char: " << (int)next_char << std::endl;
+	// 		std::cout << "char index: " << i << std::endl;
+	// 		throw (CgiHandler::BadCgiOutput("syntax error"));
+	// }
 
 
-// 	if (buff[i] == '\n' && prev_char != '\r')
-// 	{
-// 			std::cout << "----third----\n";
-// 			std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
-// 					<< "\nnext-char: " << (int)next_char << std::endl;
-// 			std::cout << "char index: " << i << std::endl;
-// 			throw (CgiHandler::BadCgiOutput("syntax error"));
-// 	}
+	// if (buff[i] == '\n' && prev_char != '\r')
+	// {
+	// 		std::cout << "----third----\n";
+	// 		std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
+	// 				<< "\nnext-char: " << (int)next_char << std::endl;
+	// 		std::cout << "char index: " << i << std::endl;
+	// 		throw (CgiHandler::BadCgiOutput("syntax error"));
+	// }
 
-// 	if (buff[i] == '\r' && next_char != '\n')
-// 	{
-// 			std::cout << "----last----\n";
-// 			std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
-// 					<< "\nnext-char: " << (int)next_char << std::endl;
-// 			std::cout << "char index: " << i << std::endl;
-// 			throw (CgiHandler::BadCgiOutput("syntax error"));
-// 	}
+	// if (buff[i] == '\r' && next_char != '\n')
+	// {
+	// 		std::cout << "----last----\n";
+	// 		std::cout << "prev-char: " << (int)prev_char << "\ncurrent char:" << (int)buff[i] 
+	// 				<< "\nnext-char: " << (int)next_char << std::endl;
+	// 		std::cout << "char index: " << i << std::endl;
+	// 		throw (CgiHandler::BadCgiOutput("syntax error"));
+	// }
 
 // //end of debugg block
 
@@ -140,7 +140,10 @@ void	CgiHandler::ParseOutputBuffer(const std::string &cgi_output_buff)
 {
 	bool	key_phase = (value_holder.empty()) ? true : false;
 
+	std::cout << "appending a buffer to the parser" << std::endl;
 	unsigned int i = 0;
+
+	std::cout << std::endl;
 	for (i = 0; i < cgi_output_buff.size();i++)
 	{
 		if (parsed_bytes_count >= HEADER_SIZE_LIMIT)
