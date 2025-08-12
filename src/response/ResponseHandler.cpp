@@ -1,11 +1,13 @@
 #include "ResponseHandler.hpp"
 
-ResponseHandler::ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf) : conf(server_conf)
+ResponseHandler::ResponseHandler()
 {
     InitializeStandardContentTypes();
     InitializeStatusPhrases();
     req = NULL;
-    client_info = clientInfos;
+    conf = NULL;
+    client_info.clientAddr ="";
+    client_info.port = "0";
     loc_config = NULL;
     is_location_allocated = false;
     resource_path = "";
@@ -23,6 +25,12 @@ void    ResponseHandler::CheckForContentType()
     catch (CgiHandler::BadCgiOutput &ex){
         throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 500));
     }
+}
+
+void ResponseHandler::SetServerConf(ServerConfig *usedConf, const ClientInfos &infos){
+    conf = usedConf;
+    client_info.clientAddr = infos.clientAddr;
+    client_info.port = infos.port;
 }
 
 std::string	ResponseHandler::GetResponseHeader(){return response_header;}
@@ -46,6 +54,8 @@ void ResponseHandler::RefreshData()
     require_cgi = false;
     is_post = false;
     req = NULL;
+    client_info.clientAddr = "";
+    client_info.port = "0";
     cgi_buffer_size = 0;
     child_status = -1;
     cgi_tmpfile_id = -1;
@@ -69,6 +79,8 @@ void ResponseHandler::Run(HttpRequest &request)
 //     std::cout << "=========> passed request to run <========\n" << "method: "//logger
 //         << request.getMethod() << std::endl << "path: " << request.getPath() << std::endl;//logger
     RefreshData();
+    if (conf == NULL)
+        LoadErrorPage(req->getVersion() + " 500 Internal Server Error", 500);
     keep_alive = false;
     req = &request;
     try {
@@ -83,6 +95,7 @@ void ResponseHandler::Run(HttpRequest &request)
     catch (std::exception &ex){
         LoadErrorPage(req->getVersion() + " 500 Internal Server Error", 500);
     }
+    
 }
 
 void ResponseHandler::SetKeepAlive()
@@ -149,7 +162,7 @@ void    ResponseHandler::HandleDirRequest()
 void ResponseHandler::ProccessHttpGET()
 {
     if (require_cgi)
-        return (CgiObj.RunCgi(*req, conf, *loc_config, resource_path, client_info));    
+        return (CgiObj.RunCgi(*req, *conf, *loc_config, resource_path, client_info));    
     if (access(resource_path.c_str(), R_OK) != 0 || (IsDir(resource_path.c_str())
         && loc_config->getIndex().empty() && !loc_config->getAutoindex()))
             throw (ResponseHandlerError(req->getVersion() + " 403 Forbidden", 403));
@@ -162,7 +175,7 @@ void ResponseHandler::ProccessHttpPOST()
 {
 //     std::cout << "inside post processor" << std::endl;//logger
     if (require_cgi)
-        return (CgiObj.RunCgi(*req, conf, *loc_config, resource_path, client_info));
+        return (CgiObj.RunCgi(*req, *conf, *loc_config, resource_path, client_info));
     if (access(resource_path.c_str(), F_OK) == 0){
         keep_alive = false;
         throw (ResponseHandlerError(req->getVersion() + " 409 Conflict", 409));
