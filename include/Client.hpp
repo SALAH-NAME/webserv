@@ -15,6 +15,7 @@ class Client {
 		Socket				_socket;
 		int					_epfd;
 		const ServerConfig&	_conf;
+		const std::vector<ServerConfig>&	_allServersConfig;
 		ClientInfos			_clientInfos;
 		int					_CGI_OutPipeFD;
 		int					_CGI_InPipeFD;
@@ -66,7 +67,7 @@ class Client {
 		
 		public:
 
-		/**/				Client(Socket, const ServerConfig&, int, ClientInfos);
+		/**/				Client(Socket, const ServerConfig&, const std::vector<ServerConfig>&, int, ClientInfos);
 		/**/				Client(const Client& other);
 		/**/				~Client();
 		

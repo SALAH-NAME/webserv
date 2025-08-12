@@ -6,25 +6,36 @@ bool ResponseHandler::NeedToRedirect(){
             loc_config->hasRedirect());
 }
 
-ServerConfig &MatcheServerNameToHost(std::vector<ServerConfig> servers, const std::string &host,
-    ServerConfig &current)
-{
-    //only returns the first server that has a name that matches with the host header
-    //you must also provide the ip and port that was used for the connection to compair
-    //with other servers
-    if (servers.size() <= 1 || host.empty())
-       return current;
-    for (std::vector<ServerConfig>::iterator it = servers.begin(); it != servers.end();it++)
-    {
-        if (it->getServerNames().empty())
-            continue;
-        //check ip and port
-        if (std::find(it->getServerNames().begin(), it->getServerNames().end(),
-            host) != it->getServerNames().end()){
-            return *it;
+static bool	matchPorts(std::vector<unsigned int> listens, unsigned int& port) {
+	for (size_t i = 0; i < listens.size(); i++) {
+		if (listens[i] == port)
+			return true;
+	}
+	return false;
+}
+
+const ServerConfig getMatchingServerConfig(const std::vector<ServerConfig>& configs, std::string host, unsigned int port, const std::string& requestedServerName) {
+	int defaultIndex = -1;
+
+    for (size_t i = 0; i < configs.size(); ++i) {
+		if (host != configs[i].getHost() || !matchPorts(configs[i].getListens(), port))
+			continue ;
+		
+		if (defaultIndex == -1)
+			defaultIndex = i;
+
+        const std::vector<std::string>& serverNames = configs[i].getServerNames();
+        for (size_t j = 0; j < serverNames.size(); ++j) {
+            if (serverNames[j] == requestedServerName) {
+                return configs[i];
+            }
         }
     }
-    return current;
+
+    // Fallback: return first config as default
+	if (defaultIndex == -1)
+		defaultIndex = 0;
+    return configs[defaultIndex];
 }
 
 bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations)

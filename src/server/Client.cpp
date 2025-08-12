@@ -1,9 +1,10 @@
 
 #include "Client.hpp"
 
-Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clientInfos) : _socket(sock)
+Client::Client(Socket sock, const ServerConfig& conf, const std::vector<ServerConfig>& allServersConfig, int epfd, ClientInfos clientInfos) : _socket(sock)
 											, _epfd(epfd)
 											, _conf(conf)
+											, _allServersConfig(allServersConfig)
 											, _clientInfos(clientInfos)
 											, _CGI_OutPipeFD(-1)
 											, _CGI_InPipeFD(-1)
@@ -39,6 +40,7 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 Client::Client(const Client& other) : _socket(other._socket)
 									, _epfd(other._epfd)
 									, _conf(other._conf)
+									, _allServersConfig(other._allServersConfig)
 									, _clientInfos(other._clientInfos)
 									, _CGI_OutPipeFD(other._CGI_OutPipeFD)
 									, _CGI_InPipeFD(other._CGI_InPipeFD)

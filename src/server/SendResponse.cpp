@@ -1,6 +1,5 @@
 
 #include "Server.hpp"
-#include <sys/socket.h>
 
 void	ServerManager::handleKeepAlive(Client& client, int serverIndex) {
 

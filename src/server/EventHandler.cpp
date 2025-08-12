@@ -82,7 +82,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 					clientEvent.data.fd = clientSocketFD;
 					if (epoll_ctl(_epfd, EPOLL_CTL_ADD, clientSocketFD, &clientEvent) == -1)
 						throw std::runtime_error(std::string("epoll_ctl() failed: ") + strerror(errno));
-					std::pair<int, Client> entry(clientSocketFD, Client(sock, _serverConfig, _epfd, clientinfos));
+					std::pair<int, Client> entry(clientSocketFD, Client(sock, _serverConfig, _allServersConfig, _epfd, clientinfos));
 					_clients.insert(entry);
 				}
 				catch (const char *errorMssg) {

@@ -22,10 +22,10 @@ void	isolateAndRecordBody(Client& client) {
 void    ServerManager::collectRequestData(Client& client) {
 	ssize_t	readbytes;
 
-	if (client.getResponseBodyFlag()) {
-		client.setPendingHeaderFlag(true);
-		return ;
-	}
+	// if (client.getResponseBodyFlag()) {
+	// 	client.setPendingHeaderFlag(true);
+	// 	return ;
+	// }
 
 	std::memset(_buffer, 0, sizeof(_buffer));
 	try {

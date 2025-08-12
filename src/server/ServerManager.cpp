@@ -50,7 +50,7 @@ void ServerManager::setUpServers(void) {
 	for (size_t i = 0; i < _serversConfig.size(); i++)
 	{
 		try {
-			_servers.push_back(Server(_serversConfig[i], _servers.size() + 1));
+			_servers.push_back(Server(_serversConfig, _serversConfig[i], (_servers.size() + 1)));
 		}
 		catch (const char* errorMssg) {
 			perror(errorMssg);

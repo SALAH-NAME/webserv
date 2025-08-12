@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:40:16 by karim             #+#    #+#             */
-/*   Updated: 2025/08/08 21:26:25 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/12 18:12:53 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,8 @@ void	Server::setup_sockaddr(int port) {
     _Address.sin_addr = resolvedAddr;          // Set resolved IPr;
 }
 
-Server::Server(const ServerConfig& serverConfig, size_t id) : _serverConfig(serverConfig), _id(id), _transferSocket() {
+Server::Server(const std::vector<ServerConfig>& allServersConfig, const ServerConfig& serverConfig, size_t id) :
+				_allServersConfig(allServersConfig), _serverConfig(serverConfig), _id(id), _transferSocket(){
 	initAttributes(id);
 
 	for (size_t i = 0; i < _ports.size(); i++) {

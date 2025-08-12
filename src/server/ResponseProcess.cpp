@@ -103,7 +103,9 @@ void	Client::generateStaticResponse() {
 }
 
 void	Client::buildResponse() {
+	// MatcheServerNameToHost(_allSe);
 	_responseHandler->Run(_httpRequest);
+	
 	
 	_isChunked = _httpRequest.isCunked();
 

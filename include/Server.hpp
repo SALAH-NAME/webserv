@@ -6,7 +6,7 @@
 /*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/08/08 18:37:39 by karim            ###   ########.fr       */
+/*   Updated: 2025/08/12 18:13:06 by karim            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,8 @@
 
 class Server {
 	private:
-		const ServerConfig&			_serverConfig;
+		const std::vector<ServerConfig>&	_allServersConfig;
+		const ServerConfig&					_serverConfig;
 		int 						_id;
 		sockaddr_in					_Address;
 		std::vector<unsigned int>	_ports;
@@ -37,7 +38,7 @@ class Server {
 		void						setEventStatus(struct epoll_event&, int);
 		void						setup_sockaddr(int port);
 	public:
-		/**/						Server(const ServerConfig&, size_t);
+		/**/						Server(const std::vector<ServerConfig>&, const ServerConfig&, size_t);
 		/**/						~Server(void);
 
 		int							getID(void);
