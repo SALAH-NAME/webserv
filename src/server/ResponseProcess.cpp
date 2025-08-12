@@ -18,15 +18,11 @@ void	Client::generateDynamicResponse() {
 	{
 		std::cout << e << "\n";
 		return ;
-	}
-
-	// exit(0);
-	
-	
+	}	
 
 	if (_responseHandler->IsPost()) {
 
-		// std::cout << " ===>> CGI POST <<===\n";
+		std::cout << " ===>> CGI POST <<===\n";
 		std::stringstream ss(_httpRequest.getHeaders()["content-length"]);
 			ss >> _contentLength;
 		_CGI_InPipeFD = _responseHandler->GetCgiInPipe().getWriteFd();
@@ -56,6 +52,8 @@ void	Client::generateDynamicResponse() {
 		else
 			_state = ReceivingData;
 	}
+	else
+		std::cout << " State: " << _state << "\n";
 
 }
 

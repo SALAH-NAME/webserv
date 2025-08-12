@@ -45,6 +45,7 @@ class Client {
 		bool				_isRequestBodyWritable;
 		bool				_bodyDataPreloadedFlag;
 		bool				_requestDataPreloadedFlag;
+		bool				_pendingHeaderFlag;
 
 		bool				_isCgiRequired;
 		bool				_isPipeReadable;
@@ -130,6 +131,7 @@ class Client {
 		void				setResponseSize(size_t);
 		void				setBodyDataPreloadedFlag(bool);
 		void				setRequestDataPreloadedFlag(bool value);
+		void				setPendingHeaderFlag(bool);
 		void				setIncomingBodyDataDetectedFlag(bool);
 		void				setRequestBodyPart(std::string);
 		void				resetUploadedBytes(void);
