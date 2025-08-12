@@ -103,7 +103,7 @@ void	Client::generateStaticResponse() {
 }
 
 void	Client::buildResponse() {
-	// MatcheServerNameToHost(_allSe);
+	_responseHandler->SetServerConf(getMatchingServerConfig(_allServersConfig, _httpRequest.getHeaders()["host"]), _clientInfos);
 	_responseHandler->Run(_httpRequest);
 	
 	

@@ -154,8 +154,7 @@ class ServerManager {
 };
 
 void				throwIfSocketError(const std::string& context);
-const ServerConfig	getMatchingServerConfig(const std::vector<ServerConfig>& configs,
-					std::string host, unsigned int port, const std::string& requestedServerName);
+ServerConfig*	getMatchingServerConfig(const std::vector<ServerConfig>& configs, std::string host);
 
 #include "Server.hpp"
 #include "Client.hpp"

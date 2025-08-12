@@ -14,7 +14,7 @@ Client::Client(Socket sock, const ServerConfig& conf, const std::vector<ServerCo
 											, _chunkBodySize(-1)
 											, _isChunked(NOT_CHUNKED)
 											, _uploadedBytes(0)
-											, _responseHandler(new ResponseHandler(clientInfos, conf))
+											, _responseHandler(new ResponseHandler())
 											, _incomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF)
 											, _incomingBodyDataDetectedFlag(INCOMING_BODY_DATA_OFF)
 											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)
@@ -473,6 +473,7 @@ void				Client::printClientStatus(void) {
 }
 
 void	Client::resetAttributes(void) {
+	std::memset((void*)&_clientInfos, 0, sizeof(ClientInfos));
 	_CGI_OutPipeFD = -1;
 	_CGI_InPipeFD = -1;
 	_lastTimeConnection =  std::time(NULL);
@@ -482,7 +483,7 @@ void	Client::resetAttributes(void) {
 	_uploadedBytes =  0;
 	_httpRequest.reset();
 	delete _responseHandler;
-	_responseHandler = new ResponseHandler(_clientInfos, _conf);
+	_responseHandler = new ResponseHandler();
 
 	if (_requestDataPreloadedFlag || _pendingHeaderFlag)
 		_incomingHeaderDataDetectedFlag = INCOMING_HEADER_DATA_ON;
