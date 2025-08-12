@@ -146,7 +146,7 @@ ServerConfig ConfigParser::parseServerBlock()
 				if (!isValidRegexPath(path))
 				{
 					throw ParseError("Invalid regex path: " + path +
-															 " (only .php and .py allowed)",
+															 " ",
 													 _tokenizer.front().line, _tokenizer.front().column);
 				}
 			}
@@ -813,7 +813,7 @@ bool ConfigParser::isValidHttpMethod(const std::string& method)
 
 bool ConfigParser::isValidRegexPath(const std::string& path)
 {
-	return path == ".php" || path == ".py" || path == ".sh";
+	return (!path.empty() && path[0] == '.');// path == ".php" || path == ".py" || path == ".sh";
 }
 
 void ConfigParser::applyInheritance()

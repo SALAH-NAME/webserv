@@ -45,7 +45,6 @@ void ResponseHandler::RefreshData()
     resource_path.clear();
     require_cgi = false;
     is_post = false;
-    keep_alive = false;
     req = NULL;
     cgi_buffer_size = 0;
     child_status = -1;
@@ -66,13 +65,22 @@ void ResponseHandler::RefreshData()
 void ResponseHandler::Run(HttpRequest &request)
 {
     RefreshData();
-    req = &request; 
+    keep_alive = false;
+    req = &request;
     try {
         ProccessRequest();
     }
-    catch (ResponseHandlerError &ex)
-    {
-        LoadErrorPage(ex.what(), ex.getStatusCode());
+    catch (ResponseHandlerError &my_exception){
+        RefreshData();
+        LoadErrorPage(my_exception.what(), my_exception.getStatusCode());
+    }
+    catch (std::bad_alloc &insuficcent_mem){
+        RefreshData();
+        LoadErrorPage(req->getVersion() + " 503 Service Unavailable", 503);
+    }
+    catch (std::exception &ex){
+        RefreshData();
+        LoadErrorPage(req->getVersion() + "500 Internal Server Error", 500);
     }
 }
 
