@@ -62,7 +62,6 @@ f"""
 			.counter {{
 				font-size: 2.5em;
 				font-weight: bold;
-				color: #2d6cdf;
 			}}
 			.last-visit {{
 				font-size: 1.3em;

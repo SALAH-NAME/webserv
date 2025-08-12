@@ -1,33 +1,39 @@
-from sys import exit, stdin
+from sys import exit, stdin, stderr
 from os import mkdir, environ, access, remove, F_OK, R_OK
 from random import random
 
-#to do: limit session number and size
-
+session_max_size = 256
 session_id = 0
 location = "/tmp/webserv-sessions/"
 id_created = False
 
 response_header = ""
+log_file = open("/home/midbella/Desktop/webserv/logs.txt", "w+") 
+
+def logger(msg, end='\n'):
+	global log_file
+	print(msg, file=log_file, end=end)
 
 def SetSessionId():
 	global session_id
-	print("setting the session id") #logger
+	logger("setting the session id")
 	if "HTTP_cookie" not in environ:
-		print ("no cookie set") #logger
+		logger ("no cookie set")
 		return
 	cookies = environ["HTTP_cookie"]
+	logger(f"cookie header value: {cookies}")
 	key = ""
 	value = ""
 	for pairs in cookies.split(';'):
-		print("current elm :", end= '') #logger
-		print(pairs) #logger
-		key = pairs.split('=')[0]
-		value = pairs.split('=')[1]
+		logger("current elm :", end= '')
+		logger(pairs)
+		key = pairs.split('=')[0].strip()
+		value = pairs.split('=')[1].strip()
+		logger(f"key= {key}, value= {value}")
 		if key == "session-id":
 			session_id = int(value)
 			return
-	print("session-id 'cookie' is not found") #logger
+	logger("session-id 'cookie' is not found")
 	return
 
 def isPost():
@@ -55,36 +61,75 @@ def	WriteToSession():
 	global session_id
 	global response_header
 	global location
+	global session_max_size
+	current_size = 0
 
-	print("inside write to session")#logger
-	response_header += "Content-Type: text/plain\r\n"
-	response_header += "Content-Length: 0\r\n"
-	response_header += "location: sessions.html"
+	logger("inside write to session (post req)")
+	response_header += "Content-Type: text/html\r\n"
+	response_header += "Status: 201 \r\n"
 	sessionFile = CreateSession()
-	print(f"created a session id: {id_created}")#logger
+	logger(f"created a session id: {id_created}")
+	logger(f"session id = {session_id}")
 	if not id_created:
 		remove(f"{location}session_{session_id}")
 		sessionFile = open(f"{location}session_{session_id}", "w+")
-		print("deleted old and created new session file with the same name")#logger
+		logger("deleted old and created new session file with the same name")
 	if not sessionFile.writable():
-		print("shit can't write in file")#logger
+		logger("can't write in file")
 		exit(1)
-	print("before reading stdin loop\n", end='')#logger
-	while True:
+	logger("before reading stdin loop\n", end='')
+	while 1:
 		line = stdin.readline()
 		if not line:
+			logger("line is invalid")
 			break
+		if current_size + len(line) > session_max_size:
+			logger("reached max session size")
+			remove(f"{location}session_{session_id}")
+			exit(1)
+		logger("will appen line : [" + line +"]")
 		print(line, file=sessionFile, end='')
-	response_header += f"Set-Cookie: session-id={session_id}\r\n"
-	print(response_header, end="\r\n")
+		current_size += len(line)
+	response_header += f"Set-Cookie: session-id={session_id}\r\n\r\n"
+	print(response_header, end="")
+	print(
+"""
+<html>
+	<header>
+		<title>Successful session creation</title>
+	</header>
+	<body>
+		<h1>Success!</h1>
+		<p>
+			The submitted data is now stored on the server.<br>
+			If the server host restarts, the session will be deleted.<br>
+			The server recognizes you by the value of the session-id cookie.<br>
+			If the session-id cookie expires or changes, the server will redirect<br>
+			to the previous page so you can create a new session.<br>
+		</p>
+		<form action="sessionManager.py" method="get">
+			<button type="submit">Fetch your session data</button>
+		</form>
+	</body>
+</html>
+"""
+)
+	logger("generated res header :")
+	for c in response_header:
+		if c == '\r':
+			logger("\\r", end='')
+		elif c == '\n':
+			logger('\\n')
+		else:
+			logger(c, end='')
 
 def NoSessionFound():
 	global response_header
 
 	response_header += "Content-Type: text/html\r\n"
 	response_header += "Status: 302\r\n"
-	response_header += "Location: /sessions.hmtl\r\f"
-	response_header += "Content-Lenght: 0"
+	response_header += "Location: /sessions.hmtl\r\n"
+	response_header += "Content-Lenght: 0\r\n"
 	print(response_header, end="\r\n")
 
 def ListSessionData():
@@ -94,11 +139,13 @@ def ListSessionData():
 	sessionFile = open(f"{location}session_{session_id}", "r")
 	if not sessionFile.readable:
 		exit(1)
+	logger(f"{location}session_{session_id}")
 	response_header += "Content-Type: text/html\r\n"
 	response_header += "status: 200\r\n"
 	print(response_header, end="\r\n")
 	print(
 	"""
+<!DOCTYPE html>
 <html>
 	<header>
 		<title>fetched session data</title>
@@ -107,10 +154,14 @@ def ListSessionData():
 	   	<h1>the session data:</h1>
 	   	<p>\n""")
 	for line in sessionFile:
-		print("\t\t\t" + line + "<br>", end="")
+		for c in line:
+			if c == '&':
+				print("<br>")
+			else:
+				print(c, end='')
 	print("""
-		<\p>
-	<body>
+		</p>
+	</body>
 </html>\n""")
 
 def SendSessionData():
@@ -126,10 +177,12 @@ def SendSessionData():
 def main():
 	global session_id
 	SetSessionId()
-	print(f"session id value: {session_id}")
+	logger(f"session id value: {session_id}")
 	if isPost():
+		logger("recieved a POST request")
 		WriteToSession()
 	else:
+		logger("recieved a GET request")
 		SendSessionData()
 
 main()
