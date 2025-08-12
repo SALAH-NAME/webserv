@@ -24,6 +24,7 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 											, _isRequestBodyWritable(NOT_WRITABLE)
 											, _bodyDataPreloadedFlag(BODY_DATA_PRELOADED_OFF)
 											, _requestDataPreloadedFlag(REQUEST_DATA_PRELOADED_OFF)
+											, _pendingHeaderFlag(true)
 											, _isCgiRequired(CGI_IS_NOT_REQUIRED)
 											, _isPipeReadable(PIPE_IS_NOT_READABLE)
 											, _isPipeClosedByPeer(PIPE_IS_NOT_CLOSED)
@@ -57,6 +58,7 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _isRequestBodyWritable(other._isRequestBodyWritable)
 									, _bodyDataPreloadedFlag(other._bodyDataPreloadedFlag)
 									, _requestDataPreloadedFlag(other._requestDataPreloadedFlag)
+									, _pendingHeaderFlag(other._pendingHeaderFlag)
 									, _isCgiRequired(other._isCgiRequired)
 									, _isPipeReadable(other._isPipeReadable)
 									, _isPipeClosedByPeer(other._isPipeClosedByPeer)
@@ -258,6 +260,10 @@ void	Client::setBodyDataPreloadedFlag(bool value) {
 
 void	Client::setRequestDataPreloadedFlag(bool value) {
 	_requestDataPreloadedFlag = value;
+}
+
+void	Client::setPendingHeaderFlag(bool value) {
+	_pendingHeaderFlag = value;
 }
 
 void	Client::setRequestBodyPart(std::string bodyData) {
@@ -465,7 +471,8 @@ void				Client::printClientStatus(void) {
 }
 
 void	Client::resetAttributes(void) {
-	_CGI_OutPipeFD =  -1;
+	_CGI_OutPipeFD = -1;
+	_CGI_InPipeFD = -1;
 	_lastTimeConnection =  std::time(NULL);
 	_contentLength =  0;
 	_chunkBodySize = -1;
@@ -475,7 +482,7 @@ void	Client::resetAttributes(void) {
 	delete _responseHandler;
 	_responseHandler = new ResponseHandler(_clientInfos, _conf);
 
-	if (_requestDataPreloadedFlag == REQUEST_DATA_PRELOADED_ON)
+	if (_requestDataPreloadedFlag || _pendingHeaderFlag)
 		_incomingHeaderDataDetectedFlag = INCOMING_HEADER_DATA_ON;
 	else
 		_incomingHeaderDataDetectedFlag =  INCOMING_HEADER_DATA_OFF;
@@ -487,6 +494,7 @@ void	Client::resetAttributes(void) {
 	_isResponseBodySendable =  NOT_SENDABLE;
 	_isRequestBodyWritable =  NOT_WRITABLE;
 	_bodyDataPreloadedFlag =  BODY_DATA_PRELOADED_OFF;
+	_pendingHeaderFlag = false;
 	_isCgiRequired =  CGI_IS_NOT_REQUIRED;
 	_isPipeReadable =  PIPE_IS_NOT_READABLE;
 	_isPipeClosedByPeer =  PIPE_IS_NOT_CLOSED;

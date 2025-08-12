@@ -139,7 +139,7 @@ void	ServerManager::processEvent(int serverIndex) {
 							&& client.getIsCgiRequired() == CGI_REQUIRED) { // check if PIPE is ready from reading
 				
 					if ((events & EPOLLHUP) && (events & EPOLLIN)) {
-						std::cout << "set pipe to \"PIPE_IS_CLOSED\" (ready to read)\n";	
+						std::cout << "set pipe to \"PIPE_IS_CLOSED\" (ready to read)\n";
 						client.setIsPipeClosedByPeer(PIPE_IS_CLOSED);
 						client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
 					}
