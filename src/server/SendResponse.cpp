@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   SendResponse.cpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/04/28 09:39:10 by karim             #+#    #+#             */
-/*   Updated: 2025/08/12 12:46:51 by karim            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "Server.hpp"
 #include <sys/socket.h>
@@ -31,7 +20,7 @@ void	ServerManager::transmitResponseHeader(Client& client, int serverIndex) {
 	std::string& response = client.getResponseHolder();
 
 	int bytesToSendNow =  client.getBytesToSendNow();
-	std::cout << "Bytes to send now: " << bytesToSendNow << "\n";
+	// std::cout << "Bytes to send now: " << bytesToSendNow << "\n";
 	// exit(0);
 
 	size_t sentBytes;
@@ -52,9 +41,6 @@ void	ServerManager::transmitResponseHeader(Client& client, int serverIndex) {
 }
 
 void	ServerManager::transmitFileResponse(Client& client, int serverIndex) {
-	
-	// std::cout << "herer\n";
-	// exit(0);
 	
 	try {
 		if (client.getIsResponseBodySendable() == NOT_SENDABLE) {
