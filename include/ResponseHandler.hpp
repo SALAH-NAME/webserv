@@ -25,7 +25,7 @@ typedef std::map<std::string, std::vector<std::string> > STRINGS_MAP;
 class ResponseHandler 
 {
 	private:
-		const ServerConfig			&conf;
+		ServerConfig				*conf;
 		ClientInfos					client_info;
 		HttpRequest					*req;
 		std::string					response_header;
@@ -72,7 +72,8 @@ class ResponseHandler
 		void		UpdateCgiChildExitStatus();
 			
 	public:
-		ResponseHandler(const ClientInfos clientInfos, const ServerConfig &server_conf); // edited
+		ResponseHandler();
+		void			SetServerConf(ServerConfig *usedCon, const ClientInfos &clientInfos);
 		void			CheckForContentType();			void			LoadErrorPage(const std::string &status_line, int status_code);
 		void 			Run(HttpRequest &request);
 		bool			IsPost();		
