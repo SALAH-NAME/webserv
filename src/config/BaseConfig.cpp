@@ -89,8 +89,14 @@ bool BaseConfig::getAutoindex() const { return _autoindex; }
 
 void BaseConfig::inheritFrom(const BaseConfig& parent)
 {
-	if (_error_pages.empty())
-		_error_pages = _error_pages = parent.getErrorPages();
+	const std::map<int, std::string>& parent_error_pages = parent.getErrorPages();
+	for (std::map<int, std::string>::const_iterator it = parent_error_pages.begin();
+			 it != parent_error_pages.end(); ++it)
+	{
+		if (_error_pages.find(it->first) == _error_pages.end())
+			_error_pages[it->first] = it->second;
+	}
+	
 	if (_client_max_body_size.getBytes() == 0)
 		_client_max_body_size = SizeValue(to_string(parent.getClientMaxBodySize()));
 	if (_root.empty())
