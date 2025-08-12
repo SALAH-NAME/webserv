@@ -76,6 +76,7 @@ void	Client::extractBodyFromPendingData(void) {
 
 	_requestBodyPart += _pendingRequestDataHolder.substr(0, BytesToExtract);
 	_pendingRequestDataHolder = _pendingRequestDataHolder.substr(BytesToExtract);
+
 	if (!_pendingRequestDataHolder.size())
 		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
 
@@ -125,8 +126,12 @@ void	Client::writeBodyToTargetFile(void) {
 		_chunkBodySize = -1;
 		if (_uploadedBytes == _conf.getClientMaxBodySize())
 			_state = Completed;
-		else
-			_state = ReceivingData;
+		else {
+			if (!_pendingRequestDataHolder.size())
+				_state = ReceivingData;
+			else
+				_state = ValidateChunkSize;
+		}
 	}
 	else {
 		if (_uploadedBytes == _contentLength)

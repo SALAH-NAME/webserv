@@ -81,8 +81,12 @@ void	Client::generateStaticResponse() {
 
 			if (!_isChunked && !_contentLength)
 				_state = UploadingToFile;
-			else if (_requestDataPreloadedFlag == REQUEST_DATA_PRELOADED_ON)
-				_state = ExtractingBody;
+			else if (_requestDataPreloadedFlag == REQUEST_DATA_PRELOADED_ON) {
+				if (_isChunked)
+					_state = ValidateChunkSize;
+				else
+					_state = ExtractingBody;
+			}
 			else
 				_state = ReceivingData;
 
@@ -104,6 +108,9 @@ void	Client::buildResponse() {
 	_responseHandler->Run(_httpRequest);
 	
 	_isChunked = _httpRequest.isCunked();
+
+	std::cout << "is Chunked: " << _isChunked << "\n";
+	std::cout << "is CGI required: " << _responseHandler->RequireCgi() << "\n";
 
 	if (_responseHandler->RequireCgi())
 		generateDynamicResponse();
