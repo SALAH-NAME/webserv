@@ -7,8 +7,11 @@ Client::Client(Socket sock, const ServerConfig& conf, int epfd, ClientInfos clie
 											, _clientInfos(clientInfos)
 											, _CGI_OutPipeFD(-1)
 											, _CGI_InPipeFD(-1)
+											, _state(DefaultState)
 											, _lastTimeConnection(std::time(NULL))
 											, _contentLength(0)
+											, _chunkBodySize(-1)
+											, _isChunked(NOT_CHUNKED)
 											, _uploadedBytes(0)
 											, _responseHandler(new ResponseHandler(clientInfos, conf))
 											, _incomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF)
@@ -40,6 +43,8 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _CGI_InPipeFD(other._CGI_InPipeFD)
 									, _lastTimeConnection(other._lastTimeConnection)
 									, _contentLength(other._contentLength)
+									, _chunkBodySize(other._chunkBodySize)
+									, _isChunked(other._isChunked)
 									, _uploadedBytes(other._uploadedBytes)
 									, _responseHandler(other._responseHandler)
 									, _incomingHeaderDataDetectedFlag(other._incomingHeaderDataDetectedFlag)
@@ -82,6 +87,10 @@ int	Client::getCGI_OutpipeFD(void) {
 
 int	Client::getCGI_InpipeFD(void) {
 	return _CGI_InPipeFD;
+}
+
+PostMethodProcessingState&	Client::getState(void) {
+	return _state;
 }
 
 time_t Client::getLastConnectionTime(void)
@@ -343,13 +352,13 @@ void	Client::updateHeaderStateAfterSend(size_t sentBytes) {
 		if (_responseHeaderFlag == RESPONSE_HEADER_READY) {
 			_responseHeaderFlag = RESPONSE_HEADER_NOT_READY;
 			_responseBodyFlag = RESPONSE_BODY_READY;
-			std::cout << " ==> Sent Header Successfully <==\n";
+			// std::cout << " ==> Sent Header Successfully <==\n";
 		}
 		else {
 			_fullResponseFlag = FULL_RESPONSE_NOT_READY;
 			_responseBodyFlag = RESPONSE_BODY_NOT_READY;
 			_responseSent = SENT;
-			std::cout << " ==> Sent Full Response Successfully <==\n";
+			// std::cout << " ==> Sent Full Response Successfully <==\n";
 		}
 	}
 }
@@ -383,7 +392,7 @@ void	Client::sendFileBody(void) {
 		_isResponseBodySendable = NOT_SENDABLE;
 		_responseBodyFlag = RESPONSE_BODY_NOT_READY;
 		_responseSent = SENT;
-		std::cout << " ==>> Send response body Successfully \n";
+		// std::cout << " ==>> Send response body Successfully \n";
 		return ;
 	}
 	
@@ -417,59 +426,6 @@ void	Client::receiveRequestBody(void) {
 	}
 	else
 		throwIfSocketError("recv()");	
-}
-
-void	Client::writeBodyToTargetFile(void) {
-	std::fstream *targetFile = _responseHandler->GetTargetFilePtr();
-
-	size_t BytesToWrite;
-
-	if (_requestBodyPart.size() >= BYTES_TO_READ)
-		BytesToWrite = BYTES_TO_READ;
-	else
-		BytesToWrite = _requestBodyPart.size();
-
-	if ((_uploadedBytes + BytesToWrite) > _contentLength) {
-		
-		if (!_contentLength) {
-			_isRequestBodyWritable = NOT_WRITABLE;
-			_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
-			_fullResponseFlag = FULL_RESPONSE_READY;
-			return ;
-		}
-		BytesToWrite =_contentLength - _uploadedBytes;
-	}
-	
-	if (_pipeBodyToCgi) {
-		if (!_isCgiInputAvailable) // the pipe isn't available yet to write in	
-			return ;
-		write(_CGI_InPipeFD, _requestBodyPart.c_str(), BytesToWrite);
- 	}
-	else {
-		targetFile->write(_requestBodyPart.c_str(), BytesToWrite);
-		targetFile->flush();
-	}
-
-	_uploadedBytes += BytesToWrite;
-	_requestBodyPart = _requestBodyPart.substr(BytesToWrite);
-	
-	if (_requestBodyPart.size())
-		_isRequestBodyWritable = WRITABLE;
-	else
-		_isRequestBodyWritable = NOT_WRITABLE;
-
-	if (_uploadedBytes == _contentLength) {
-		_isRequestBodyWritable = NOT_WRITABLE;
-		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
-		if (_pipeBodyToCgi) {
-			_pipeBodyToCgi = NO_PIPE;
-			close(_CGI_InPipeFD);
-			_CGI_InPipeFD = -1;
-		}
-		else
-			_fullResponseFlag = FULL_RESPONSE_READY;
-		return ;
-	}
 }
 
 void	Client::closeAndDeregisterPipe(void) {
@@ -512,11 +468,13 @@ void	Client::resetAttributes(void) {
 	_CGI_OutPipeFD =  -1;
 	_lastTimeConnection =  std::time(NULL);
 	_contentLength =  0;
+	_chunkBodySize = -1;
+	_isChunked = NOT_CHUNKED;
 	_uploadedBytes =  0;
 	_httpRequest.reset();
 	delete _responseHandler;
 	_responseHandler = new ResponseHandler(_clientInfos, _conf);
-	
+
 	if (_requestDataPreloadedFlag == REQUEST_DATA_PRELOADED_ON)
 		_incomingHeaderDataDetectedFlag = INCOMING_HEADER_DATA_ON;
 	else

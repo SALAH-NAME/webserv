@@ -13,14 +13,10 @@ void	isolateAndRecordBody(Client& client, size_t headerEnd) {
 	
 	// some body-data received after header-data ==> it needs to be saved and removed from header part
 	
-	// client.setRequestBodyPart(headerPart.substr(headerEnd + 4)); // here we save the body
 	client.setPendingRequestData(headerPart.substr(headerEnd + 4)); // here we save the data ('next request' or 'current request body')
-	
-	// client.setIsRequestBodyWritable(WRITABLE);
 	client.setHeaderPart(headerPart.substr(0, headerEnd + 4));
-	// client.setBodyDataPreloaded(BODY_DATA_PRELOADED_ON);
 	client.setRequestDataPreloadedFlag(REQUEST_DATA_PRELOADED_ON);
-	// std::cout << "ISOLATED\n";
+	std::cout << "ISOLATED\n";
 }
 
 void    ServerManager::collectRequestData(Client& client) {
@@ -33,16 +29,11 @@ void    ServerManager::collectRequestData(Client& client) {
 			client.getBufferFromPendingData(_buffer, &readbytes);
 		else
 			readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
-
+		
 		if (readbytes > 0) {
 			// std::cout << "read bytes ==> " << readbytes << " ||  from : " << client.getSocket().getFd() << "\n";
-		}
-		
-		if (readbytes > 0 && readbytes <= BYTES_TO_READ) {
 			client.resetLastConnectionTime();
 			client.appendToHeaderPart(std::string(_buffer, readbytes));
-
-			// printRequestAndResponse("APPended", client.getHeaderPart());
 			
 			if (std::string(_buffer, readbytes) == "\r\n")
 			{
@@ -53,7 +44,7 @@ void    ServerManager::collectRequestData(Client& client) {
 			}
 			headerEnd = (ssize_t)client.getHeaderPart().find(_2CRLF);
 			if ((size_t)headerEnd != std::string::npos) {
-				// std::cout << "   ====>> request is completed <<=====\n";
+				// std::cout << "   ====>> request is completed 1 <<=====\n";
 				isolateAndRecordBody(client, headerEnd);
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
@@ -62,8 +53,10 @@ void    ServerManager::collectRequestData(Client& client) {
 			HttpRequest &req = client.getHttpRequest();
 			req.appendAndValidate(client.getHeaderPart());
 
+			
+
 			if (!client.getRequestDataPreloadedFlag() && req.getState() == HttpRequest::STATE_BODY) {
-				// std::cout << "   ====>> request is completed <<=====\n";
+				// std::cout << "   ====>> request is completed 2 <<=====\n";
 				headerEnd = -4;
 				isolateAndRecordBody(client, headerEnd);
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
@@ -105,18 +98,49 @@ void    ServerManager::collectRequestData(Client& client) {
 }
 
 void	ServerManager::transferBodyToFile(Client& client, int serverIndex) {
-	try {
-		if (client.getIsRequestBodyWritable() == NOT_WRITABLE) {
-			client.receiveRequestBody();
-		}
-		else if (client.getIsRequestBodyWritable() == WRITABLE) {
-			client.writeBodyToTargetFile();
-		}
-	} catch (const std::runtime_error& e) {
-		perror(e.what());
-		_servers[serverIndex].closeConnection(client.getSocket().getFd());
+
+	PostMethodProcessingState& state = client.getState();	
+
+	switch (state) {
+
+		case DefaultState:
+			break;
+
+		case ReceivingData:
+        	client.receiveFromSocket();
+        	break;
+
+		case ExtractingBody:
+			client.extractBodyFromPendingData();
+			break;
+		
+		case ValidateChunkSize:
+			client.validateChunkBodySize();
+			break ;
+		
+		case UploadingToFile:
+        	client.writeBodyToTargetFile();
+        	break;
+		
+    	case PipingToCGI:
+        	client.pipeBodyToCGI();
+        	break;
+		
+		case Completed:
+        	client.finalizeBodyProccess();
+        	break;
+		
+		case CloseConnection:
+			_servers[serverIndex].closeConnection(client.getSocket().getFd());
+			break ;
+
+		case InvalidBody:
+			client.handleInvalidBody();
+			_servers[serverIndex].closeConnection(client.getSocket().getFd());
+			// close the connection at the moment // should send a resposne first
 	}
 }
+
 
 void	ServerManager::receiveClientsData(int serverIndex) {
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();

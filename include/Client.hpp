@@ -23,9 +23,13 @@ class Client {
 		std::string			_requestBodyPart;
 		std::string			_responseHolder;
 		std::string			_pendingRequestDataHolder;
+
+		PostMethodProcessingState	_state;
 		
 		time_t				_lastTimeConnection;
 		size_t				_contentLength;
+		int					_chunkBodySize;
+		int					_isChunked;
 		size_t				_uploadedBytes;
 		
 		HttpRequest			_httpRequest;
@@ -67,11 +71,12 @@ class Client {
 		
 		std::string			_tempBuffer;
 		int 				temp_size;
-		std::string					temp_header;
+		std::string			temp_header;
 		
 		Socket&				getSocket();
 		int					getCGI_OutpipeFD(void);
 		int					getCGI_InpipeFD(void);
+		PostMethodProcessingState& getState(void);
 		time_t				getLastConnectionTime(void);
 		bool				getIncomingHeaderDataDetectedFlag(void);
 		
@@ -157,7 +162,7 @@ class Client {
 		void				updateHeaderStateAfterSend(size_t);
 		void				sendFileBody(void);
 		void				readFileBody(void);
-		void				writeBodyToTargetFile(void);
+		// void				writeBodyToTargetFile(void);
 		void				closeAndDeregisterPipe(void);
 
 		void				CgiExceptionHandler(void);
@@ -165,6 +170,15 @@ class Client {
 		void				handleKeepAlive(void);
 		void				printClientStatus(void);
 		void				getBufferFromPendingData(char* buffer, ssize_t*);
+
+
+		void				receiveFromSocket(void);
+		void				validateChunkBodySize(void);
+		void				extractBodyFromPendingData(void);
+		void				writeBodyToTargetFile(void);
+		void				pipeBodyToCGI(void);
+		void				finalizeBodyProccess(void);
+		void				handleInvalidBody(void);
 };
 
 #endif

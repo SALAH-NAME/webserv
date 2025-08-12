@@ -63,7 +63,11 @@
 #define PIPE_TO_CGI true
 #define NO_PIPE false
 
+#define IS_CHUNKED true
+#define NOT_CHUNKED false
+
 #define _2CRLF "\r\n\r\n"
+#define _CRLF "\r\n"
 
 #include <netinet/in.h> // For sockaddr_in
 #include <unistd.h> 
@@ -93,6 +97,18 @@
 class Server;
 class Client;
 class ResponseHandler;
+
+enum PostMethodProcessingState {
+	DefaultState,			// Do nothing
+    ReceivingData,			// Reading from socket into _pendingData
+	ValidateChunkSize,		// getting the size of chunked body
+    ExtractingBody,			// Parsing body from _pendingData into _requestBodyPart
+    UploadingToFile,		// Writing body to target file
+    PipingToCGI,			// Streaming body into CGI pipe
+    Completed,				// Body fully processed
+	CloseConnection,		// when connection closed by peer
+	InvalidBody				// Ex: received unexpected data while Expecting CRLF 
+};
 
 struct ClientInfos
 {
