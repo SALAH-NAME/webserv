@@ -82,7 +82,7 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 				// printRequestAndResponse("response header", client.getResponseHolder());
 				client.setResponseHeaderFlag(RESPONSE_HEADER_READY);
 				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
-				client.closeAndDeregisterPipe();
+				client.closeAndDeregisterPipe(client.getCGI_OutpipeFD());
 				responseHandler->GetTargetFilePtr()->seekg(0);
 				
 			} catch (ResponseHandler::ResponseHandlerError& e) {

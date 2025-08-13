@@ -437,27 +437,35 @@ void	Client::receiveRequestBody(void) {
 		throwIfSocketError("recv()");	
 }
 
-void	Client::closeAndDeregisterPipe(void) {
-	std::cout << "============================================================\n";
-	epoll_ctl(_epfd, EPOLL_CTL_DEL, _CGI_OutPipeFD, NULL);
-	std::cout << "  ## Removed Pipe fd: " << _CGI_OutPipeFD << " from epoll  ## \n";
-	close(_CGI_OutPipeFD);
-	std::cout << "  ## closed Pipe fd: " << _CGI_OutPipeFD << "              ## \n";
-	std::cout << "============================================================\n\n";
-	
+void    Client::closeAndDeregisterPipe(int pipeFD) {
+    std::cout << "============================================================\n";
+    epoll_ctl(_epfd, EPOLL_CTL_DEL, pipeFD, NULL);
+    std::cout << "  ## Removed Pipe fd: " << pipeFD << " from epoll  ## \n";
+    close(pipeFD);
+    pipeFD = -1;
+    std::cout << "  ## closed Pipe fd: " << pipeFD << "              ## \n";
+    std::cout << "============================================================\n\n";
+    
 }
 
-void	Client::CgiExceptionHandler(void) {
-	if (_responseHandler->GetTargetFilePtr()) {
-		// std::cout << "   ===>>> from target file \n";
-		_responseHolder = _responseHandler->GetResponseHeader();
-		_responseHeaderFlag = RESPONSE_HEADER_READY;
-	}
-	else {
-		// std::cout << " ====>  no neeed \n";
-		_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
-		_fullResponseFlag = FULL_RESPONSE_READY;
-	}
+void    Client::CgiExceptionHandler() {
+    if (_CGI_OutPipeFD != -1) {
+        closeAndDeregisterPipe(_CGI_OutPipeFD);
+        _isPipeClosedByPeer = PIPE_IS_NOT_CLOSED;
+    }
+    if (_CGI_InPipeFD != -1) {
+        closeAndDeregisterPipe(_CGI_InPipeFD);
+        _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+    }
+
+    if (_responseHandler->GetTargetFilePtr()) {
+        _responseHolder = _responseHandler->GetResponseHeader();
+        _responseHeaderFlag = RESPONSE_HEADER_READY;
+    }
+    else {
+        _responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
+        _fullResponseFlag = FULL_RESPONSE_READY;
+    }
 }
 
 void				Client::printClientStatus(void) {

@@ -166,9 +166,9 @@ class Client {
 		void				sendFileBody(void);
 		void				readFileBody(void);
 		// void				writeBodyToTargetFile(void);
-		void				closeAndDeregisterPipe(void);
+		void				closeAndDeregisterPipe(int);
 
-		void				CgiExceptionHandler(void);
+		void				CgiExceptionHandler();
 		void				resetAttributes(void);
 		void				handleKeepAlive(void);
 		void				printClientStatus(void);
