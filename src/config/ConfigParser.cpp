@@ -160,6 +160,12 @@ ServerConfig ConfigParser::parseServerBlock()
 
 			location.inheritFrom(server);
 
+			if (is_regex && location.getCgiPass().empty())
+			{
+				throw ParseError("Regex location (CGI location) '" + path + "' must specify cgi_pass directive",
+												 _tokenizer.front().line, _tokenizer.front().column);
+			}
+
 			if (is_regex)
 			{
 				server.addRegexLocation(path, location);
@@ -379,6 +385,12 @@ void ConfigParser::parseErrorPage(BaseConfig& config)
 											 _tokenizer.front().line, _tokenizer.front().column);
 		}
 		error_codes.push_back(code);
+	}
+
+	if (error_codes.empty())
+	{
+		throw ParseError("error_page directive requires at least one status code",
+										 _tokenizer.front().line, _tokenizer.front().column);
 	}
 
 	std::string path = expectString("Expected path for error page");
