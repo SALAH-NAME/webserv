@@ -6,12 +6,15 @@ bool ResponseHandler::NeedToRedirect(){
             loc_config->hasRedirect());
 }
 
-ServerConfig* getMatchingServerConfig(const std::vector<ServerConfig>& configs, std::string host) {
+ServerConfig* getMatchingServerConfig(const std::vector<ServerConfig>& configs, const HttpRequest& httpRequest) {
 	int defaultIndex = -1;
 
-    if (host.empty())
+    std::map<std::string, std::string> headers = httpRequest.getHeaders();
+    std::map<std::string, std::string>::iterator it;
+    if ((it = headers.find("host")) != headers.end())
         return &(const_cast<ServerConfig&>(configs[0]));
 
+    const std::string& host = it->second;
     for (size_t i = 0; i < configs.size(); ++i) {
 		if (defaultIndex == -1)
 			defaultIndex = i;

@@ -100,11 +100,7 @@ void	Client::generateStaticResponse() {
 }
 
 void	Client::buildResponse() {
-	std::map<std::string, std::string> headers = _httpRequest.getHeaders();
-	if (headers.find("host") != headers.end())
-		_responseHandler->SetServerConf(getMatchingServerConfig(_allServersConfig, _httpRequest.getHeaders()["host"]), _clientInfos);
-	else
-		_responseHandler->SetServerConf(getMatchingServerConfig(_allServersConfig, ""), _clientInfos);
+	_responseHandler->SetServerConf(getMatchingServerConfig(_allServersConfig, _httpRequest), _clientInfos);
 	
 	_responseHandler->Run(_httpRequest);
 	
