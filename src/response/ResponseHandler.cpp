@@ -70,12 +70,12 @@ void ResponseHandler::RefreshData()
         delete target_file;
         target_file = NULL;
     }
-//     std::cout << "REFRESH DATA ??????????????" << std::endl;//logger
+//     std::cout << "===========> REFRESHED DATA <===========" << std::endl;//logger
 }
 
 void ResponseHandler::Run(HttpRequest &request)
 {
-//     std::cout << "/////////////// RESPONSE RUN \n";//logger
+//     std::cout << "RESSPONSE RUN \n";//logger
 //     std::cout << "=========> passed request to run <========\n" << "method: "//logger
 //         << request.getMethod() << std::endl << "path: " << request.getPath() << std::endl;//logger
     RefreshData();
@@ -161,6 +161,7 @@ void    ResponseHandler::HandleDirRequest()
 
 void ResponseHandler::ProccessHttpGET()
 {
+//     std::cout << "inside GET req processor" << std::endl;//logger
     if (require_cgi)
         return (CgiObj.RunCgi(*req, *conf, *loc_config, resource_path, client_info));    
     if (access(resource_path.c_str(), R_OK) != 0 || (IsDir(resource_path.c_str())
@@ -173,7 +174,7 @@ void ResponseHandler::ProccessHttpGET()
 
 void ResponseHandler::ProccessHttpPOST()
 {
-//     std::cout << "inside post processor" << std::endl;//logger
+//     std::cout << "inside post req processor" << std::endl;//logger
     if (require_cgi)
         return (CgiObj.RunCgi(*req, *conf, *loc_config, resource_path, client_info));
     if (access(resource_path.c_str(), F_OK) == 0){

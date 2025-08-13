@@ -1,5 +1,6 @@
 from os import environ
 from datetime import datetime
+from sys import stderr
 
 response_header = "Content-Type: text/html\r\n"
 timestamp = ""
@@ -31,10 +32,11 @@ def SetVisiCount():
 		key_value = pair.split('=')
 		if len(key_value) != 2:
 			continue
-		key = key_value[0]
-		value = key_value[1]
+		key = key_value[0].strip()
+		value = key_value[1].strip()
 		if key == "visit-counter":
 			counter = int(value)
+	print(f"fetched counter = {counter}", file=stderr)
 
 SetVisiCount()
 InitializeCookies()

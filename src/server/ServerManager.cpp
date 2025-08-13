@@ -33,6 +33,7 @@ void ServerManager::checkTimeOut(void)
 				try {
 					it->second.getResponseHandler()->CheckCgiChildState();
 				} catch (ResponseHandler::ResponseHandlerError& e) {
+					std::cout << "------> the exception was caught by the server <------" << std::endl;
 					std::cout << e.what() << std::endl;
 					it->second.getResponseHandler()->LoadErrorPage(e.what(), e.getStatusCode());
 					it->second.CgiExceptionHandler();

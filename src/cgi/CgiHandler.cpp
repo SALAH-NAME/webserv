@@ -142,7 +142,7 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 // 		std::cout << "inside the spawned child code" << std::endl;//logger
 		if (chdir(GetFileDirectoryPath(script_path).c_str()) != 0){
 			delete_strings(argv);
-// 			std::cout << "chdir failed" << std::endl;//logger
+// $1
 			std::exit(1); // Fixed: free memory before exit
 		}
 		SetCgiChildFileDescriptors();

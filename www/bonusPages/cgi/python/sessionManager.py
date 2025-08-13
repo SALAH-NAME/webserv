@@ -128,9 +128,20 @@ def NoSessionFound():
 
 	response_header += "Content-Type: text/html\r\n"
 	response_header += "Status: 302\r\n"
-	response_header += "Location: /sessions.hmtl\r\n"
-	response_header += "Content-Lenght: 0\r\n"
+	response_header += "Location: /sessions.html\r\n"
+	response_header += "Content-Length: 0\r\n"
 	print(response_header, end="\r\n")
+
+def formatSessionLine(line):
+	i = 0
+	while i in range(len(line)):
+		if line[i] == '&':
+			print("<br>")
+		elif line[i] == '%':
+			print('@', end='')
+		else:
+			print(line[i], end='')
+		i += 1
 
 def ListSessionData():
 	global location
@@ -154,15 +165,13 @@ def ListSessionData():
 	   	<h1>the session data:</h1>
 	   	<p>\n""")
 	for line in sessionFile:
-		for c in line:
-			if c == '&':
-				print("<br>")
-			else:
-				print(c, end='')
+		logger(f"line = {line}")
+		formatSessionLine(line)
 	print("""
 		</p>
 	</body>
-</html>\n""")
+</html>
+""")
 
 def SendSessionData():
 	global session_id

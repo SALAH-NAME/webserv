@@ -30,16 +30,19 @@ void	ResponseHandler::LoadErrorPage( const std::string &status_line, int status_
 	else
 		error_page = conf->getErrorPage(status_code);
 	RefreshData();
-	// std::cout << "error page = " << error_page << std::endl;
-	if (error_page == "" || access(error_page.c_str(), R_OK) != 0)
-		GenerateErrorPage(status_line);
-	else
+// 	std::cout << "error page = " << error_page << std::endl;//logger
+	if (error_page == "" || access(error_page.c_str(), R_OK) != 0){
+// 		std::cout << "will generate an error page" << std::endl;//logger
+		GenerateErrorPage(status_line);}
+	else {
+// 		std::cout << "will loadd a static error page" << std::endl;//logger
 		LoadStaticFile(error_page, status_line);
+	}
 }
 
 ResponseHandler::ResponseHandlerError::ResponseHandlerError(const std::string &Errmsg, int statusCode) : error(Errmsg){
-	// std::cout << "-------------response exception is constructed-------------" << std::endl; //logger
-	// std::cout << "status line: " << Errmsg << std::endl; //logger
+// 	std::cout << "-------------response exception is constructed-------------" << std::endl; //logger
+// 	std::cout << "status line: " << Errmsg << std::endl; //logger
 	status_code = statusCode;
 }
 

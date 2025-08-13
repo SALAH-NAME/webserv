@@ -40,8 +40,10 @@ void	ResponseHandler::UpdateCgiChildExitStatus()//returns -1 if cgi child still 
 	wait_rval = waitpid(child_pid, &exit_status, WNOHANG);
 	if (wait_rval == 0)// child still running
 		child_status = -1;//keep -1 to signify that the child is not reaped yet
-	else if (wait_rval == child_pid) // child exited
+	else if (wait_rval == child_pid){ // child exited
 		child_status = WEXITSTATUS(exit_status);
+// 		std::cout << "child is reaped and the exit status is: " << child_status << std::endl;//logger
+	}
 	else
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 }
@@ -51,11 +53,11 @@ void ResponseHandler::CheckCgiChildState() // use only if cgi is required
 	UpdateCgiChildExitStatus();
 	if (!IsCgiChildRunning() && child_status != 0){
 		DeleteCgiTargetFile();
-// 		// std::cout << "script failed" << std::endl;//logger
+// 		std::cout << "--- script failed ---\nshould call load error page" << std::endl;//logger
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
 	else if (CheckCgiTimeOut()){
-// 		// std::cout << "time out" << std::endl;//logger
+// 		std::cout << "time out" << std::endl;//logger
 		DeleteCgiTargetFile(); 
 		CgiObj.KillChild();
 		throw (ResponseHandlerError(req->getVersion() + " 504 Gateway Timeout", 504));
@@ -66,6 +68,8 @@ std::string	ResponseHandler::GenerateCgiStatusLine()
 {
 	int 		status_code = CgiObj.GetStatusCode();
 	std::string	reason_phrase = CgiObj.GetReasonPhrase();
+	if (child_status != -1 && child_status != 0)
+		return "";
 
 	if (status_code == 0)
 		return (req->getVersion() + " 200 OK");
@@ -79,6 +83,7 @@ std::string	ResponseHandler::GenerateCgiStatusLine()
 
 void ResponseHandler::GenerateHeaderFromCgiData()
 {
+// 	std::cout << "will generate a header form the cgi returen header" << std::endl;//logger
 	std::map<std::string, std::string> &headers = CgiObj.GetOutputHeaders();
 	std::vector<std::string> &extra_cookies = CgiObj.GetExtraCookieValues();
 	bool has_date = headers.find("date") != headers.end();
@@ -104,7 +109,7 @@ void ResponseHandler::FinishCgiResponse()//if an exception is thrown call loadEr
 	else if (cgi_buffer_size + response_body.size() != (unsigned)returned_length){
 		DeleteCgiTargetFile();
 		CgiObj.KillChild();
-// 		// std::cout << "cgi returned content-lenght not true" << std::endl;//logger
+// 		std::cout << "cgi returned content-lenght not true" << std::endl;//logger
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
 	else
@@ -113,6 +118,7 @@ void ResponseHandler::FinishCgiResponse()//if an exception is thrown call loadEr
 
 void ResponseHandler::AppendCgiOutput(const std::string &buffer)
 {
+	std::cout << "------------> called append <---------" << std::endl;
 	try {
 		CgiObj.ParseOutputBuffer(buffer);
 	}
@@ -125,6 +131,7 @@ void ResponseHandler::AppendCgiOutput(const std::string &buffer)
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
     if (ReachedCgiBodyPhase()){
+// 		std::cout << "-----> reached body phase <-----" << std::endl; //logger
 		GenerateHeaderFromCgiData();
 		response_body = CgiObj.GetPreservedBody();
     }
@@ -172,7 +179,7 @@ void ResponseHandler::AppendBufferToTmpFile(const std::string &buf)
 	else if (CgiObj.GetContentLength() != -1 && cgi_buffer_size + buf.size() > (unsigned)CgiObj.GetContentLength()){
 		DeleteCgiTargetFile();		
 		CgiObj.KillChild();
-// 		// std::cout << "current content-lenght passed returend one" << std::endl;//logger
+// 		std::cout << "current content-lenght passed returend one" << std::endl;//logger
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
 	target_file->write(buf.c_str(), buf.size());

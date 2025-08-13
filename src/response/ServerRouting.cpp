@@ -122,7 +122,7 @@ bool locationMatched(const std::string &req_path, const LocationConfig &location
         return true;
     req_part = GetRestOfPath(req_path, pos);
     testing_path = locationConf.getRoot() + "/" + (method != "POST" ? req_part : GetFileDirectoryPath(req_part)); // appending the req_part to the config root if not POST
-//     // std::cout << "testing path: " << testing_path << std::endl;//logger
+// //     // std::cout << "testing path: " << testing_path << std::endl;//logger
     if (access(testing_path.c_str(), F_OK) == 0){// checks if the resulting path exists
         current_path = locationConf.getRoot() + "/" + req_part;
         return true;
