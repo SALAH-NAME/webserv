@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: karim <karim@student.42.fr>                +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/05/10 18:39:03 by karim             #+#    #+#             */
-/*   Updated: 2025/08/12 18:13:06 by karim            ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #ifndef SERVER_HPP
 #define SERVER_HPP
@@ -27,7 +16,6 @@ class Server {
 		int							_protocol;
 		int							_nMaxBacklog;
 		int 						_epfd;
-		bool						_isKeepAlive;
 		int							_timeOut;
 		std::map<int, Client>		_clients;
 		std::vector<int>			_markedForEraseClients;

@@ -22,10 +22,10 @@ void	isolateAndRecordBody(Client& client) {
 void    ServerManager::collectRequestData(Client& client) {
 	ssize_t	readbytes;
 
-	// if (client.getResponseBodyFlag()) {
-	// 	client.setPendingHeaderFlag(true);
-	// 	return ;
-	// }
+	if (client.getResponseBodyFlag()) {
+		client.setPendingHeaderFlag(true);
+		return ;
+	}
 
 	std::memset(_buffer, 0, sizeof(_buffer));
 	try {
@@ -38,7 +38,6 @@ void    ServerManager::collectRequestData(Client& client) {
 			return ;
 		
 		// std::cout << "read bytes ==> " << readbytes << " ||  from : " << client.getSocket().getFd() << "\n";
-		
 		if (readbytes > 0 && readbytes <= BYTES_TO_READ) {
 			client.resetLastConnectionTime();
 			client.appendToHeaderPart(std::string(_buffer, readbytes));

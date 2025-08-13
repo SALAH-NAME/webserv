@@ -22,7 +22,7 @@ void	Client::generateDynamicResponse() {
 
 	if (_responseHandler->IsPost()) {
 
-		std::cout << " ===>> CGI POST <<===\n";
+		// std::cout << " ===>> CGI POST <<===\n";
 		std::stringstream ss(_httpRequest.getHeaders()["content-length"]);
 			ss >> _contentLength;
 		_CGI_InPipeFD = _responseHandler->GetCgiInPipe().getWriteFd();
@@ -31,7 +31,7 @@ void	Client::generateDynamicResponse() {
 		try {
 			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, _CGI_InPipeFD, &_event) == -1)
 				throw std::string("epoll_ctl failed");
-			std::cout << "CGI Input Pipe fd: " << _CGI_InPipeFD << " Added successfully to epoll: " << _epfd << "\n";
+			// std::cout << "CGI Input Pipe fd: " << _CGI_InPipeFD << " Added successfully to epoll: " << _epfd << "\n";
 
 			_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
 			_pipeBodyToCgi = PIPE_TO_CGI;
@@ -52,9 +52,6 @@ void	Client::generateDynamicResponse() {
 		else
 			_state = ReceivingData;
 	}
-	else
-		std::cout << " State: " << _state << "\n";
-
 }
 
 void	Client::generateStaticResponse() {
@@ -109,8 +106,8 @@ void	Client::buildResponse() {
 	
 	_isChunked = _httpRequest.isCunked();
 
-	std::cout << "is Chunked: " << _isChunked << "\n";
-	std::cout << "is CGI required: " << _responseHandler->RequireCgi() << "\n";
+	// std::cout << "is Chunked: " << _isChunked << "\n";
+	// std::cout << "is CGI required: " << _responseHandler->RequireCgi() << "\n";
 
 	if (_responseHandler->RequireCgi())
 		generateDynamicResponse();

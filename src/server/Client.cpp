@@ -44,6 +44,7 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _clientInfos(other._clientInfos)
 									, _CGI_OutPipeFD(other._CGI_OutPipeFD)
 									, _CGI_InPipeFD(other._CGI_InPipeFD)
+									, _state(other._state)
 									, _lastTimeConnection(other._lastTimeConnection)
 									, _contentLength(other._contentLength)
 									, _chunkBodySize(other._chunkBodySize)
@@ -476,6 +477,7 @@ void	Client::resetAttributes(void) {
 	std::memset((void*)&_clientInfos, 0, sizeof(ClientInfos));
 	_CGI_OutPipeFD = -1;
 	_CGI_InPipeFD = -1;
+	_state = DefaultState;
 	_lastTimeConnection =  std::time(NULL);
 	_contentLength =  0;
 	_chunkBodySize = -1;

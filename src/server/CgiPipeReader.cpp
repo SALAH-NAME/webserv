@@ -12,7 +12,7 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 	if (!responseHandler->ReachedCgiBodyPhase()) {
 		// reading CGI header
 		readBytes = cgiOutPipe.read(buffer, BYTES_TO_READ); // reade cgi headers
-		// std::cout << "read header bytes: " << readBytes << "\n";
+		// std::cout << "read header bytes from CGI: " << readBytes << "\n";
 		if (readBytes > 0) {
 			buffer[readBytes] = 0;
 			try {
@@ -62,7 +62,7 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 		}
 
 		readBytes = cgiOutPipe.read(buffer, BYTES_TO_READ);
-		// std::cout << "read body bytes: " << readBytes << "\n";
+		// std::cout << "read body bytes from pipe: " << readBytes << "\n";
 		if (readBytes > 0) {
 			buffer[readBytes] = 0;
 			try {

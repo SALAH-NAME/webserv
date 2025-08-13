@@ -3,7 +3,7 @@
 
 void	ServerManager::handleKeepAlive(Client& client, int serverIndex) {
 
-	std::cout << "   ###################### Is keep alive: " << client.getResponseHandler()->KeepConnectioAlive() << " ##############\n";
+	// std::cout << "   ###################### Is keep alive: " << client.getResponseHandler()->KeepConnectioAlive() << " ##############\n";
 	
 	if (client.getResponseHandler()->KeepConnectioAlive())
 		client.resetAttributes();
@@ -40,7 +40,7 @@ void	ServerManager::transmitResponseHeader(Client& client, int serverIndex) {
 }
 
 void	ServerManager::transmitFileResponse(Client& client, int serverIndex) {
-	
+
 	try {
 		if (client.getIsResponseBodySendable() == NOT_SENDABLE) {
 			client.readFileBody();

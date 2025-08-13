@@ -30,7 +30,7 @@ void	ResponseHandler::LoadErrorPage( const std::string &status_line, int status_
 	else
 		error_page = conf->getErrorPage(status_code);
 	RefreshData();
-	std::cout << "error page = " << error_page << std::endl;
+	// std::cout << "error page = " << error_page << std::endl;
 	if (error_page == "" || access(error_page.c_str(), R_OK) != 0)
 		GenerateErrorPage(status_line);
 	else

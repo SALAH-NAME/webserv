@@ -118,9 +118,7 @@ void	ServerManager::processEvent(int serverIndex) {
 			// std::cout << "############  got an event on an existing client socket or pipe fd " << event_fd << " #############\n";
 			Client& client = clientIterator->second;
 			if (clientIterator->first == event_fd) {
-				
-				// event on client socket
-				if (events == CONNECTION_ERROR) {
+				if ((events & EPOLLHUP) && (events & EPOLLERR)) {
 					std::cout << "Connection Error\n";
 					server.closeConnection(event_fd);
 					continue ;
@@ -140,7 +138,7 @@ void	ServerManager::processEvent(int serverIndex) {
 							&& client.getIsCgiRequired() == CGI_REQUIRED) { // check if PIPE is ready from reading
 				
 					if ((events & EPOLLHUP) && (events & EPOLLIN)) {
-						std::cout << "set pipe to \"PIPE_IS_CLOSED\" (ready to read)\n";
+						// std::cout << "set pipe to \"PIPE_IS_CLOSED\" (ready to read)\n";
 						client.setIsPipeClosedByPeer(PIPE_IS_CLOSED);
 						client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
 					}
