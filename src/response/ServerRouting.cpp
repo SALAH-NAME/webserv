@@ -9,6 +9,9 @@ bool ResponseHandler::NeedToRedirect(){
 ServerConfig* getMatchingServerConfig(const std::vector<ServerConfig>& configs, std::string host) {
 	int defaultIndex = -1;
 
+    if (host.empty())
+        return &(const_cast<ServerConfig&>(configs[0]));
+
     for (size_t i = 0; i < configs.size(); ++i) {
 		if (defaultIndex == -1)
 			defaultIndex = i;

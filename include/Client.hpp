@@ -121,7 +121,6 @@ class Client {
 		void				appendToHeaderPart(const std::string& requestData);
 		void				appendToBodyPart(const std::string& requestData);
 		void				resetLastConnectionTime(void);
-		void				setEvent(int _epfd, struct epoll_event& event);
 		void				setResponseHeaderFlag(bool value);
 		void				setFullResponseFlag(bool value);
 		void				setResponseHolder(const std::string responseData);

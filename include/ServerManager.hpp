@@ -131,6 +131,9 @@ class ServerManager {
 		void								createEpoll(void);
 		void								setUpServers(void);
 		void    							addToEpollSet(void);
+		void								eraseUnusedSockets(void);
+		void								printRunningServers(void);
+		
 		void								checkTimeOut(void);
 		void								collectRequestData(Client&);
 		void								transmitResponseHeader(Client&, int);
@@ -153,8 +156,11 @@ class ServerManager {
 
 };
 
-void				throwIfSocketError(const std::string& context);
+void			throwIfSocketError(const std::string& context);
 ServerConfig*	getMatchingServerConfig(const std::vector<ServerConfig>& configs, std::string host);
+void			addSocketToEpoll(int epfd, int fd, uint32_t events);
+// void			modifyEpollEvents(int epfd, int fd, uint32_t events);
+// void			deleteEpollEvents(int epfd, int fd);
 
 #include "Server.hpp"
 #include "Client.hpp"

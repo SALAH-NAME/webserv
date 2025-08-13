@@ -1,6 +1,28 @@
 
 #include "ServerManager.hpp"
 
+void addSocketToEpoll(int epfd, int fd, uint32_t events) {
+    struct epoll_event ev;
+    ev.data.fd = fd;
+    ev.events = events;
+    if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev) == -1) {
+		throw std::runtime_error("     + epoll_ctl(ADD) failed +");
+	}
+}
+
+// void modifyEpollEvents(int epfd, int fd, uint32_t events) {
+//     struct epoll_event ev;
+//     ev.data.fd = fd;
+//     ev.events = events;
+//     if (epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &ev) == -1)
+//         throw std::runtime_error("epoll_ctl(MOD) failed");
+// }
+
+// void	deleteEpollEvents(int epfd, int fd) {
+//     if (epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL) == -1)
+//         throw std::runtime_error("epoll_ctl(DEL) failed");
+// }
+
 void	ServerManager::generatResponses(int serverIndex) {
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
@@ -57,43 +79,46 @@ void ServerManager::setUpServers(void) {
 		}
 	}
 	if (!_servers.size())
-		throw "No server is available";
+		throw "    ===>>>> Can't run the program, None of the servers is running!! <<<<===\n";
 }
 
 void ServerManager::addToEpollSet(void) {
 
 	std::cout << "----------------- Add To Epoll Set ----------------------\n";
-	for (size_t i = 0; i < _servers.size(); i++)
-	{
+	int runningServers = 0;
+	for (size_t i = 0; i < _servers.size(); i++) {
+		int AddedSockets = 0;
 		std::vector<Socket>& listeningSockets = _servers[i].getListeningSockets();
 		if (!listeningSockets.size())
 			continue;
 
 		_servers[i].setEPFD(_epfd);
 
-		std::cout << "Server(" << _servers[i].getID() << ") || sockets FDs(" << listeningSockets.size() << ") => {"; //
-
-		for (size_t x = 0; x < listeningSockets.size(); x++)
-		{
+		for (size_t x = 0; x < listeningSockets.size(); x++) {
 			std::memset(&_event, 0, sizeof(_event)); // std
-			_event.data.fd = listeningSockets[x].getFd();
-			_event.events = EPOLLIN | EPOLLET; // make the listening socket Edge-triggered
 
-			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, listeningSockets[x].getFd(),
-										&_event) == -1)
-			{
-				std::cout << "\nepoll ctl failed with server: "
-									<< listeningSockets[x].getFd()
-									<< " socket: " << listeningSockets[x].getFd() << "\n";
-				throw "epoll_ctl failed";
+			try {
+				addSocketToEpoll(_epfd, listeningSockets[x].getFd(), (EPOLLIN | EPOLLET)); // make the listening socket Edge-triggered
+				AddedSockets++;
+			} catch (const std::runtime_error& e) {
+				_servers[i].getMarkedForEraseUnusedSocket().push_back(listeningSockets[x].getFd());
+				perror(e.what());
+				continue ;
 			}
-
-			std::cout << listeningSockets[x].getFd();
-			if ((x + 1) < listeningSockets.size())
-				std::cout << ", ";
 		}
-		std::cout << "} added to epoll set\n";
+		try {
+			if (!AddedSockets)  {
+				throw " * server is not Available, None if its sockets is added to epoll set *";
+			} 
+			else
+				runningServers++;
+		} catch (const char* errorMssg) {
+			std::cerr << errorMssg << "\n\n";
+			continue ;
+		}
 	}
+	if (!runningServers)
+		throw "    ===>>>> Can't run the program, None of the servers is running!! <<<<===\n";
 }
 
 void ServerManager::createEpoll() {
@@ -106,12 +131,60 @@ void ServerManager::createEpoll() {
 						<< ")\n";
 }
 
+void ServerManager::printRunningServers(void) {
+    std::cout << "----------------- Running Servers -----------------------\n";
+
+    for (size_t i = 0; i < _servers.size(); ++i) {
+		int serverID = _servers[i].getID();
+        const std::vector<Socket>& ListeningSockets = _servers[i].getListeningSockets();
+
+        std::cout << "Server[" << serverID << "]: sockets nums(" << ListeningSockets.size() << ") ==> {";  
+		
+        for (size_t j = 0; j < ListeningSockets.size(); ++j) {
+			std::cout << ListeningSockets[j].getFd();
+            if (j + 1 < ListeningSockets.size())
+			std::cout << ", ";
+        }
+		std::cout << "}\n";
+    }
+}
+
+void ServerManager::eraseUnusedSockets() {
+
+	for (size_t i = 0; i < _servers.size(); i++) {
+
+		std::vector<Socket>&	listeningSockets = _servers[i].getListeningSockets();
+		std::vector<int>&		markedForEraseUnusedClient = _servers[i].getMarkedForEraseUnusedSocket();
+
+    	for (size_t x = 0; x < listeningSockets.size(); ) {
+    	    int fd = listeningSockets[x].getFd();
+    	    bool shouldErase = false;
+
+    	    for (size_t j = 0; j < markedForEraseUnusedClient.size(); ++j) {
+    	        if (markedForEraseUnusedClient[j] == fd) {
+    	            shouldErase = true;
+    	            break;
+    	        }
+    	    }
+
+    	    if (shouldErase) {
+    	        listeningSockets.erase(listeningSockets.begin() + x);
+    	    } else {
+    	        ++x;
+    	    }
+    	}
+		markedForEraseUnusedClient.clear();
+	}
+}
+
 ServerManager::ServerManager(const std::vector<ServerConfig>& serversInfo)
 		: _serversConfig(serversInfo) {
 
 	createEpoll();
 	setUpServers();
 	addToEpollSet();
+	eraseUnusedSockets();
+	printRunningServers();
 }
 
 ServerManager::~ServerManager(void) {}

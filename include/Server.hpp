@@ -20,6 +20,7 @@ class Server {
 		std::map<int, Client>		_clients;
 		std::vector<int>			_markedForEraseClients;
 		std::vector<Socket>			_listeningSockets;
+		std::vector<int>			_markedForEraseUnusedClient;
 		Socket						_transferSocket;
 		
 		void						initAttributes(int);
@@ -29,8 +30,11 @@ class Server {
 		/**/						Server(const std::vector<ServerConfig>&, const ServerConfig&, size_t);
 		/**/						~Server(void);
 
+		const ServerConfig&			getConfig(void);
 		int							getID(void);
+		const std::vector<unsigned int>	getPorts(void);
 		std::vector<Socket>&		getListeningSockets(void);
+		std::vector<int>&			getMarkedForEraseUnusedSocket(void);
 		std::map<int, Client>&		getClients(void);
 		int							getTimeOut(void);
 		std::vector<int>			getMarkedForEraseClients();
