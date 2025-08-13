@@ -69,8 +69,16 @@ Server::Server(const std::vector<ServerConfig>& allServersConfig, const ServerCo
 
 Server::~Server(void) {}
 
+const ServerConfig&	Server::getConfig(void) {
+	return _serverConfig;
+}
+
 int		Server::getID(void) {
 	return _id;
+}
+
+const std::vector<unsigned int>	Server::getPorts(void) {
+	return _ports;
 }
 
 std::vector<int>	Server::getMarkedForEraseClients() {
@@ -83,6 +91,10 @@ void Server::setEPFD(int value) {
 
 std::vector<Socket>&		Server::getListeningSockets() {
 	return _listeningSockets;
+}
+
+std::vector<int>& Server::getMarkedForEraseUnusedSocket(void) {
+	return _markedForEraseUnusedClient;
 }
 
 std::map<int, Client>::iterator	Server::verifyClientsFD(int client_fd) {
@@ -109,7 +121,7 @@ void	Server::closeConnection(int clientSocket) {
 void	Server::eraseMarked() {
 	for (size_t i = 0; i < _markedForEraseClients.size(); i++) {
 		close(_markedForEraseClients[i]);
-		// std::cout << "close connection: " << _markedForEraseClients[i] << "\n";
+		std::cout << "close connection: " << _markedForEraseClients[i] << "\n";
 		_clients.erase(_markedForEraseClients[i]);
 	}
 	_markedForEraseClients.clear();

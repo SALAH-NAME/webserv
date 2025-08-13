@@ -45,8 +45,9 @@
 #define PIPE_IS_READABLE true
 #define PIPE_IS_NOT_READABLE false
 
-#define PIPE_IS_CLOSED true
-#define PIPE_IS_NOT_CLOSED false
+#define PIPE_IS_CLOSED 1
+#define PIPE_IS_NOT_CLOSED 0
+#define PIPE_CLOSED_NO_INPUT 2
 
 #define CGI_REQUIRED true
 #define CGI_IS_NOT_REQUIRED false
@@ -131,6 +132,9 @@ class ServerManager {
 		void								createEpoll(void);
 		void								setUpServers(void);
 		void    							addToEpollSet(void);
+		void								eraseUnusedSockets(void);
+		void								printRunningServers(void);
+		
 		void								checkTimeOut(void);
 		void								collectRequestData(Client&);
 		void								transmitResponseHeader(Client&, int);
@@ -153,8 +157,11 @@ class ServerManager {
 
 };
 
-void				throwIfSocketError(const std::string& context);
-ServerConfig*	getMatchingServerConfig(const std::vector<ServerConfig>& configs, std::string host);
+void			throwIfSocketError(const std::string& context);
+ServerConfig*	getMatchingServerConfig(const std::vector<ServerConfig>& configs, const HttpRequest&);
+void			addSocketToEpoll(int epfd, int fd, uint32_t events);
+// void			modifyEpollEvents(int epfd, int fd, uint32_t events);
+// void			deleteEpollEvents(int epfd, int fd);
 
 #include "Server.hpp"
 #include "Client.hpp"

@@ -163,7 +163,7 @@ bool	Client::getIsPipeReadable(void) {
 	return _isPipeReadable;
 }
 
-bool	Client::getIsPipeClosedByPeer(void) {
+int	Client::getIsPipeClosedByPeer(void) {
 	return _isPipeClosedByPeer;
 }
 
@@ -238,12 +238,6 @@ void Client::appendToBodyPart(const std::string &bodyData)
 	_requestBodyPart += bodyData;
 }
 
-void Client::setEvent(int _epfd, struct epoll_event &event)
-{
-	event.events = EPOLLIN | EPOLLOUT | EPOLLET;
-	epoll_ctl(_epfd, EPOLL_CTL_ADD, event.data.fd, &event);
-}
-
 void	Client::resetLastConnectionTime(void){
 	_lastTimeConnection = std::time(NULL);
 }
@@ -313,7 +307,7 @@ void	Client::setIsPipeReadable(bool value) {
 	_isPipeReadable = value;
 }
 
-void	Client::setIsPipeClosedByPeer(bool value) {
+void	Client::setIsPipeClosedByPeer(int	value) {
 	_isPipeClosedByPeer = value;
 }
 

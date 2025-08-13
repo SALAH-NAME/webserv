@@ -109,7 +109,7 @@ void	ServerManager::processEvent(int serverIndex) {
 		event_fd = _events[i].data.fd;
 		events = _events[i].events;
 		
-		// std::cout << "  ### Event on: " << event_fd << " ###\n";
+		// std::cout << "  ### Event on: " << event_fd << " ###\n"; 
 		if (server.verifyServerSocketsFDs(event_fd)) {
 			// std::cout << "########### got an event on the server socket {" << event_fd << "} ##############\n";
 			server.incomingConnection(event_fd);
@@ -136,10 +136,15 @@ void	ServerManager::processEvent(int serverIndex) {
 
 				else if (event_fd == client.getCGI_OutpipeFD()
 							&& client.getIsCgiRequired() == CGI_REQUIRED) { // check if PIPE is ready from reading
-				
+					
 					if ((events & EPOLLHUP) && (events & EPOLLIN)) {
-						// std::cout << "set pipe to \"PIPE_IS_CLOSED\" (ready to read)\n";
+						// std::cout << "set pipe to \"PIPE_IS_CLOSED WITH INPUT\" (ready to read)\n";
 						client.setIsPipeClosedByPeer(PIPE_IS_CLOSED);
+						client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
+					}
+					else if (events & EPOLLHUP) {
+						// std::cout << "set pipe to \"PIPE_IS_CLOSED WITH NO INPUT\n";
+						client.setIsPipeClosedByPeer(PIPE_CLOSED_NO_INPUT);
 						client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
 					}
 				}

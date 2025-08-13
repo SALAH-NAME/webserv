@@ -6,18 +6,29 @@ bool ResponseHandler::NeedToRedirect(){
             loc_config->hasRedirect());
 }
 
-ServerConfig* getMatchingServerConfig(const std::vector<ServerConfig>& configs, std::string host) {
+ServerConfig* getMatchingServerConfig(const std::vector<ServerConfig>& configs, const HttpRequest& httpRequest) {
 	int defaultIndex = -1;
 
+    // std::cout << "---------server name matcher called----------" << std::endl;//logger
+    std::map<std::string, std::string> headers = httpRequest.getHeaders();
+    std::map<std::string, std::string>::iterator it;
+    // std::cout << "find res: " << (headers.find("host") != headers.end()) << std::endl;
+    if ((it = headers.find("host")) == headers.end())
+        return &(const_cast<ServerConfig&>(configs[0]));
+
+    const std::string& host = it->second;
+    // std::cout << "req host = " << host << std::endl;//logger 
     for (size_t i = 0; i < configs.size(); ++i) {
 		if (defaultIndex == -1)
 			defaultIndex = i;
 
         const std::vector<std::string>& serverNames = configs[i].getServerNames();
         for (size_t j = 0; j < serverNames.size(); ++j) {
+            // std::cout << "compairing [" << serverNames[j] << ']' << std::endl;//logger
             if (serverNames[j] == host) {
                 return &(const_cast<ServerConfig&>(configs[i]));
             }
+            // std::cout << "___not matched___" << std::endl;//logger
         }
     }
 

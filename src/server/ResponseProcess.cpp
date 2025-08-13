@@ -100,7 +100,8 @@ void	Client::generateStaticResponse() {
 }
 
 void	Client::buildResponse() {
-	_responseHandler->SetServerConf(getMatchingServerConfig(_allServersConfig, _httpRequest.getHeaders()["host"]), _clientInfos);
+	_responseHandler->SetServerConf(getMatchingServerConfig(_allServersConfig, _httpRequest), _clientInfos);
+	
 	_responseHandler->Run(_httpRequest);
 	
 	
