@@ -9,10 +9,16 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 	ssize_t readBytes;
 	char    buffer[BYTES_TO_READ+1];
 
+	if (client.getIsPipeClosedByPeer() == PIPE_CLOSED_NO_INPUT) {
+		responseHandler->LoadErrorPage(client.getHttpRequest().getVersion() + " 502 Bad Gateway", 502);
+		client.CgiExceptionHandler();
+		return ;
+	}
+
 	if (!responseHandler->ReachedCgiBodyPhase()) {
 		// reading CGI header
 		readBytes = cgiOutPipe.read(buffer, BYTES_TO_READ); // reade cgi headers
-		// std::cout << "read header bytes from CGI: " << readBytes << "\n";
+		std::cout << "read header bytes from CGI: " << readBytes << "\n";
 		if (readBytes > 0) {
 			buffer[readBytes] = 0;
 			try {

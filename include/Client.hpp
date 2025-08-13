@@ -50,7 +50,7 @@ class Client {
 
 		bool				_isCgiRequired;
 		bool				_isPipeReadable;
-		bool				_isPipeClosedByPeer;
+		int					_isPipeClosedByPeer;
 		bool				_pipeReadComplete;
 
 		bool				_setTargetFile;
@@ -111,7 +111,7 @@ class Client {
 		bool				getIsRequestBodyWritable(void);
 		bool				getIsCgiRequired(void);
 		bool 				getIsPipeReadable(void);
-		bool				getIsPipeClosedByPeer(void);
+		int					getIsPipeClosedByPeer(void);
 
 		bool				getSetTargetFile(void);
 		bool				getResponseSent(void);
@@ -144,7 +144,7 @@ class Client {
 		
 		void				setIsRequestBodyWritable(bool);
 		void				setIsPipeReadable(bool);
-		void				setIsPipeClosedByPeer(bool);
+		void				setIsPipeClosedByPeer(int);
 		void				setIsCgiRequired(bool);
 		void				setPipeReadComplete(bool);
 

@@ -148,7 +148,7 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();
 
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->second.getIsPipeClosedByPeer() == PIPE_IS_CLOSED) {
+		if (it->second.getIsPipeClosedByPeer() == PIPE_IS_CLOSED || it->second.getIsPipeClosedByPeer() == PIPE_CLOSED_NO_INPUT) {
 			// std::cout << " ***** input is ready to read from Pipe : " << it->second.getResponseHandler()->GetCgiOutPipe().getReadFd() << "  ****\n";
 			consumeCgiOutput(it->second, serverIndex);
 		}

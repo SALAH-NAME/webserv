@@ -45,8 +45,9 @@
 #define PIPE_IS_READABLE true
 #define PIPE_IS_NOT_READABLE false
 
-#define PIPE_IS_CLOSED true
-#define PIPE_IS_NOT_CLOSED false
+#define PIPE_IS_CLOSED 1
+#define PIPE_IS_NOT_CLOSED 0
+#define PIPE_CLOSED_NO_INPUT 2
 
 #define CGI_REQUIRED true
 #define CGI_IS_NOT_REQUIRED false

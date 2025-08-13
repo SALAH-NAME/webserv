@@ -163,7 +163,7 @@ bool	Client::getIsPipeReadable(void) {
 	return _isPipeReadable;
 }
 
-bool	Client::getIsPipeClosedByPeer(void) {
+int	Client::getIsPipeClosedByPeer(void) {
 	return _isPipeClosedByPeer;
 }
 
@@ -307,7 +307,7 @@ void	Client::setIsPipeReadable(bool value) {
 	_isPipeReadable = value;
 }
 
-void	Client::setIsPipeClosedByPeer(bool value) {
+void	Client::setIsPipeClosedByPeer(int	value) {
 	_isPipeClosedByPeer = value;
 }
 
