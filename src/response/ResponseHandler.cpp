@@ -113,7 +113,7 @@ void ResponseHandler::ProccessRequest()
 //     std::cout << "passed initial error checks" << std::endl; //logger
     SetKeepAlive();
     RouteResolver(req->getPath(), req->getMethod());//  set resource_path and loc_config
-    std::cout << "route resoulved to " << resource_path << std::endl;
+    // std::cout << "route resoulved to " << resource_path << std::endl;
     try {
         req->validateContentLengthLimit(loc_config->getClientMaxBodySize());
     }

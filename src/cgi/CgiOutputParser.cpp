@@ -140,7 +140,7 @@ void	CgiHandler::ParseOutputBuffer(const std::string &cgi_output_buff)
 {
 	bool	key_phase = (value_holder.empty()) ? true : false;
 
-	std::cout << "appending a buffer to the parser" << std::endl;
+	// std::cout << "appending a buffer to the parser" << std::endl;
 	unsigned int i = 0;
 
 	std::cout << std::endl;

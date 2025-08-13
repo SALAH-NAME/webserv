@@ -157,7 +157,7 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 	input_pipe.closeRead();
 	delete_strings(argv);
 	env.clear();
-	std::cout << "a CGI child is running in the back ground" << std::endl;
+	// std::cout << "a CGI child is running in the back ground" << std::endl;
 }
 
 CgiHandler::~CgiHandler()

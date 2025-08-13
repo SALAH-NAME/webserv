@@ -119,7 +119,7 @@ void	ServerManager::processEvent(int serverIndex) {
 			Client& client = clientIterator->second;
 			if (clientIterator->first == event_fd) {
 				if ((events & EPOLLHUP) && (events & EPOLLERR)) {
-					std::cout << "Connection Error\n";
+					// std::cout << "Connection Error\n";
 					server.closeConnection(event_fd);
 					continue ;
 				}
