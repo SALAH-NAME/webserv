@@ -200,7 +200,7 @@ void ResponseHandler::ProccessHttpDELETE()
         throw(ResponseHandlerError(req->getVersion() + " 403 Forbidden", 403));
     if (std::remove(resource_path.c_str()) == -1)
         throw(ResponseHandlerError(req->getVersion() + " 500 Internal Server Error", 500));
-    SetResponseHeader(req->getVersion() + " 200 OK", -1, false);
+    SetResponseHeader(req->getVersion() + " 200 OK", 0, false);
 }
 
 ResponseHandler::~ResponseHandler(){
