@@ -136,7 +136,7 @@ class ServerManager {
 		void								printRunningServers(void);
 		
 		void								checkTimeOut(void);
-		void								collectRequestData(Client&);
+		void								collectRequestData(Client&, int);
 		void								transmitResponseHeader(Client&, int);
 		void								transferBodyToFile(Client&, int);
 		void								transmitFileResponse(Client& , int);
