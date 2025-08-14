@@ -96,7 +96,6 @@ class CgiHandler
 std::string		NumtoString(int num);
 bool			isAllDigit(std::string &str);
 bool			Crlf_check(const std::string &str, unsigned int index);
-void			SyntaxErrorsCheck(const std::string &buff, unsigned int i, bool key_phase);
 void			TrimSpaces(std::string &str);
 std::string		GetFileDirectoryPath(const std::string &path);
 #endif

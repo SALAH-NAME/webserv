@@ -81,9 +81,6 @@ std::time_t	CgiHandler::GetExecutionStartTime(){return exec_t0;}
 
 std::string	CgiHandler::GetPreservedBody(){return preserved_body;}
 
-int CgiHandler::GetParsedBytesNum(){return parsed_bytes_count;}
-
-
 bool CgiHandler::PostReq()
 {
 	return is_POST;
