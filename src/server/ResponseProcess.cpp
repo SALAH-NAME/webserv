@@ -106,6 +106,9 @@ void	Client::buildResponse() {
 	// std::cout << "is Chunked: " << _isChunked << "\n";
 	// std::cout << "is CGI required: " << _responseHandler->RequireCgi() << "\n";
 
+	modifyEpollEvents(_epfd, _socket.getFd(), (EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLERR));
+	// std::cout << "   ====>>> Added EPOLLOUT flag <<<===\n";
+
 	if (_responseHandler->RequireCgi())
 		generateDynamicResponse();
 	else

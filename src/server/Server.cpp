@@ -127,7 +127,7 @@ void	Server::closeConnection(Client& client) {
 void	Server::eraseMarked() {
 	for (size_t i = 0; i < _markedForEraseClients.size(); i++) {
 		close(_markedForEraseClients[i]);
-		std::cout << "close connection: " << _markedForEraseClients[i] << "\n";
+		// std::cout << "close connection: " << _markedForEraseClients[i] << "\n";
 		_clients.erase(_markedForEraseClients[i]);
 	}
 	_markedForEraseClients.clear();

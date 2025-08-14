@@ -23,6 +23,7 @@ void	Client::receiveFromSocket(void) {
 			_state = CloseConnection;
 		return ;
 	}
+	// std::cout << "read bytes: " << readBytes << "\n";
 
 	resetLastConnectionTime();
 	buffer[readBytes] = 0;

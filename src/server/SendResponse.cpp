@@ -4,9 +4,13 @@
 void	ServerManager::handleKeepAlive(Client& client, int serverIndex) {
 
 	// std::cout << "   ###################### Is keep alive: " << client.getResponseHandler()->KeepConnectioAlive() << " ##############\n";
-	
-	if (client.getResponseHandler()->KeepConnectioAlive())
+
+	if (client.getResponseHandler()->KeepConnectioAlive()) {
+		int clientFD = client.getSocket().getFd();
+		modifyEpollEvents(client.getEpfd(), clientFD, (EPOLLIN | EPOLLHUP | EPOLLERR | EPOLLET));
+		// std::cout << "     ===>>> RERMOVED EPOLLOUT flag  <<<===\n";
 		client.resetAttributes();
+	}
 	else
 		_servers[serverIndex].closeConnection(client);
 }
@@ -20,7 +24,6 @@ void	ServerManager::transmitResponseHeader(Client& client) {
 
 	int bytesToSendNow =  client.getBytesToSendNow();
 	// std::cout << "Bytes to send now: " << bytesToSendNow << "\n";
-	// exit(0);
 
 	size_t sentBytes;
 	sentBytes = client.getSocket().send(response.c_str(), bytesToSendNow, MSG_NOSIGNAL);
