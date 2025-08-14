@@ -18,11 +18,6 @@ void addSocketToEpoll(int epfd, int fd, uint32_t events) {
 //         throw std::runtime_error("epoll_ctl(MOD) failed");
 // }
 
-// void	deleteEpollEvents(int epfd, int fd) {
-//     if (epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL) == -1)
-//         throw std::runtime_error("epoll_ctl(DEL) failed");
-// }
-
 void	ServerManager::generatResponses(int serverIndex) {
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
@@ -30,10 +25,18 @@ void	ServerManager::generatResponses(int serverIndex) {
 
 		if (client.getGenerateInProcess() == GENERATE_RESPONSE_OFF)
 			continue ;
-			
-		it->second.buildResponse();
+		
+		try {
+			it->second.buildResponse();
+		}
+		catch(std::runtime_error& e) {
+			_servers[serverIndex].closeConnection(client.getSocket().getFd());
+			perror(e.what());
+			continue ;
+		}
 		client.setGenerateResponseInProcess(GENERATE_RESPONSE_OFF);
 	}
+	_servers[serverIndex].eraseMarked();
 }
 
 void ServerManager::checkTimeOut(void)

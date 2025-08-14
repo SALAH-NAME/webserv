@@ -51,25 +51,17 @@ static void	getClientsInfos(ClientInfos* clientinfos, uint32_t rawIP, uint16_t n
 
 void	Server::incomingConnection(int NewEvent_fd) {
 	struct sockaddr_in	serverSockAddr;
-	socklen_t			serverSockAddrLen = sizeof(serverSockAddr);
-	
-	struct epoll_event	clientEvent;
-	ssize_t				clientEventLen = sizeof(clientEvent);
-	int					clientSocketFD;
-	
 	struct sockaddr_in	clientAddr;
+	socklen_t			serverSockAddrLen = sizeof(serverSockAddr);
 	socklen_t			clientAddrLen = sizeof(clientAddr);
+	ClientInfos 		clientinfos;
+	int					clientSocketFD;
 
-	ClientInfos clientinfos;
-		
-	std::memset(&clientEvent, 0, clientEventLen);
-	clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET; // make the client socket Edge-Triggered
-	
 	for (size_t i = 0; i < _listeningSockets.size(); i++) {
 		if (_listeningSockets[i].getFd() != NewEvent_fd)
 			continue ;
 		
-		std::memset(&clientAddr, 0, clientAddrLen); 
+		std::memset(&clientAddr, 0, clientAddrLen);
 		std::memset(&serverSockAddr, 0, serverSockAddrLen); 
 		try {
 			while (true) {
@@ -79,9 +71,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 					getsockname(clientSocketFD, (struct sockaddr*)&serverSockAddr, &serverSockAddrLen);
 					getClientsInfos(&clientinfos, clientAddr.sin_addr.s_addr, serverSockAddr.sin_port);
 					// std::cout << "  ======>>> accept : " << clientSocketFD << " <<====== \n";
-					clientEvent.data.fd = clientSocketFD;
-					if (epoll_ctl(_epfd, EPOLL_CTL_ADD, clientSocketFD, &clientEvent) == -1)
-						throw std::runtime_error(std::string("epoll_ctl() failed: ") + strerror(errno));
+					addSocketToEpoll(_epfd, clientSocketFD, (EPOLLIN | EPOLLOUT | EPOLLET)); // make the client socket Edge-Triggered
 					
 					std::pair<int, Client> entry(clientSocketFD, Client(sock, _serverConfig, _allServersConfig, _epfd, clientinfos));
 					_clients.insert(entry);

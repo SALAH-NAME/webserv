@@ -22,10 +22,11 @@ class Server {
 		std::vector<Socket>			_listeningSockets;
 		std::vector<int>			_markedForEraseUnusedClient;
 		Socket						_transferSocket;
-		
+
 		void						initAttributes(int);
 		void						setEventStatus(struct epoll_event&, int);
 		void						setup_sockaddr(int port);
+	
 	public:
 		/**/						Server(const std::vector<ServerConfig>&, const ServerConfig&, size_t);
 		/**/						~Server(void);

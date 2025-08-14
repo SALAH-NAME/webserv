@@ -66,7 +66,6 @@ class Client {
 		void				extractBodyFromPendingRequestHolder(void);
 		
 		public:
-
 		/**/				Client(Socket, const ServerConfig&, const std::vector<ServerConfig>&, int, ClientInfos);
 		/**/				Client(const Client& other);
 		/**/				~Client();

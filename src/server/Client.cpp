@@ -414,7 +414,7 @@ void	Client::receiveRequestBody(void) {
 		_fullResponseFlag = FULL_RESPONSE_READY;
 		return ;
 	}
-	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, 0); // Enable NON_Blocking for recv()
+	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
 	if (readBytes > 0 && readBytes <= BYTES_TO_READ) {
 		resetLastConnectionTime();
 		if (_uploadedBytes + readBytes >= _contentLength) {

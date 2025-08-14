@@ -5,19 +5,17 @@ void	Client::generateDynamicResponse() {
 	// std::cout << "Is CGI required: " << _isCgiRequired << std::endl;
 
 	_CGI_OutPipeFD = _responseHandler->GetCgiOutPipe().getReadFd();
-	struct epoll_event					_event;
-	_event.events = EPOLLIN | EPOLLHUP | EPOLLET;
-	_event.data.fd = _CGI_OutPipeFD;
 	
 	try {
-		if (epoll_ctl(_epfd, EPOLL_CTL_ADD, _CGI_OutPipeFD, &_event) == -1)
-			throw std::string("epoll_ctl failed");
+		addSocketToEpoll(_epfd, _CGI_OutPipeFD, (EPOLLIN | EPOLLHUP | EPOLLERR | EPOLLET));
 		std::cout << "Pipe fd: " << _CGI_OutPipeFD << " Added successfully to epoll: " << _epfd << "\n";
 	}
-	catch(std::string e)
+	catch(std::runtime_error& e)
 	{
-		std::cout << e << "\n";
-		return ;
+		close(_CGI_OutPipeFD);
+		_CGI_OutPipeFD = -1;
+		_state = DefaultState;
+		throw e.what();
 	}	
 
 	if (_responseHandler->IsPost()) {
@@ -26,21 +24,19 @@ void	Client::generateDynamicResponse() {
 		std::stringstream ss(_httpRequest.getHeaders()["content-length"]);
 			ss >> _contentLength;
 		_CGI_InPipeFD = _responseHandler->GetCgiInPipe().getWriteFd();
-		_event.events = EPOLLOUT | EPOLLET;
-		_event.data.fd = _CGI_InPipeFD;
-		try {
-			if (epoll_ctl(_epfd, EPOLL_CTL_ADD, _CGI_InPipeFD, &_event) == -1)
-				throw std::string("epoll_ctl failed");
-			// std::cout << "CGI Input Pipe fd: " << _CGI_InPipeFD << " Added successfully to epoll: " << _epfd << "\n";
 
+		try {
+			addSocketToEpoll(_epfd, _CGI_InPipeFD, (EPOLLIN | EPOLLOUT));
 			_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
 			_pipeBodyToCgi = PIPE_TO_CGI;
 			
 		}
-		catch(std::string e)
+		catch(std::runtime_error& e)
 		{
-			std::cout << e << "\n";
-			return ;
+			close(_CGI_InPipeFD);
+			_CGI_InPipeFD = -1;
+			_state = DefaultState;
+			throw e.what();
 		}
 		
 		if (_pendingRequestDataHolder.size()) {

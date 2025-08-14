@@ -42,8 +42,6 @@ void    ServerManager::collectRequestData(Client& client) {
 			client.resetLastConnectionTime();
 			client.appendToHeaderPart(std::string(_buffer, readbytes));
 
-			// printRequestAndResponse("header", client.getHeaderPart());
-
 			if (std::string(_buffer, readbytes) == "\r\n")
 			{
 				// in case of receive empty line (Press Enter) !!
@@ -58,12 +56,8 @@ void    ServerManager::collectRequestData(Client& client) {
 			if (req.getState() == HttpRequest::STATE_BODY) {
 				// std::cout << "   ====>> request is completed <<=====\n";
 				isolateAndRecordBody(client);
-
 				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
 				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-
-				// printRequestAndResponse("header", client.getHeaderPart());
-				// printRequestAndResponse("Pending data", client.getPendingRequestData());
 			}
 
 			if (req.getState() == HttpRequest::STATE_ERROR)
