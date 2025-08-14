@@ -10,13 +10,13 @@ void addSocketToEpoll(int epfd, int fd, uint32_t events) {
 	}
 }
 
-// void modifyEpollEvents(int epfd, int fd, uint32_t events) {
-//     struct epoll_event ev;
-//     ev.data.fd = fd;
-//     ev.events = events;
-//     if (epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &ev) == -1)
-//         throw std::runtime_error("epoll_ctl(MOD) failed");
-// }
+void modifyEpollEvents(int epfd, int fd, uint32_t events) {
+    struct epoll_event ev;
+    ev.data.fd = fd;
+    ev.events = events;
+    if (epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &ev) == -1)
+        throw std::runtime_error("epoll_ctl(MOD) failed");
+}
 
 void	ServerManager::generatResponses(int serverIndex) {
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();

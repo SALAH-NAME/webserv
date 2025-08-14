@@ -71,6 +71,7 @@ class Client {
 		/**/								~Client();
 
 		Socket&								getSocket();
+		int									getEpfd(void);
 		int									getCGI_OutpipeFD(void);
 		int									getCGI_InpipeFD(void);
 		PostMethodProcessingState&			getState(void);
