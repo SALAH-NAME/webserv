@@ -17,23 +17,21 @@ void	Client::receiveFromSocket(void) {
 	std::memset(buffer, 0, sizeof(buffer));
 
 	ssize_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
-	if (readBytes == -1)
-		return ;
 
-	if (readBytes > 0) {
-		resetLastConnectionTime();
-		buffer[readBytes] = 0;
-		_pendingRequestDataHolder += std::string(buffer, readBytes);
-		
-		if (_isChunked && _chunkBodySize == -1)
-			_state = ValidateChunkSize;
-		else
-			_state = ExtractingBody;
+	if (readBytes <= 0) {
+		if (!readBytes)
+			_state = CloseConnection;
+		return ;
 	}
-	else if (!readBytes)
-		_state = CloseConnection;
+
+	resetLastConnectionTime();
+	buffer[readBytes] = 0;
+	_pendingRequestDataHolder += std::string(buffer, readBytes);
+	
+	if (_isChunked && _chunkBodySize == -1)
+		_state = ValidateChunkSize;
 	else
-		throwIfSocketError("recv()");
+		_state = ExtractingBody;
 }
 
 void	Client::validateChunkBodySize(void) {

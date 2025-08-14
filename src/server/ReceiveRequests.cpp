@@ -40,47 +40,36 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 		}
 		
 		// std::cout << "read bytes ==> " << readbytes << " ||  from : " << client.getSocket().getFd() << "\n";
-		if (readbytes > 0 && readbytes <= BYTES_TO_READ) {
-			client.resetLastConnectionTime();
-			client.appendToHeaderPart(std::string(_buffer, readbytes));
-
-			if (std::string(_buffer, readbytes) == "\r\n")
-			{
-				// in case of receive empty line (Press Enter) !!
-				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
-				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-				// std::cout << " ==> Empty line\n";
-			}
-
-			HttpRequest &req = client.getHttpRequest();
-			req.appendAndValidate(client.getHeaderPart());
+		client.resetLastConnectionTime();
+		client.appendToHeaderPart(std::string(_buffer, readbytes));
 	
-			if (req.getState() == HttpRequest::STATE_BODY) {
-				// std::cout << "   ====>> request is completed <<=====\n";
-				isolateAndRecordBody(client);
-				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
-				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-			}
-
-			if (req.getState() == HttpRequest::STATE_ERROR)
-			{
-				client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
-				client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-				return; // Return instead of throwing to allow response generation
-			}
+		if (std::string(_buffer, readbytes) == "\r\n")
+		{
+			// in case of receive empty line (Press Enter) !!
+			client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
+			client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+			// std::cout << " ==> Empty line\n";
 		}
-		else
-			throwIfSocketError("recv()");
+
+		HttpRequest &req = client.getHttpRequest();
+		req.appendAndValidate(client.getHeaderPart());
+	
+		if (req.getState() == HttpRequest::STATE_BODY) {
+			// std::cout << "   ====>> request is completed <<=====\n";
+			isolateAndRecordBody(client);
+			client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
+			client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+		}
+	
+		if (req.getState() == HttpRequest::STATE_ERROR)
+		{
+			client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
+			client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+			return; // Return instead of throwing to allow response generation
+		}
 	}
 	catch (const HttpRequestException &e) {
 		std::string error_msg = "HTTP Request Error: ";
-		error_msg += e.what();
-		std::cerr << error_msg << std::endl;
-		client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
-		client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-	}
-	catch (const std::runtime_error& e) {
-		std::string error_msg = "HTTP parsing error: ";
 		error_msg += e.what();
 		std::cerr << error_msg << std::endl;
 		client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);

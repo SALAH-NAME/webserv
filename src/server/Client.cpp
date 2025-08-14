@@ -386,8 +386,8 @@ void	Client::sendFileBody(void) {
 	
 	if (_responseHolder.size()) {
 		sentBytes = _socket.send(_responseHolder.c_str(), _responseHolder.size(), MSG_NOSIGNAL);
-		if (sentBytes < 0)
-			throwIfSocketError("send()");
+		if (sentBytes <= 0)
+			return ;
 		resetLastConnectionTime();
 	}
 	
@@ -400,35 +400,6 @@ void	Client::sendFileBody(void) {
 	}
 	
 	_isResponseBodySendable = NOT_SENDABLE;
-}
-
-void	Client::receiveRequestBody(void) {
-
-	char buffer[BYTES_TO_READ+1];
-	
-	std::memset(buffer, 0, sizeof(buffer));
-	
-	if (!_pipeBodyToCgi && !_contentLength) {
-		_isRequestBodyWritable = NOT_WRITABLE;
-		_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
-		_fullResponseFlag = FULL_RESPONSE_READY;
-		return ;
-	}
-	size_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
-	if (readBytes > 0 && readBytes <= BYTES_TO_READ) {
-		resetLastConnectionTime();
-		if (_uploadedBytes + readBytes >= _contentLength) {
-			readBytes = _contentLength - _uploadedBytes;
-		}
-		buffer[readBytes] = 0;
-		_requestBodyPart = std::string(buffer, readBytes);
-		_isRequestBodyWritable = WRITABLE;
-	}
-	else if (readBytes == 0) {
-		// waiting for timeout or clinet closed connection
-	}
-	else
-		throwIfSocketError("recv()");	
 }
 
 void    Client::closeAndDeregisterPipe(int pipeFD) {
