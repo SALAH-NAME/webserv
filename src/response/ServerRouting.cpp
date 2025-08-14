@@ -47,11 +47,13 @@ bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_lo
     {
         if (it->second.isCgi() && it->second.getPath() == extension)
         {
+            std::cout << "checking path : " << (it->second.getRoot() + req_path) << std::endl;//logger
             //the requested file extension matched with a cgi location
             if (access((it->second.getRoot() + req_path).c_str(), F_OK) != 0)
                 throw (ResponseHandlerError(req->getVersion() + " 404 Not Found", 404));
             if (IsDir((it->second.getRoot()+req_path).c_str()))//if the path exist but as a directory
                 throw (ResponseHandlerError(req->getVersion() + " 403 Forbidden", 403));
+            std::cout << "sript does exist" << std::endl;//logger
             resource_path = it->second.getRoot() + '/' + req_path;
             loc_config = &it->second;
             require_cgi = true;

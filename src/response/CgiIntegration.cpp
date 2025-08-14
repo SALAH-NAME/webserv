@@ -42,7 +42,7 @@ void	ResponseHandler::UpdateCgiChildExitStatus()//returns -1 if cgi child still 
 		child_status = -1;//keep -1 to signify that the child is not reaped yet
 	else if (wait_rval == child_pid){ // child exited
 		child_status = WEXITSTATUS(exit_status);
-// 		std::cout << "child is reaped and the exit status is: " << child_status << std::endl;//logger
+		// std::cout << "child is reaped and the exit status is: " << child_status << std::endl;//logger
 	}
 	else
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
@@ -102,7 +102,7 @@ void ResponseHandler::GenerateHeaderFromCgiData()
 
 void ResponseHandler::FinishCgiResponse()//if an exception is thrown call loadErrorPage
 {
-// 	std::cout << "-------------Finish Cgi response is called---------------" << std::endl;//logger
+	// std::cout << "-------------Finish Cgi response is called---------------" << std::endl;//logger
 	int returned_length = CgiObj.GetContentLength();
 	if (returned_length == -1)
 		response_header += "Content-Length: " + NumtoString(cgi_buffer_size + response_body.size())+CRLF+CRLF;
@@ -118,7 +118,8 @@ void ResponseHandler::FinishCgiResponse()//if an exception is thrown call loadEr
 
 void ResponseHandler::AppendCgiOutput(const std::string &buffer)
 {
-	std::cout << "------------> called append <---------" << std::endl;
+	// std::cout << "------------> called append <---------" << std::endl;//logger
+	// std::cout << "buffer = [" << buffer << ']' << std::endl;//logger
 	try {
 		CgiObj.ParseOutputBuffer(buffer);
 	}
@@ -131,7 +132,7 @@ void ResponseHandler::AppendCgiOutput(const std::string &buffer)
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
     if (ReachedCgiBodyPhase()){
-// 		std::cout << "-----> reached body phase <-----" << std::endl; //logger
+		// std::cout << "-----> reached body phase <-----" << std::endl; //logger
 		GenerateHeaderFromCgiData();
 		response_body = CgiObj.GetPreservedBody();
     }
@@ -141,7 +142,7 @@ void ResponseHandler::SetTargetFileForCgi(int id)
 {
 	std::string filename = TMP_FILE_PREFIX + NumtoString(id);
 
-// 	std::cout << "--------------will set a target file for cgi ----------------" << std::endl;//logger
+	// std::cout << "--------------will set a target file for cgi ----------------" << std::endl;//logger
 	cgi_tmpfile_id = id;
 	CgiObj.PreBodyPhraseChecks();
 	int fd = open(filename.c_str(), O_CREAT, 0644);
@@ -157,7 +158,7 @@ void ResponseHandler::SetTargetFileForCgi(int id)
 		CgiObj.KillChild();
 		throw (ResponseHandlerError(req->getVersion() + " 500 Internal Server Error", 500));
 	}
-// 	std::cout << "----------target file is set-----------" << std::endl;//logger
+	// std::cout << "----------target file is set-----------" << std::endl;//logger
 	response_body.clear();
 }
 

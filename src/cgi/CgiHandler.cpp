@@ -53,11 +53,18 @@ void	CgiHandler::SetCgiEnvironment(HttpRequest	&http_req, const ServerConfig &co
 
 void	SetCgiChildArguments(char **Argv, const std::string &interpiter, const std::string &script_path)
 {
+	std::string script_name;
+
+	int i = script_path.size() - 1;
+	for (; i >= 0; i--)
+		if (script_path[i] == '/')
+			break;
+	script_name = script_path.substr(i + 1);
 	Argv[0] = new char[interpiter.size() + 1];
-	Argv[1] = new char[script_path.size() + 1];
+	Argv[1] = new char[script_name.size() + 1];
 	Argv[2] = NULL;
 	std::strcpy(Argv[0], interpiter.c_str());
-	std::strcpy(Argv[1], script_path.c_str());
+	std::strcpy(Argv[1], script_name.c_str());
 }
 
 pid_t	CgiHandler::GetChildPid(){return child_pid;}
@@ -73,6 +80,9 @@ std::map<std::string, std::string>&	CgiHandler::GetOutputHeaders(){return output
 std::time_t	CgiHandler::GetExecutionStartTime(){return exec_t0;}
 
 std::string	CgiHandler::GetPreservedBody(){return preserved_body;}
+
+int CgiHandler::GetParsedBytesNum(){return parsed_bytes_count;}
+
 
 bool CgiHandler::PostReq()
 {
@@ -121,7 +131,7 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 				const LocationConfig &cgi_conf, std::string &script_path,
 					ClientInfos &client_info)
 {
-// 	std::cout << "called run cgi" << std::endl;//logger
+	// std::cout << "called run cgi" << std::endl;//logger
 	int 	id;
 	char	**argv = new char*[3];
 
@@ -139,16 +149,15 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 		throw (std::runtime_error("failed to spawn child"));
 	if (id == 0)
 	{
-// 		std::cout << "inside the spawned child code" << std::endl;//logger
+		// std::cout << "inside the spawned child code" << std::endl;//logger
 		if (chdir(GetFileDirectoryPath(script_path).c_str()) != 0){
 			delete_strings(argv);
-// $1
 			std::exit(1); // Fixed: free memory before exit
 		}
 		SetCgiChildFileDescriptors();
 		execve(cgi_conf.getCgiPass().c_str(), argv, this->env.GetRawEnv());
 		delete_strings(argv);
-// 		std::cout << "execve failed" << std::endl;//logger
+		std::cout << "execve failed" << std::endl;//logger
 		std::exit(1);
 	}
 	this->exec_t0 = std::time(NULL);
@@ -157,7 +166,7 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 	input_pipe.closeRead();
 	delete_strings(argv);
 	env.clear();
-	// std::cout << "a CGI child is running in the back ground" << std::endl;
+	// std::cout << "a CGI child is running in the back ground" << std::endl;//logger
 }
 
 CgiHandler::~CgiHandler()
