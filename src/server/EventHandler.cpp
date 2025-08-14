@@ -99,7 +99,7 @@ void	ServerManager::processEvent(int serverIndex) {
 		event_fd = _events[i].data.fd;
 		events = _events[i].events;
 		
-		// std::cout << "  ### Event on: " << event_fd << " ###\n"; 
+		// std::cout << "  ### Event on: " << event_fd << " ###\n";
 		if (server.verifyServerSocketsFDs(event_fd)) {
 			// std::cout << "########### got an event on the server socket {" << event_fd << "} ##############\n";
 			server.incomingConnection(event_fd);

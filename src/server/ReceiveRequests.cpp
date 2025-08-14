@@ -19,7 +19,7 @@ void	isolateAndRecordBody(Client& client) {
 	std::cout << "ISOLATED\n";
 }
 
-void    ServerManager::collectRequestData(Client& client) {
+void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 	ssize_t	readbytes;
 
 	if (client.getResponseBodyFlag()) {
@@ -33,9 +33,11 @@ void    ServerManager::collectRequestData(Client& client) {
 			client.getBufferFromPendingData(_buffer, &readbytes);
 		else
 			readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
-
-		if (readbytes < 0)
+		if (readbytes <= 0) {
+			if (!readbytes)
+				_servers[serverIndex].closeConnection(client.getSocket().getFd());
 			return ;
+		}
 		
 		// std::cout << "read bytes ==> " << readbytes << " ||  from : " << client.getSocket().getFd() << "\n";
 		if (readbytes > 0 && readbytes <= BYTES_TO_READ) {
@@ -148,7 +150,7 @@ void	ServerManager::receiveClientsData(int serverIndex) {
 		}
 		else if (it->second.getIncomingHeaderDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
 			// std::cout << " ***** incoming Header data from : " << it->second.getSocket().getFd() << "  ****\n";
-			collectRequestData(it->second);
+			collectRequestData(it->second, serverIndex);
 		}
 		else if (it->second.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_ON) {
 			// std::cout << " ***** incoming Body data from : " << it->second.getSocket().getFd() << "  ****\n";

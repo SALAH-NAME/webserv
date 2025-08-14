@@ -25,7 +25,7 @@ Client::Client(Socket sock, const ServerConfig& conf, const std::vector<ServerCo
 											, _isRequestBodyWritable(NOT_WRITABLE)
 											, _bodyDataPreloadedFlag(BODY_DATA_PRELOADED_OFF)
 											, _requestDataPreloadedFlag(REQUEST_DATA_PRELOADED_OFF)
-											, _pendingHeaderFlag(true)
+											, _pendingHeaderFlag(false)
 											, _isCgiRequired(CGI_IS_NOT_REQUIRED)
 											, _isPipeReadable(PIPE_IS_NOT_READABLE)
 											, _isPipeClosedByPeer(PIPE_IS_NOT_CLOSED)
