@@ -60,6 +60,12 @@ private:
 	bool isValidRegexPath(const std::string& path);
 
 	void applyInheritance();
+	void validateCircularRedirects();
+	
+	bool serverHasRedirects(const ServerConfig& server);
+	void buildRedirectMap(const ServerConfig& server, std::map<std::string, std::string>& redirect_map);
+	bool detectCircularRedirect(const std::string& start_path, const std::map<std::string, std::string>& redirect_map, std::set<std::string>& global_visited);
+	std::string buildCircularRedirectErrorMessage(const std::vector<std::string>& path_stack, const std::string& current_path);
 
 public:
 	class ParseError : public std::exception

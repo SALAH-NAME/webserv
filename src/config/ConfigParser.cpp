@@ -8,6 +8,8 @@
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
+#include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -24,6 +26,7 @@ bool ConfigParser::parse()
 	{
 		parseConfig();
 		applyInheritance();
+		validateCircularRedirects();
 		return true;
 	}
 	catch (const ParseError& e)
@@ -861,4 +864,106 @@ void ConfigParser::applyInheritance()
 			server.addRegexLocation(regex_path, location);
 		}
 	}
+}
+
+void ConfigParser::validateCircularRedirects()
+{
+	for (size_t server_idx = 0; server_idx < _servers.size(); ++server_idx)
+	{
+		const ServerConfig& server = _servers[server_idx];
+		
+		if (!serverHasRedirects(server))
+			continue;
+		
+		std::map<std::string, std::string> redirect_map;
+		buildRedirectMap(server, redirect_map);
+		
+		std::set<std::string> global_visited;
+		
+		for (std::map<std::string, std::string>::const_iterator it = redirect_map.begin(); it != redirect_map.end(); ++it)
+		{
+			const std::string& start_path = it->first;
+			
+			if (global_visited.find(start_path) == global_visited.end())
+				detectCircularRedirect(start_path, redirect_map, global_visited);
+		}
+	}
+}
+
+bool ConfigParser::serverHasRedirects(const ServerConfig& server)
+{
+	const std::map<std::string, LocationConfig>& locations = server.getLocations();
+	
+	for (std::map<std::string, LocationConfig>::const_iterator it = locations.begin(); it != locations.end(); ++it)
+	{
+		if (it->second.hasRedirect())
+			return true;
+	}
+	
+	return false;
+}
+
+void ConfigParser::buildRedirectMap(const ServerConfig& server, std::map<std::string, std::string>& redirect_map)
+{
+	const std::map<std::string, LocationConfig>& locations = server.getLocations();
+	
+	for (std::map<std::string, LocationConfig>::const_iterator it = locations.begin();
+			 it != locations.end(); ++it)
+	{
+		const LocationConfig& location = it->second;
+		if (location.hasRedirect())
+			redirect_map[it->first] = location.getRedirect().url;
+	}
+}
+
+bool ConfigParser::detectCircularRedirect(const std::string& start_path, const std::map<std::string, std::string>& redirect_map, std::set<std::string>& global_visited)
+{
+	std::vector<std::string> path_stack;
+	std::set<std::string> local_visited;
+	std::string current_path = start_path;
+	
+	while (redirect_map.find(current_path) != redirect_map.end())
+	{
+		if (local_visited.find(current_path) != local_visited.end())
+		{
+			std::string error_msg = buildCircularRedirectErrorMessage(path_stack, current_path);
+			throw ParseError(error_msg, 0, 0);
+		}
+		
+		local_visited.insert(current_path);
+		path_stack.push_back(current_path);
+		
+		std::map<std::string, std::string>::const_iterator redirect_it = redirect_map.find(current_path);
+		current_path = redirect_it->second;
+	}
+	
+	for (std::set<std::string>::const_iterator visit_it = local_visited.begin(); visit_it != local_visited.end(); ++visit_it)
+	{
+		global_visited.insert(*visit_it);
+	}
+	
+	return false;
+}
+
+std::string ConfigParser::buildCircularRedirectErrorMessage(const std::vector<std::string>& path_stack, const std::string& current_path)
+{
+	std::string error_msg = "Circular redirect detected: ";
+	bool cycle_started = false;
+	
+	for (size_t i = 0; i < path_stack.size(); ++i)
+	{
+		if (path_stack[i] == current_path)
+			cycle_started = true;
+		
+		if (cycle_started)
+		{
+			if (error_msg != "Circular redirect detected: ")
+				error_msg += " -> ";
+			error_msg += path_stack[i];
+		}
+	}
+	
+	error_msg += " -> " + current_path;
+	
+	return error_msg;
 }
