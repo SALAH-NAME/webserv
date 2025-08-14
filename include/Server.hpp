@@ -48,7 +48,7 @@ class Server {
 		std::map<int, Client>::iterator	verifyClientsFD(int);
 		void						incomingConnection(int);			
 		void						checkTimeOut(void);
-		void						closeConnection(int);
+		void						closeConnection(Client&);
 		void						eraseMarked();
 };
 
