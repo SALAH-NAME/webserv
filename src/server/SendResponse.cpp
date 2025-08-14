@@ -8,7 +8,7 @@ void	ServerManager::handleKeepAlive(Client& client, int serverIndex) {
 	if (client.getResponseHandler()->KeepConnectioAlive())
 		client.resetAttributes();
 	else
-		_servers[serverIndex].closeConnection(client.getSocket().getFd());
+		_servers[serverIndex].closeConnection(client);
 }
 
 void	ServerManager::transmitResponseHeader(Client& client) {

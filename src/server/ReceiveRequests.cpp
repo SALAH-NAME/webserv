@@ -35,7 +35,7 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
 		if (readbytes <= 0) {
 			if (!readbytes)
-				_servers[serverIndex].closeConnection(client.getSocket().getFd());
+				_servers[serverIndex].closeConnection(client);
 			return ;
 		}
 		
@@ -118,12 +118,12 @@ void	ServerManager::transferBodyToFile(Client& client, int serverIndex) {
         	break;
 		
 		case CloseConnection:
-			_servers[serverIndex].closeConnection(client.getSocket().getFd());
+			_servers[serverIndex].closeConnection(client);
 			break ;
 
 		case InvalidBody:
 			client.handleInvalidBody();
-			_servers[serverIndex].closeConnection(client.getSocket().getFd());
+			_servers[serverIndex].closeConnection(client);
 			// close the connection at the moment // should send a resposne first
 	}
 }

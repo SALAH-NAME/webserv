@@ -113,9 +113,15 @@ bool	Server::verifyServerSocketsFDs(int NewEvent_fd) {
 	return false;
 }
 
-void	Server::closeConnection(int clientSocket) {
-	epoll_ctl(_epfd, EPOLL_CTL_DEL, clientSocket, NULL);
-	_markedForEraseClients.push_back(clientSocket);
+void	Server::closeConnection(Client& client) {
+
+	int clientFD = client.getSocket().getFd();
+
+	if (client.getIsCgiRequired() && client.getResponseHandler()->GetCgiChildPid())
+		kill(client.getResponseHandler()->GetCgiChildPid(), SIGKILL);
+
+	epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL);
+	_markedForEraseClients.push_back(clientFD);
 }
 
 void	Server::eraseMarked() {

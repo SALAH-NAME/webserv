@@ -53,8 +53,7 @@ void	Server::incomingConnection(int NewEvent_fd) {
 					getsockname(clientSocketFD, (struct sockaddr*)&serverSockAddr, &serverSockAddrLen);
 					getClientsInfos(&clientinfos, clientAddr.sin_addr.s_addr, serverSockAddr.sin_port);
 					// std::cout << "  ======>>> accept : " << clientSocketFD << " <<====== \n";
-					addSocketToEpoll(_epfd, clientSocketFD, (EPOLLIN | EPOLLOUT | EPOLLET)); // make the client socket Edge-Triggered
-					
+					addSocketToEpoll(_epfd, clientSocketFD, (EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLERR | EPOLLET)); // make the client socket Edge-Triggered
 					std::pair<int, Client> entry(clientSocketFD, Client(sock, _serverConfig, _allServersConfig, _epfd, clientinfos));
 					_clients.insert(entry);
 				}
@@ -88,11 +87,11 @@ void	ServerManager::processEvent(int serverIndex) {
 		}
 		else if ((clientIterator = server.verifyClientsFD(event_fd)) != server.getClients().end()) {
 			// std::cout << "############  got an event on an existing client socket or pipe fd " << event_fd << " #############\n";
+			std::cout << "Event: " << events << "\n";
 			Client& client = clientIterator->second;
 			if (clientIterator->first == event_fd) {
-				if ((events & EPOLLHUP) && (events & EPOLLERR)) {
-					// std::cout << "Connection Error\n";
-					server.closeConnection(event_fd);
+				if ((events & EPOLLHUP) || (events & EPOLLERR)) {
+					server.closeConnection(client);
 					continue ;
 				}
 				if (client.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_OFF)

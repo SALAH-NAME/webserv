@@ -30,7 +30,7 @@ void	ServerManager::generatResponses(int serverIndex) {
 			it->second.buildResponse();
 		}
 		catch(std::runtime_error& e) {
-			_servers[serverIndex].closeConnection(client.getSocket().getFd());
+			_servers[serverIndex].closeConnection(client);
 			perror(e.what());
 			continue ;
 		}
@@ -51,7 +51,7 @@ void ServerManager::checkTimeOut(void)
 					_servers[x].getTimeOut())
 			{
 				std::cout << "Time out: " << _servers[x].getTimeOut() << "\n";
-				_servers[x].closeConnection(it->first);
+				_servers[x].closeConnection(it->second);
 			}
 
 			if (it->second.getIsCgiRequired()) {
