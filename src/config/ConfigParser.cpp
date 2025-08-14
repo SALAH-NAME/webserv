@@ -575,6 +575,12 @@ void ConfigParser::parseRedirect(LocationConfig& location)
 	}
 
 	std::string url = expectString("Expected URL for return directive");
+	
+	if (!isValidUrl(url))
+	{
+		throw ParseError("Invalid URL for return directive: " + url, _tokenizer.front().line, _tokenizer.front().column);
+	}
+	
 	location.setRedirect(code, url);
 
 	expectSemicolon("Expected semicolon after return directive");
@@ -831,6 +837,51 @@ bool ConfigParser::isValidRegexPath(const std::string& path)
 	return (!path.empty() && path[0] == '.');// path == ".php" || path == ".py" || path == ".sh";
 }
 
+bool ConfigParser::isExternalUrl(const std::string& url)
+{
+	if (url.find("://") != std::string::npos)
+		return true;
+	
+	if (url.length() >= 2 && url.substr(0, 2) == "//")
+		return true;
+	
+	return false;
+}
+
+bool ConfigParser::isValidUrl(const std::string& url)
+{
+	if (url.empty())
+		return false;
+	
+	if (isExternalUrl(url))
+	{
+		size_t protocol_pos = url.find("://");
+		if (protocol_pos == std::string::npos)
+		{
+			if (url.length() < 3)
+				return false;
+			
+			std::string domain_part = url.substr(2);
+			return !domain_part.empty() && domain_part.find('/') != 0;
+		}
+		
+		std::string protocol = url.substr(0, protocol_pos);
+		std::string rest = url.substr(protocol_pos + 3);
+		
+		if (protocol != "http" && protocol != "https" && protocol != "ftp" && protocol != "ftps")
+			return false;
+		
+		if (rest.empty())
+			return false;
+		
+		return rest.find('/') != 0;
+	}
+	else
+	{
+		return isValidPath(url);
+	}
+}
+
 void ConfigParser::applyInheritance()
 {
 	for (size_t i = 0; i < _servers.size(); ++i)
@@ -912,7 +963,12 @@ void ConfigParser::buildRedirectMap(const ServerConfig& server, std::map<std::st
 	{
 		const LocationConfig& location = it->second;
 		if (location.hasRedirect())
-			redirect_map[it->first] = location.getRedirect().url;
+		{
+			const std::string& redirect_url = location.getRedirect().url;
+			
+			if (!isExternalUrl(redirect_url))
+				redirect_map[it->first] = redirect_url;
+		}
 	}
 }
 

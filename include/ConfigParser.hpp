@@ -58,6 +58,8 @@ private:
 	bool isValidDomain(const std::string& domain);
 	bool isValidHttpMethod(const std::string& method);
 	bool isValidRegexPath(const std::string& path);
+	bool isExternalUrl(const std::string& url);
+	bool isValidUrl(const std::string& url);
 
 	void applyInheritance();
 	void validateCircularRedirects();

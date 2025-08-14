@@ -167,7 +167,7 @@ void ConfigTokenizer::addToken(const std::string& token, ConfigTokenType type,
 
 bool ConfigTokenizer::isSpecialChar(char c) const
 {
-	return c == '_' || c == '-' || c == '.' || c == '/';
+	return c == '_' || c == '-' || c == '.' || c == '/' || c == ':';
 }
 
 bool ConfigTokenizer::isSizeSuffix(char c) const
