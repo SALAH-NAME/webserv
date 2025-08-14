@@ -137,9 +137,9 @@ class ServerManager {
 		
 		void								checkTimeOut(void);
 		void								collectRequestData(Client&, int);
-		void								transmitResponseHeader(Client&, int);
+		void								transmitResponseHeader(Client&);
 		void								transferBodyToFile(Client&, int);
-		void								transmitFileResponse(Client& , int);
+		void								transmitFileResponse(Client&);
 		void								consumeCgiOutput(Client& , int);
 		void								transferBodyToCgi(Client& client, int serverIndex);
 
@@ -157,11 +157,10 @@ class ServerManager {
 
 };
 
-void			throwIfSocketError(const std::string& context);
-ServerConfig*	getMatchingServerConfig(const std::vector<ServerConfig>& configs, const HttpRequest&);
-void			addSocketToEpoll(int epfd, int fd, uint32_t events);
-// void			modifyEpollEvents(int epfd, int fd, uint32_t events);
-// void			deleteEpollEvents(int epfd, int fd);
+ServerConfig*								getMatchingServerConfig(const std::vector<ServerConfig>& configs, const HttpRequest&);
+void										addSocketToEpoll(int epfd, int fd, uint32_t events);
+// void										modifyEpollEvents(int epfd, int fd, uint32_t events);
+// void										deleteEpollEvents(int epfd, int fd);
 
 #include "Server.hpp"
 #include "Client.hpp"

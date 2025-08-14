@@ -1,24 +1,6 @@
 
 #include "ServerManager.hpp"
 
-void throwIfSocketError(const std::string& context) {
-	switch (errno) {
-		case EAGAIN:
-			// Non-fatal: try again later
-			break;
-		case EINTR:
-			// Retry-able signal interruption
-			break;
-		case ECONNRESET:
-		case ENOTCONN:
-		case EPIPE:
-		case EBADF:
-			throw std::runtime_error(context + ": fatal socket error - " + strerror(errno));
-		default:
-			throw std::runtime_error(context + ": unknown socket error - " + strerror(errno));
-	}
-}
-
 static void extractPort(std::string& port, uint16_t netPort) {
     // Network byte order is big-endian: high byte first
 	uint16_t hostPort = ((netPort >> 8) & 0xFF) | ((netPort & 0xFF) << 8);
