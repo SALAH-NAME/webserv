@@ -152,8 +152,10 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 			std::exit(1); // Fixed: free memory before exit
 		}
 		SetCgiChildFileDescriptors();
-		execve(cgi_conf.getCgiPass().c_str(), argv, this->env.GetRawEnv());
+		char **raw_env = env.GetRawEnv();
+		execve(cgi_conf.getCgiPass().c_str(), argv, raw_env);
 		delete_strings(argv);
+		delete_strings(raw_env);
 		std::cout << "execve failed" << std::endl;//logger
 		std::exit(1);
 	}
