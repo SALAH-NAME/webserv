@@ -86,6 +86,10 @@ Socket &Client::getSocket()
 	return _socket;
 }
 
+int	Client::getEpfd(void){
+	return _epfd;
+}
+
 int	Client::getCGI_OutpipeFD(void) {
 	return _CGI_OutPipeFD;
 }
@@ -372,6 +376,7 @@ void	Client::readFileBody(void) {
 	char buffer[BYTES_TO_SEND+1];
 	targetFile->read(buffer, BYTES_TO_SEND);
 	ssize_t _bytesReadFromFile = targetFile->gcount();
+	// std::cout << "read bytes: " << _bytesReadFromFile << "\n";
 
 	buffer[_bytesReadFromFile] = 0;
 	_responseHolder = std::string(buffer, _bytesReadFromFile);
@@ -390,6 +395,7 @@ void	Client::sendFileBody(void) {
 			return ;
 		resetLastConnectionTime();
 	}
+	// std::cout << "send bytes: " << sentBytes << "\n";
 	
 	if (_responseHolder.size() < BYTES_TO_SEND) {
 		_isResponseBodySendable = NOT_SENDABLE;
