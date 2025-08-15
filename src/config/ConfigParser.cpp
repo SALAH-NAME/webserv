@@ -348,12 +348,6 @@ void ConfigParser::parseDirective(BaseConfig& config, bool is_server,
 			{
 				parseConnectionTimeout(global);
 			}
-			else if (directive == "cgi_timeout")
-			{
-				unsigned int timeout = expectNumber("Expected timeout value");
-				global.setCgiTimeout(timeout);
-				expectSemicolon("Expected semicolon after cgi_timeout directive");
-			}
 			else if (directive == "error_log")
 			{
 				parseErrorLog(global);
@@ -361,6 +355,30 @@ void ConfigParser::parseDirective(BaseConfig& config, bool is_server,
 			else if (directive == "access_log")
 			{
 				parseAccessLog(global);
+			}
+			else if (directive == "cgi_timeout")
+			{
+				throw ParseError("cgi_timeout directive is not supported in global context - use it in location blocks only", token.line, token.column);
+			}
+			else if (directive == "cgi_pass")
+			{
+				throw ParseError("cgi_pass directive is not supported in global context - use it in location blocks only", token.line, token.column);
+			}
+			else if (directive == "return")
+			{
+				throw ParseError("return directive is not supported in global context - use it in location blocks only", token.line, token.column);
+			}
+			else if (directive == "listen")
+			{
+				throw ParseError("listen directive is not supported in global context - use it in server blocks only", token.line, token.column);
+			}
+			else if (directive == "host")
+			{
+				throw ParseError("host directive is not supported in global context - use it in server blocks only", token.line, token.column);
+			}
+			else if (directive == "server_name")
+			{
+				throw ParseError("server_name directive is not supported in global context - use it in server blocks only", token.line, token.column);
 			}
 			else
 			{
