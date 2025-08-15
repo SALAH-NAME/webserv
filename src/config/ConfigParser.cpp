@@ -13,6 +13,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
 
 ConfigParser::ConfigParser(ConfigTokenizer& tokenizer) : _tokenizer(tokenizer)
 {
@@ -275,7 +278,7 @@ void ConfigParser::parseDirective(BaseConfig& config, bool is_server,
 		}
 		else if (directive == "root")
 		{
-			parseRoot(config);
+			parseRoot(config, is_location);
 		}
 		else if (directive == "index")
 		{
@@ -399,6 +402,8 @@ void ConfigParser::parseErrorPage(BaseConfig& config)
 	}
 
 	std::string path = expectString("Expected path for error page");
+	
+	validateErrorPagePath(path);
 
 	for (size_t i = 0; i < error_codes.size(); ++i)
 	{
@@ -428,14 +433,17 @@ void ConfigParser::parseClientMaxBodySize(BaseConfig& config)
 	expectSemicolon("Expected semicolon after client_max_body_size directive");
 }
 
-void ConfigParser::parseRoot(BaseConfig& config)
+void ConfigParser::parseRoot(BaseConfig& config, bool is_location)
 {
 	std::string root = expectString("Expected path for root directive");
 	if (!isValidPath(root))
 	{
-		throw ParseError("Invalid path: " + root, _tokenizer.front().line,
+		throw ParseError("Invalid path format: " + root, _tokenizer.front().line,
 										 _tokenizer.front().column);
 	}
+	
+	validateRootPath(root, is_location);
+	
 	config.setRoot(root);
 	expectSemicolon("Expected semicolon after root directive");
 }
@@ -594,9 +602,11 @@ void ConfigParser::parseCgiPass(LocationConfig& location)
 
 	if (!isValidPath(path))
 	{
-		throw ParseError("Invalid path: " + path, _tokenizer.front().line,
+		throw ParseError("Invalid path format: " + path, _tokenizer.front().line,
 										 _tokenizer.front().column);
 	}
+	
+	validateCgiPassPath(path);
 
 	location.setCgiPass(path);
 	expectSemicolon("Expected semicolon after cgi_pass directive");
@@ -1061,4 +1071,117 @@ std::string ConfigParser::buildCircularRedirectErrorMessage(const std::vector<st
 	error_msg += " -> " + current_path;
 	
 	return error_msg;
+}
+
+inline bool ConfigParser::s_isDir(mode_t mode)
+{
+    return (mode & S_IFMT) == S_IFDIR;
+}
+
+inline bool ConfigParser::s_isReg(mode_t mode)
+{
+    return (mode & S_IFMT) == S_IFREG;
+}
+
+bool ConfigParser::isPathAccessible(const std::string& path)
+{
+	struct stat path_stat;
+	return stat(path.c_str(), &path_stat) == 0;
+}
+
+bool ConfigParser::isExecutableAccessible(const std::string& path)
+{
+	return access(path.c_str(), X_OK) == 0;
+}
+
+bool ConfigParser::isDirectoryAccessible(const std::string& path)
+{
+	struct stat path_stat;
+	if (stat(path.c_str(), &path_stat) != 0)
+		return false;
+
+	return s_isDir(path_stat.st_mode) && (access(path.c_str(), R_OK) == 0);
+}
+
+void ConfigParser::validateRootPath(const std::string& path, bool is_location)
+{
+	if (!isPathAccessible(path))
+	{
+		throw ParseError("Root path does not exist: " + path, _tokenizer.front().line, _tokenizer.front().column);
+	}
+	
+	struct stat path_stat;
+	stat(path.c_str(), &path_stat);
+	
+	if (is_location)
+	{
+		if (s_isDir(path_stat.st_mode))
+		{
+			if (access(path.c_str(), R_OK) != 0)
+			{
+				throw ParseError("Root directory is not readable: " + path, _tokenizer.front().line, _tokenizer.front().column);
+			}
+		}
+		else if (s_isReg(path_stat.st_mode))
+		{
+			if (access(path.c_str(), R_OK) != 0)
+			{
+				throw ParseError("Root file is not readable: " + path, _tokenizer.front().line, _tokenizer.front().column);
+			}
+		}
+		else
+		{
+			throw ParseError("Root path must be a file or directory: " + path, _tokenizer.front().line, _tokenizer.front().column);
+		}
+	}
+	else
+	{
+		if (!s_isDir(path_stat.st_mode))
+		{
+			throw ParseError("Server root path must be a directory: " + path, _tokenizer.front().line, _tokenizer.front().column);
+		}
+		
+		if (access(path.c_str(), R_OK) != 0)
+		{
+			throw ParseError("Root directory is not readable: " + path, _tokenizer.front().line, _tokenizer.front().column);
+		}
+	}
+}
+
+void ConfigParser::validateErrorPagePath(const std::string& path)
+{
+
+	if (!path.empty() && path[0] == '/')
+	{
+		if (!isPathAccessible(path))
+		{
+			throw ParseError("Error page file does not exist: " + path, _tokenizer.front().line, _tokenizer.front().column);
+		}
+		
+		struct stat path_stat;
+		if (stat(path.c_str(), &path_stat) == 0 && s_isDir(path_stat.st_mode))
+		{
+			throw ParseError("Error page path cannot be a directory: " + path, _tokenizer.front().line, _tokenizer.front().column);
+		}
+		
+		if (access(path.c_str(), R_OK) != 0)
+		{
+			throw ParseError("Error page file is not readable: " + path, _tokenizer.front().line, _tokenizer.front().column);
+		}
+	}
+}
+
+void ConfigParser::validateCgiPassPath(const std::string& path)
+{
+	if (!isExecutableAccessible(path))
+	{
+		if (!isPathAccessible(path))
+		{
+			throw ParseError("CGI executable does not exist: " + path, _tokenizer.front().line, _tokenizer.front().column);
+		}
+		else
+		{
+			throw ParseError("CGI path is not executable: " + path, _tokenizer.front().line, _tokenizer.front().column);
+		}
+	}
 }

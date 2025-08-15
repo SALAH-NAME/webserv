@@ -8,6 +8,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <sys/types.h>
 
 class ConfigParser
 {
@@ -16,6 +17,8 @@ private:
 	GlobalConfig							_global_config;
 	std::vector<ServerConfig> _servers;
 
+	inline bool s_isDir(mode_t mode);
+	inline bool s_isReg(mode_t mode);
 	void					 parseConfig();
 	void					 parseGlobalDirectives();
 	ServerConfig	 parseServerBlock();
@@ -26,7 +29,7 @@ private:
 
 	void parseErrorPage(BaseConfig& config);
 	void parseClientMaxBodySize(BaseConfig& config);
-	void parseRoot(BaseConfig& config);
+	void parseRoot(BaseConfig& config, bool is_location = false);
 	void parseIndex(BaseConfig& config);
 	void parseAllowedMethods(BaseConfig& config);
 	void parseAutoindex(BaseConfig& config);
@@ -60,6 +63,13 @@ private:
 	bool isValidRegexPath(const std::string& path);
 	bool isExternalUrl(const std::string& url);
 	bool isValidUrl(const std::string& url);
+
+	bool isPathAccessible(const std::string& path);
+	bool isExecutableAccessible(const std::string& path);
+	bool isDirectoryAccessible(const std::string& path);
+	void validateRootPath(const std::string& path, bool is_location = false);
+	void validateErrorPagePath(const std::string& path);
+	void validateCgiPassPath(const std::string& path);
 
 	void applyInheritance();
 	void validateCircularRedirects();
