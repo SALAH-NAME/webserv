@@ -26,7 +26,8 @@ void	Client::generateDynamicResponse() {
 		_CGI_InPipeFD = _responseHandler->GetCgiInPipe().getWriteFd();
 
 		try {
-			addSocketToEpoll(_epfd, _CGI_InPipeFD, (EPOLLIN | EPOLLOUT));
+			addSocketToEpoll(_epfd, _CGI_InPipeFD, (EPOLLOUT | EPOLLHUP | EPOLLERR)); // make the inpipe EPOLLOUT for only writing in it
+			std::cout << "Add CGI input pipe to Epoll set (EPOLLOUT)";
 			_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
 			_pipeBodyToCgi = PIPE_TO_CGI;
 			

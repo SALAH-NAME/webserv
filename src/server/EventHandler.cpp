@@ -102,8 +102,15 @@ void	ServerManager::processEvent(int serverIndex) {
 			else {
 				// event on one of client pipes
 				
-				if (event_fd == client.getCGI_InpipeFD())
-					client.setIsCgiInputAvailable(events & EPOLLOUT); // check if PIPE is available for writing
+				if (event_fd == client.getCGI_InpipeFD()) {
+					if ((events & EPOLLHUP) || (events & EPOLLERR)) { // if an error occured
+						client.closeAndDeregisterPipe(event_fd);
+						_servers[serverIndex].closeConnection(client);
+						client.setState(DefaultState);
+					}
+					else
+						client.setIsCgiInputAvailable(events & EPOLLOUT); // check if PIPE is available for writing
+				}
 
 				else if (event_fd == client.getCGI_OutpipeFD()
 							&& client.getIsCgiRequired() == CGI_REQUIRED) { // check if PIPE is ready from reading
