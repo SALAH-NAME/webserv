@@ -1150,24 +1150,20 @@ void ConfigParser::validateRootPath(const std::string& path, bool is_location)
 
 void ConfigParser::validateErrorPagePath(const std::string& path)
 {
-
-	if (!path.empty() && path[0] == '/')
+	if (!isPathAccessible(path))
 	{
-		if (!isPathAccessible(path))
-		{
-			throw ParseError("Error page file does not exist: " + path, _tokenizer.front().line, _tokenizer.front().column);
-		}
-		
-		struct stat path_stat;
-		if (stat(path.c_str(), &path_stat) == 0 && s_isDir(path_stat.st_mode))
-		{
-			throw ParseError("Error page path cannot be a directory: " + path, _tokenizer.front().line, _tokenizer.front().column);
-		}
-		
-		if (access(path.c_str(), R_OK) != 0)
-		{
-			throw ParseError("Error page file is not readable: " + path, _tokenizer.front().line, _tokenizer.front().column);
-		}
+		throw ParseError("Error page file does not exist: " + path, _tokenizer.front().line, _tokenizer.front().column);
+	}
+	
+	struct stat path_stat;
+	if (stat(path.c_str(), &path_stat) == 0 && s_isDir(path_stat.st_mode))
+	{
+		throw ParseError("Error page path cannot be a directory: " + path, _tokenizer.front().line, _tokenizer.front().column);
+	}
+	
+	if (access(path.c_str(), R_OK) != 0)
+	{
+		throw ParseError("Error page file is not readable: " + path, _tokenizer.front().line, _tokenizer.front().column);
 	}
 }
 
