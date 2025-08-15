@@ -35,6 +35,7 @@ Client::Client(Socket sock, const ServerConfig& conf, const std::vector<ServerCo
 											, _isOutputAvailable(NOT_AVAILABLE)
 											, _isCgiInputAvailable(NOT_AVAILABLE)
 											, _pipeBodyToCgi(NO_PIPE)
+											, _isBodyTooLarge(false)
 {}
 
 Client::Client(const Client& other) : _socket(other._socket)
@@ -71,6 +72,7 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _isOutputAvailable(other._isOutputAvailable)
 									, _isCgiInputAvailable(other._isCgiInputAvailable)
 									, _pipeBodyToCgi(other._pipeBodyToCgi)
+									, _isBodyTooLarge(other._isBodyTooLarge)
 {
 	const_cast<Client&> (other)._responseHandler = NULL;
 }
@@ -487,6 +489,7 @@ void	Client::resetAttributes(void) {
 	_responseSent = NOT_SENT;
 	_isCgiInputAvailable = NOT_AVAILABLE;
 	_pipeBodyToCgi = NO_PIPE;
+	_isBodyTooLarge = false;
 
 	_requestHeaderPart.clear();
 	_requestBodyPart.clear();

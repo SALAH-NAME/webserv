@@ -59,6 +59,7 @@ class Client {
 		bool								_isOutputAvailable;
 		bool								_isCgiInputAvailable;
 		bool								_pipeBodyToCgi;
+		bool								_isBodyTooLarge;
 
 		void								isolateAndRecordExtraBytes(void);
 		void								generateDynamicResponse();
@@ -132,7 +133,6 @@ class Client {
 		void								setRequestBodyPart(std::string);
 		void								resetUploadedBytes(void);
 		void								setPendingRequestData(std::string);
-		void								setState(PostMethodProcessingState);
 
 		void								setContentLength(int);
 		void								resetContentLength(void);
