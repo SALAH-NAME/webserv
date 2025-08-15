@@ -106,7 +106,6 @@ void	ServerManager::processEvent(int serverIndex) {
 					if ((events & EPOLLHUP) || (events & EPOLLERR)) { // if an error occured
 						client.closeAndDeregisterPipe(event_fd);
 						_servers[serverIndex].closeConnection(client);
-						client.setState(DefaultState);
 					}
 					else
 						client.setIsCgiInputAvailable(events & EPOLLOUT); // check if PIPE is available for writing

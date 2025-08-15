@@ -41,6 +41,11 @@ void	Client::validateChunkBodySize(void) {
 		if (_pendingRequestDataHolder.find(_CRLF) != std::string::npos) {
 			try {
 				_chunkBodySize = _httpRequest.validateChunkSize(_pendingRequestDataHolder);
+				if ((_uploadedBytes + _chunkBodySize) > _conf.getClientMaxBodySize()) {
+					_isBodyTooLarge = true;
+					_state = Completed;
+					return ;
+				}
 
 			} catch (...) {
 				_state = InvalidBody;
@@ -182,22 +187,31 @@ void	Client::finalizeBodyProccess(void) {
 	
 	_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
 	_state = DefaultState;
-	if (_pipeBodyToCgi) {
-		_pipeBodyToCgi = NO_PIPE;
-		try {
-			deleteEpollEvents(_epfd, _CGI_InPipeFD);
-		} catch(std::runtime_error& e) {
-			perror(e.what());
-			close(_CGI_InPipeFD);
-			_state = CloseConnection;
-			_CGI_InPipeFD = -1;
-			return ;
-		}
-		close(_CGI_InPipeFD);
-		_CGI_InPipeFD = -1;
+
+	if (_isBodyTooLarge) {
+		// should remove the the connection
+		_responseHandler->LoadErrorPage("Payload Too Large", 413);
+		CgiExceptionHandler();
+		return ;
 	}
-	else
+	else {
+		if (_pipeBodyToCgi) {
+			_pipeBodyToCgi = NO_PIPE;
+			try {
+				deleteEpollEvents(_epfd, _CGI_InPipeFD);
+			} catch(std::runtime_error& e) {
+				perror(e.what());
+				close(_CGI_InPipeFD);
+				_state = CloseConnection;
+				_CGI_InPipeFD = -1;
+				return ;
+			}
+			close(_CGI_InPipeFD);
+			_CGI_InPipeFD = -1;
+		}
+		else
 		_fullResponseFlag = FULL_RESPONSE_READY;
+	}
 }
 
 void	Client::handleInvalidBody(void) {
