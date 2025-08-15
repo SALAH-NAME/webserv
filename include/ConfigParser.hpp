@@ -29,7 +29,7 @@ private:
 
 	void parseErrorPage(BaseConfig& config);
 	void parseClientMaxBodySize(BaseConfig& config);
-	void parseRoot(BaseConfig& config, bool is_location = false);
+	void parseRoot(BaseConfig& config);
 	void parseIndex(BaseConfig& config);
 	void parseAllowedMethods(BaseConfig& config);
 	void parseAutoindex(BaseConfig& config);
@@ -67,7 +67,7 @@ private:
 	bool isPathAccessible(const std::string& path);
 	bool isExecutableAccessible(const std::string& path);
 	bool isDirectoryAccessible(const std::string& path);
-	void validateRootPath(const std::string& path, bool is_location = false);
+	void validateRootPath(const std::string& path);
 	void validateErrorPagePath(const std::string& path);
 	void validateCgiPassPath(const std::string& path);
 
