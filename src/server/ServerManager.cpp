@@ -18,6 +18,11 @@ void modifyEpollEvents(int epfd, int fd, uint32_t events) {
         throw std::runtime_error("epoll_ctl(MOD) failed");
 }
 
+void deleteEpollEvents(int epfd, int fd) {
+    if (epoll_ctl(epfd, EPOLL_CTL_DEL, fd, NULL) == -1)
+        throw std::runtime_error("epoll_ctl(MOD) failed");
+}
+
 void	ServerManager::generatResponses(int serverIndex) {
 	std::map<int, Client>& clients = _servers[serverIndex].getClients();
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {

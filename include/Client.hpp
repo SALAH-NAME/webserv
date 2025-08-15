@@ -132,6 +132,7 @@ class Client {
 		void								setRequestBodyPart(std::string);
 		void								resetUploadedBytes(void);
 		void								setPendingRequestData(std::string);
+		void								setState(PostMethodProcessingState);
 
 		void								setContentLength(int);
 		void								resetContentLength(void);

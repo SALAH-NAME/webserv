@@ -23,7 +23,7 @@ void	Client::receiveFromSocket(void) {
 			_state = CloseConnection;
 		return ;
 	}
-	// std::cout << "read bytes: " << readBytes << "\n";
+	// std::cout << "received bytes: " << readBytes << "\n";
 
 	resetLastConnectionTime();
 	buffer[readBytes] = 0;
@@ -43,7 +43,6 @@ void	Client::validateChunkBodySize(void) {
 				_chunkBodySize = _httpRequest.validateChunkSize(_pendingRequestDataHolder);
 
 			} catch (...) {
-				std::cout << "catching an Excepion\n";
 				_state = InvalidBody;
 				return ;
 			}
@@ -185,6 +184,15 @@ void	Client::finalizeBodyProccess(void) {
 	_state = DefaultState;
 	if (_pipeBodyToCgi) {
 		_pipeBodyToCgi = NO_PIPE;
+		try {
+			deleteEpollEvents(_epfd, _CGI_InPipeFD);
+		} catch(std::runtime_error& e) {
+			perror(e.what());
+			close(_CGI_InPipeFD);
+			_state = CloseConnection;
+			_CGI_InPipeFD = -1;
+			return ;
+		}
 		close(_CGI_InPipeFD);
 		_CGI_InPipeFD = -1;
 	}
