@@ -47,9 +47,8 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 			}
 
 		}
-		else {
-			// read failed !!
-		}
+		else
+			return ;
 	}
 	else {
 		// reading CGI body
@@ -99,5 +98,7 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 				client.CgiExceptionHandler();
 			}
 		}
+		else
+			return ;
 	}
 }

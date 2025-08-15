@@ -378,6 +378,8 @@ void	Client::readFileBody(void) {
 	char buffer[BYTES_TO_SEND+1];
 	targetFile->read(buffer, BYTES_TO_SEND);
 	ssize_t _bytesReadFromFile = targetFile->gcount();
+	if (_bytesReadFromFile <= 0)
+		return ;
 	// std::cout << "read bytes: " << _bytesReadFromFile << "\n";
 
 	buffer[_bytesReadFromFile] = 0;

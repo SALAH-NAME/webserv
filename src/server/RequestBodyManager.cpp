@@ -121,6 +121,8 @@ void	Client::writeBodyToTargetFile(void) {
 		bytesToWrite = _requestBodyPart.size();
 	
 	targetFile->write(_requestBodyPart.c_str(), bytesToWrite);
+	if (!targetFile->good())
+		return ;
 	targetFile->flush();
 	
 	_uploadedBytes += bytesToWrite;
@@ -157,8 +159,8 @@ void	Client::pipeBodyToCGI(void) {
 		bytesToWrite = _requestBodyPart.size();
  
 	ssize_t pipedBytes = write(_CGI_InPipeFD, _requestBodyPart.c_str(), bytesToWrite);
-	if (pipedBytes < 0)
-		return ; // An error occured // we keep the same state, we will try to write again until write success or get timeout
+	if (pipedBytes <= 0)
+		return ; // An error occured // we keep the same state, Retry again until write success or timeout
 	
 	_chunkBodySize = -1;
 	_uploadedBytes += bytesToWrite;
