@@ -248,8 +248,8 @@ void HttpRequest::parseHeaderLine(const std::string &line)
     if (isDuplicateHeader(header_name))
         throw HttpRequestException(400, "Bad Request - Duplicate header");
     
-    if (header_name == "host")
-        header_value = normalizeHostHeader(header_value);
+    // if (header_name == "host")
+    //     header_value = normalizeHostHeader(header_value);
     
     headers[header_name] = header_value;
 }
