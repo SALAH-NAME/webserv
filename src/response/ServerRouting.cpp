@@ -16,7 +16,7 @@ ServerConfig* getMatchingServerConfig(const std::vector<ServerConfig>& configs, 
     if ((it = headers.find("host")) == headers.end())
         return &(const_cast<ServerConfig&>(configs[0]));
 
-    const std::string& host = it->second;
+    const std::string& host = httpRequest.normalizeHostHeader(it->second);
     // std::cout << "req host = " << host << std::endl;//logger 
     for (size_t i = 0; i < configs.size(); ++i) {
 		if (defaultIndex == -1)
