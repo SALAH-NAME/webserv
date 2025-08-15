@@ -61,6 +61,15 @@ std::string HttpRequest::trim(const std::string &str) const
     return str.substr(start, end - start + 1);
 }
 
+std::string HttpRequest::normalizeHostHeader(const std::string &host) const
+{
+    std::string::size_type colon_pos = host.find(':');
+    if (colon_pos != std::string::npos)
+        return host.substr(0, colon_pos);
+    
+    return host;
+}
+
 bool HttpRequest::isValidMethod(const std::string &method) const
 {
     return method == "GET" || method == "POST" || method == "DELETE";
@@ -238,6 +247,10 @@ void HttpRequest::parseHeaderLine(const std::string &line)
     header_name = toLower(header_name);
     if (isDuplicateHeader(header_name))
         throw HttpRequestException(400, "Bad Request - Duplicate header");
+    
+    if (header_name == "host")
+        header_value = normalizeHostHeader(header_value);
+    
     headers[header_name] = header_value;
 }
 

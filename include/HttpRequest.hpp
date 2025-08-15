@@ -75,6 +75,7 @@ private:
     void validateHeaderLine(const std::string &line);
     std::string toLower(const std::string &str) const;
     std::string trim(const std::string &str) const;
+    std::string normalizeHostHeader(const std::string &host) const;
     void parseUriComponents();
     bool isValidMethod(const std::string &method) const;
     bool isValidVersion(const std::string &version) const;
