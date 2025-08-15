@@ -169,6 +169,8 @@ ServerConfig ConfigParser::parseServerBlock()
 												 _tokenizer.front().line, _tokenizer.front().column);
 			}
 
+			checkDuplicateLocationPath(server, path, is_regex);
+
 			if (is_regex)
 			{
 				server.addRegexLocation(path, location);
@@ -913,6 +915,43 @@ void ConfigParser::applyInheritance()
 			location.inheritFrom(server);
 
 			server.addRegexLocation(regex_path, location);
+		}
+	}
+}
+
+void ConfigParser::checkDuplicateLocationPath(const ServerConfig& server, const std::string& path, bool is_regex)
+{
+	if (is_regex)
+	{
+		const std::map<std::string, LocationConfig>& regex_locations = server.getRegexLocation();
+		if (regex_locations.find(path) != regex_locations.end())
+		{
+			throw ParseError("Duplicate regex location path: " + path, _tokenizer.front().line, _tokenizer.front().column);
+		}
+	}
+	else
+	{
+		const std::map<std::string, LocationConfig>& locations = server.getLocations();
+		if (locations.find(path) != locations.end())
+		{
+			throw ParseError("Duplicate location path: " + path, _tokenizer.front().line, _tokenizer.front().column);
+		}
+	}
+	
+	if (is_regex)
+	{
+		const std::map<std::string, LocationConfig>& regular_locations = server.getLocations();
+		if (regular_locations.find(path) != regular_locations.end())
+		{
+			throw ParseError("Location path conflicts with existing regular location: " + path, _tokenizer.front().line, _tokenizer.front().column);
+		}
+	}
+	else
+	{
+		const std::map<std::string, LocationConfig>& regex_locations = server.getRegexLocation();
+		if (regex_locations.find(path) != regex_locations.end())
+		{
+			throw ParseError("Location path conflicts with existing regex location: " + path, _tokenizer.front().line, _tokenizer.front().column);
 		}
 	}
 }

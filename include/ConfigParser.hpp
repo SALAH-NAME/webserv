@@ -65,6 +65,7 @@ private:
 	void validateCircularRedirects();
 	
 	bool serverHasRedirects(const ServerConfig& server);
+	void checkDuplicateLocationPath(const ServerConfig& server, const std::string& path, bool is_regex);
 	void buildRedirectMap(const ServerConfig& server, std::map<std::string, std::string>& redirect_map);
 	bool detectCircularRedirect(const std::string& start_path, const std::map<std::string, std::string>& redirect_map, std::set<std::string>& global_visited);
 	std::string buildCircularRedirectErrorMessage(const std::vector<std::string>& path_stack, const std::string& current_path);
