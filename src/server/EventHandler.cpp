@@ -1,5 +1,6 @@
 
 #include "ServerManager.hpp"
+#include <cerrno>
 
 static void extractPort(std::string& port, uint16_t netPort) {
     // Network byte order is big-endian: high byte first
@@ -140,15 +141,19 @@ void    ServerManager::waitingForEvents(void) {
 	std::cout << "    ##### BYTES TO SEND : " << BYTES_TO_SEND << "  |||  ";
 	std::cout << "BYTES TO READ: " << BYTES_TO_READ << "   ##### \n";
 
-	while (true) {
+	while (!g_shutdown) {
 		std::memset(_events, 0, sizeof(_events));
 		_nfds = epoll_wait(_epfd, _events, MAX_EVENTS, EPOLLTIMEOUT);
-		if (_nfds < 0)
+		if (_nfds < 0) {
+			if (errno == EINTR) {
+				continue;
+			}
 			throw "epoll_wait failed";
+		}
 			
 		checkTimeOut();
 
-		for (int i = 0; i < _nfds; i++) {
+		for (int i = 0; i < _nfds && !g_shutdown; i++) {
 			if (!processEvent(i)) // not a client event (pipeFD/listenSocket)
 				continue ;
 			receiveClientsData(i);
@@ -156,4 +161,6 @@ void    ServerManager::waitingForEvents(void) {
 			sendClientsResponse(i);
 		}
 	}
+	
+	cleanup();
 }

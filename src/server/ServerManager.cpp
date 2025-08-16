@@ -228,7 +228,7 @@ void ServerManager::eraseUnusedSockets() {
 
 ServerManager::ServerManager(const std::vector<ServerConfig>& serversInfo)
 		: _serversConfig(serversInfo), _domain(AF_INET), _type(SOCK_STREAM | SOCK_NONBLOCK)
-		,  _timeOut(1) {
+		,  _timeOut(1), _cleanupPerformed(false) {
 	
 	createEpoll();
 	setUpServers();
@@ -236,4 +236,59 @@ ServerManager::ServerManager(const std::vector<ServerConfig>& serversInfo)
 	eraseUnusedSockets();
 }
 
-ServerManager::~ServerManager(void) {}
+ServerManager::~ServerManager(void) {
+	cleanup();
+}
+
+void ServerManager::cleanup(void) {
+	if (_cleanupPerformed)
+		return;
+	
+	std::cout << "Starting server cleanup..." << std::endl;
+	
+	// close all client
+	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+		Client& client = it->second;
+		// kill cgi child
+		if (client.getIsCgiRequired() && client.getResponseHandler()->GetCgiChildPid()) {
+			kill(client.getResponseHandler()->GetCgiChildPid(), SIGTERM);
+			for (int i = 0; i < 10000; ++i) { } // sleep for a short time
+			kill(client.getResponseHandler()->GetCgiChildPid(), SIGKILL);
+		}
+
+		// cgi pipes
+		if (client.getIsCgiRequired()) {
+			if (client.getCGI_InpipeFD() != -1) {
+				epoll_ctl(_epfd, EPOLL_CTL_DEL, client.getCGI_InpipeFD(), NULL);
+				close(client.getCGI_InpipeFD());
+			}
+			if (client.getCGI_OutpipeFD() != -1) {
+				epoll_ctl(_epfd, EPOLL_CTL_DEL, client.getCGI_OutpipeFD(), NULL);
+				close(client.getCGI_OutpipeFD());
+			}
+		}
+		
+		// remove client from epoll
+		int clientFD = client.getSocket().getFd();
+		epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL);
+	}
+	
+	/// clean clients
+	_clients.clear();
+	
+	// close listen sockets
+	for (std::vector<Socket>::iterator it = _listenSockets.begin(); it != _listenSockets.end(); ++it) {
+		int sockFD = it->getFd();
+		epoll_ctl(_epfd, EPOLL_CTL_DEL, sockFD, NULL);
+	}
+	_listenSockets.clear();
+	
+	/// close epoll fd
+	if (_epfd != -1) {
+		close(_epfd);
+		_epfd = -1;
+	}
+	
+	_cleanupPerformed = true;
+	std::cout << "Server cleanup completed." << std::endl;
+}

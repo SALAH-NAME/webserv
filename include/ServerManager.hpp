@@ -98,6 +98,8 @@
 #include "ConfigPrinter.hpp"
 #include "Socket.hpp"
 
+extern volatile sig_atomic_t g_shutdown;
+
 class Client;
 class ResponseHandler;
 
@@ -145,6 +147,7 @@ class ServerManager {
 		int									_type;
 		int									_timeOut;
 		sockaddr_in							_Address;
+		bool								_cleanupPerformed;
 
 		void								setup_sockaddr(int, int);
 		void								createListenignSockets(int);
@@ -176,6 +179,8 @@ class ServerManager {
 		void								receiveClientsData(int);
 		void								generatResponses(int);
 		void								sendClientsResponse(int);
+
+		void								cleanup(void);
 
 	public:
 

@@ -1,5 +1,17 @@
 
 #include "ServerManager.hpp"
+#include <csignal>
+
+volatile sig_atomic_t g_shutdown = 0;
+
+void signalHandler(int signal)
+{
+	if (signal == SIGINT)
+	{
+		std::cout << "\n\nReceived SIGINT (Ctrl+C). Shutting down gracefully...\n" << std::endl;
+		g_shutdown = 1;
+	}
+}
 
 void    printRequestAndResponse(std::string str, std::string request) {
 	char lasChar = 0;
@@ -20,6 +32,8 @@ void    printRequestAndResponse(std::string str, std::string request) {
 
 int main(int argc, char** argv)
 {
+	signal(SIGINT, signalHandler);
+
 	std::string config_file = "conf/default.conf";
 	if (argc > 1)
 	{
