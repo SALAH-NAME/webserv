@@ -732,3 +732,14 @@ int HttpRequest::validateChunkSize(std::string& buffer)
     
     return chunk_size;
 }
+
+
+void HttpRequest::setStatusCode(int code)
+{
+    status_code = code;
+}
+
+void HttpRequest::setRequestValid(bool isValid)
+{
+    valid = isValid;
+}

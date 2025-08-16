@@ -141,6 +141,9 @@ public:
     bool isCunked() const;
     int validateChunkSize(std::string& buffer);
 
+    void setStatusCode(int code);
+    void setRequestValid(bool isValid);
+
 private:
     int hexCharToDecimal(char c) const;
     bool isValidHexDigit(char c) const;
