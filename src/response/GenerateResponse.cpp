@@ -67,7 +67,7 @@ void    ResponseHandler::GenerateDirListing()
         throw (ResponseHandlerError(req->getVersion() + " 500 Internal Server Error", 500));
     while ((dir_iter = readdir(dir)) != NULL)
         if (static_cast <std::string>(dir_iter->d_name) != ".")
-            dir_entries.push_back(dir_iter->d_name);
+            dir_entries.push_back(std::string(dir_iter->d_name) + (dir_iter->d_type == DT_DIR ? "/" : ""));
     std::sort(dir_entries.begin(), dir_entries.end());
     response_body = "<html>\n\t<head><title>Index of " + req->getPath() + "</title></head>\n\t<body>\n";
     response_body += "\t\t<h1>Index of " + req->getPath() + "</h1><hr>\n\t\t<pre>";
