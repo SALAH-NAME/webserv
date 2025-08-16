@@ -15,6 +15,8 @@ ResponseHandler::ResponseHandler()
     is_post = false;
     keep_alive = false;
     target_file = NULL;
+    cgi_tmpfile_id = -1;
+    cgi_buffer_size = 0;
 }
 
 void    ResponseHandler::CheckForContentType()
