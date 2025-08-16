@@ -88,7 +88,7 @@ class CgiHandler
 
 			public:
 				BadCgiOutput(const std::string &err_msg);
-				const char *what() throw();
+				const char *what() const throw();
 				~BadCgiOutput() throw();
 		};
 };
