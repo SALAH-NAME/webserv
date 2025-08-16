@@ -157,7 +157,7 @@ void	ServerManager::createListenignSockets(int configIndex) {
 			hp.ip = _serversConfig[configIndex].getHost();
 			hp.port = ports[i];
 			_portsAndHosts.insert(std::make_pair(socket.getFd(), hp));
-
+			
 			std::cout << "Server(" << (configIndex + 1) << ") {socket: " << socket << "} is listening on => ";
 			std::cout << _serversConfig[configIndex].getHost() << ":" << ports[i] << "\n";
 

@@ -31,7 +31,7 @@ static void	getClientsInfos(ClientInfos* clientinfos, struct HostPort serverInfo
 	extractPort(clientinfos->port, netPort);
 
 	clientinfos->serverInfos.ip = serverInfo.ip;
-	clientinfos->port = serverInfo.port;
+	clientinfos->serverInfos.port = serverInfo.port;
 }
 
 void	ServerManager::incomingConnection(int event_fd) {
