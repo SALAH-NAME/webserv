@@ -181,7 +181,7 @@ CgiHandler::BadCgiOutput::BadCgiOutput(const std::string &err_msg){
 	error = err_msg;
 }
 
-const char *CgiHandler::BadCgiOutput::what() throw(){	
+const char *CgiHandler::BadCgiOutput::what() const throw(){	
 	return(error.c_str());
 }
 
