@@ -90,7 +90,7 @@ def	WriteToSession():
 		#logger("will appen line : [" + line +"]")
 		print(line, file=sessionFile, end='')
 		current_size += len(line)
-	response_header += f"Set-Cookie: session-id={session_id}\r\n\r\n"
+	response_header += f"Set-Cookie: session-id={session_id}; Path=/sessionManager.py\r\n\r\n"
 	print(response_header, end="")
 	print(
 """
@@ -186,5 +186,7 @@ def main():
 		#logger("recieved a GET request")
 		SendSessionData()
 
-main()
+
+if __name__ == "__main__":
+	main()
 

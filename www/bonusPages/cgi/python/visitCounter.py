@@ -15,8 +15,8 @@ def InitializeCookies():
 		counter = 0
 	now = datetime.now()
 	timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
-	response_header += f"Set-Cookie: visit-counter={counter + 1}\r\n"
-	response_header += f"Set-Cookie: last-visit={timestamp}\r\n\r\n"
+	response_header += f"Set-Cookie: visit-counter={counter + 1}; Path=/visitCounter.py\r\n"
+	response_header += f"Set-Cookie: last-visit={timestamp}; Path=/visitCounter.py\r\n\r\n"
 	return
 
 def SetVisiCount():
