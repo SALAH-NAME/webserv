@@ -205,8 +205,8 @@ help:
 	@echo ""
 	@echo "$(YELLOW)Clean Targets:$(RESET)"
 	@echo "  $(GREEN)clean$(RESET)             - Remove object files for current mode only"
-	@echo "  $(GREEN)fclean$(RESET)            - Remove all generated files for current mode"
-	@echo "  $(GREEN)cleanall$(RESET)          - Remove all build artifacts for all modes"
+	@echo "  $(GREEN)fclean$(RESET)            - Remove all generated files for current mode + temp files"
+	@echo "  $(GREEN)cleanall$(RESET)          - Remove all build artifacts for all modes + temp files"
 	@echo "  $(GREEN)re$(RESET)                - Clean and rebuild current mode"
 	@echo "  $(GREEN)rebuild-all$(RESET)       - Clean and rebuild all modes"
 	@echo ""
@@ -341,6 +341,8 @@ fclean:  clean
 	@rm -f $(MODE_EXEC) $(UNIT_EXEC) $(NAME) unit_test
 	@rm -f valgrind*.log *.log
 	@rm -f compile_commands.json
+	@echo "$(RED)Cleaning webserv temporary files...$(RESET)"
+	@rm -rf /tmp/webserv /tmp/webserv-login-sessions /tmp/webserv-sessions /tmp/webserv-users
 
 cleanall:
 	@echo "$(RED)Cleaning all build modes...$(RESET)"
@@ -348,6 +350,8 @@ cleanall:
 	@rm -f $(NAME) unit_test
 	@rm -f valgrind*.log *.log
 	@rm -f compile_commands.json
+	@echo "$(RED)Cleaning webserv temporary files...$(RESET)"
+	@rm -rf /tmp/webserv /tmp/webserv-login-sessions /tmp/webserv-sessions /tmp/webserv-users
 
 re: fclean 
 	@$(MAKE) MODE_MAKE=$(MODE_MAKE) all
