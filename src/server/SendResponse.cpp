@@ -4,7 +4,6 @@
 void	ServerManager::handleKeepAlive(Client& client) {
 
 	// std::cout << "   ###################### Is keep alive: " << client.getResponseHandler()->KeepConnectioAlive() << " ##############\n";
-
 	if (client.getResponseHandler()->KeepConnectioAlive()) {
 		int clientFD = client.getSocket().getFd();
 		try {
