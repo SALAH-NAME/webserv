@@ -466,7 +466,7 @@ void				Client::printClientStatus(void) {
 }
 
 void	Client::resetAttributes(void) {
-	std::memset((void*)&_clientInfos, 0, sizeof(ClientInfos));
+	// std::memset((void*)&_clientInfos, 0, sizeof(ClientInfos));
 	_CGI_OutPipeFD = -1;
 	_CGI_InPipeFD = -1;
 	_state = DefaultState;

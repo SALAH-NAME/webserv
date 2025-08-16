@@ -97,7 +97,9 @@ void	Client::generateStaticResponse() {
 }
 
 void	Client::buildResponse() {
-	_correctServerConfig = getMatchingServerConfig(_allServersConfig, _httpRequest);
+	std::cout << "  ==>> getMatchingServerConfig <<==\n";
+	_correctServerConfig = getMatchingServerConfig(_allServersConfig, _httpRequest, _clientInfos);
+	std::cout << "  ==>> SetServerConf <<==\n";
 	_responseHandler->SetServerConf(_correctServerConfig, _clientInfos);
 	_isChunked = _httpRequest.isCunked();
 	

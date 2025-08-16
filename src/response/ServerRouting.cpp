@@ -6,36 +6,36 @@ bool ResponseHandler::NeedToRedirect(){
             loc_config->hasRedirect());
 }
 
-ServerConfig* getMatchingServerConfig(const std::vector<ServerConfig>& configs, const HttpRequest& httpRequest) {
-	int defaultIndex = -1;
+ServerConfig* getMatchingServerConfig(const std::vector<ServerConfig>& configs, const HttpRequest& httpRequest, ClientInfos ip_info)
+{
+    std::cout << "---------server name matcher called----------" << std::endl;//logger
+    
+    std::cout << "client ip = " << ip_info.clientAddr << std::endl << "client port = " << ip_info.port << std::endl;//logger
+    std::cout << "connection address: " << ip_info.serverInfos.ip << std::endl; //logger
+    std::cout << "connection port: " << ip_info.serverInfos.port << std::endl; //logger
+    std::string host = "";
+    if (httpRequest.getHeaders().find("host") != httpRequest.getHeaders().end())
+        host = httpRequest.normalizeHostHeader(httpRequest.getHeaders()["host"]);
+    std::cout << "req host = " << host << std::endl;//logger
 
-    // std::cout << "---------server name matcher called----------" << std::endl;//logger
-    std::map<std::string, std::string> headers = httpRequest.getHeaders();
-    std::map<std::string, std::string>::iterator it;
-    // std::cout << "find res: " << (headers.find("host") != headers.end()) << std::endl;
-    if ((it = headers.find("host")) == headers.end())
-        return &(const_cast<ServerConfig&>(configs[0]));
-
-    const std::string& host = httpRequest.normalizeHostHeader(it->second);
-    // std::cout << "req host = " << host << std::endl;//logger 
-    for (size_t i = 0; i < configs.size(); ++i) {
-		if (defaultIndex == -1)
-			defaultIndex = i;
-
+    ServerConfig *default_conf = NULL;
+    for (size_t i = 0; i < configs.size(); i++)
+    {
+        bool ip_port_matched = false;
+        const std::vector<unsigned int> &Ports = configs[i].getListens();
+        if (std::find(Ports.begin(), Ports.end(), ip_info.serverInfos.port)
+            != Ports.end() && configs[i].getHost() == ip_info.serverInfos.ip)
+                ip_port_matched = true;
+        if (host.empty() && ip_port_matched)
+            return &(const_cast<ServerConfig&>(configs[i]));
+        if (ip_port_matched && !default_conf)
+            default_conf = &(const_cast<ServerConfig&>(configs[i]));
         const std::vector<std::string>& serverNames = configs[i].getServerNames();
-        for (size_t j = 0; j < serverNames.size(); ++j) {
-            // std::cout << "compairing [" << serverNames[j] << ']' << std::endl;//logger
-            if (serverNames[j] == host) {
-                return &(const_cast<ServerConfig&>(configs[i]));
-            }
-            // std::cout << "___not matched___" << std::endl;//logger
-        }
+        if (ip_port_matched && std::find(serverNames.begin(), serverNames.end(), host) != serverNames.end())
+            return &(const_cast<ServerConfig&>(configs[i]));
     }
 
-    // Fallback: return first config as default
-	if (defaultIndex == -1)
-		defaultIndex = 0;
-    return &(const_cast<ServerConfig&>(configs[defaultIndex]));
+    return (default_conf);
 }
 
 bool ResponseHandler::CheckForCgi(const std::string &req_path, LOCATIONS &srv_locations)

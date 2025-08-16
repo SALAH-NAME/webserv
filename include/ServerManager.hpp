@@ -190,7 +190,7 @@ class ServerManager {
 
 };
 
-ServerConfig*								getMatchingServerConfig(const std::vector<ServerConfig>& configs, const HttpRequest&);
+ServerConfig*								getMatchingServerConfig(const std::vector<ServerConfig>& configs, const HttpRequest&, ClientInfos);
 void										addSocketToEpoll(int epfd, int fd, uint32_t events);
 void										modifyEpollEvents(int epfd, int fd, uint32_t events);
 void										deleteEpollEvents(int epfd, int fd);
