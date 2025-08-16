@@ -148,7 +148,7 @@ void    ServerManager::waitingForEvents(void) {
 			
 		checkTimeOut();
 
-		for (int	i = 0; i < _nfds; i++) {
+		for (int i = 0; i < _nfds; i++) {
 			if (!processEvent(i)) // not a client event (pipeFD/listenSocket)
 				continue ;
 			receiveClientsData(i);

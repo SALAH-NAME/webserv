@@ -75,7 +75,6 @@ private:
     void validateHeaderLine(const std::string &line);
     std::string toLower(const std::string &str) const;
     std::string trim(const std::string &str) const;
-    std::string normalizeHostHeader(const std::string &host) const;
     void parseUriComponents();
     bool isValidMethod(const std::string &method) const;
     bool isValidVersion(const std::string &version) const;
@@ -106,6 +105,7 @@ private:
 public:
     HttpRequest();
 
+    std::string normalizeHostHeader(const std::string &host) const;
     void appendAndValidate(std::string &_parsing_buffer);
     bool hasCompleteRequest() const;
 
@@ -140,6 +140,9 @@ public:
 
     bool isCunked() const;
     int validateChunkSize(std::string& buffer);
+
+    void setStatusCode(int code);
+    void setRequestValid(bool isValid);
 
 private:
     int hexCharToDecimal(char c) const;

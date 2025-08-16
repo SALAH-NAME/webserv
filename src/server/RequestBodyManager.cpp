@@ -47,7 +47,14 @@ void	Client::validateChunkBodySize(void) {
 					return ;
 				}
 
-			} catch (...) {
+			} catch (const HttpRequestException& e) {
+				_httpRequest.setRequestValid(false);
+				_httpRequest.setStatusCode(e.statusCode());
+				_state = InvalidBody;
+				return ;
+			}
+			catch (...)
+			{
 				_state = InvalidBody;
 				return ;
 			}

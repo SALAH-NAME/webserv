@@ -278,7 +278,7 @@ void ConfigParser::parseDirective(BaseConfig& config, bool is_server,
 		}
 		else if (directive == "root")
 		{
-			parseRoot(config, is_location);
+			parseRoot(config);
 		}
 		else if (directive == "index")
 		{
@@ -348,12 +348,6 @@ void ConfigParser::parseDirective(BaseConfig& config, bool is_server,
 			{
 				parseConnectionTimeout(global);
 			}
-			else if (directive == "cgi_timeout")
-			{
-				unsigned int timeout = expectNumber("Expected timeout value");
-				global.setCgiTimeout(timeout);
-				expectSemicolon("Expected semicolon after cgi_timeout directive");
-			}
 			else if (directive == "error_log")
 			{
 				parseErrorLog(global);
@@ -361,6 +355,30 @@ void ConfigParser::parseDirective(BaseConfig& config, bool is_server,
 			else if (directive == "access_log")
 			{
 				parseAccessLog(global);
+			}
+			else if (directive == "cgi_timeout")
+			{
+				throw ParseError("cgi_timeout directive is not supported in global context - use it in location blocks only", token.line, token.column);
+			}
+			else if (directive == "cgi_pass")
+			{
+				throw ParseError("cgi_pass directive is not supported in global context - use it in location blocks only", token.line, token.column);
+			}
+			else if (directive == "return")
+			{
+				throw ParseError("return directive is not supported in global context - use it in location blocks only", token.line, token.column);
+			}
+			else if (directive == "listen")
+			{
+				throw ParseError("listen directive is not supported in global context - use it in server blocks only", token.line, token.column);
+			}
+			else if (directive == "host")
+			{
+				throw ParseError("host directive is not supported in global context - use it in server blocks only", token.line, token.column);
+			}
+			else if (directive == "server_name")
+			{
+				throw ParseError("server_name directive is not supported in global context - use it in server blocks only", token.line, token.column);
 			}
 			else
 			{
@@ -433,7 +451,7 @@ void ConfigParser::parseClientMaxBodySize(BaseConfig& config)
 	expectSemicolon("Expected semicolon after client_max_body_size directive");
 }
 
-void ConfigParser::parseRoot(BaseConfig& config, bool is_location)
+void ConfigParser::parseRoot(BaseConfig& config)
 {
 	std::string root = expectString("Expected path for root directive");
 	if (!isValidPath(root))
@@ -442,7 +460,7 @@ void ConfigParser::parseRoot(BaseConfig& config, bool is_location)
 										 _tokenizer.front().column);
 	}
 	
-	validateRootPath(root, is_location);
+	validateRootPath(root);
 	
 	config.setRoot(root);
 	expectSemicolon("Expected semicolon after root directive");
@@ -1103,7 +1121,7 @@ bool ConfigParser::isDirectoryAccessible(const std::string& path)
 	return s_isDir(path_stat.st_mode) && (access(path.c_str(), R_OK) == 0);
 }
 
-void ConfigParser::validateRootPath(const std::string& path, bool is_location)
+void ConfigParser::validateRootPath(const std::string& path)
 {
 	if (!isPathAccessible(path))
 	{
@@ -1113,61 +1131,33 @@ void ConfigParser::validateRootPath(const std::string& path, bool is_location)
 	struct stat path_stat;
 	stat(path.c_str(), &path_stat);
 	
-	if (is_location)
+	if (!s_isDir(path_stat.st_mode))
 	{
-		if (s_isDir(path_stat.st_mode))
-		{
-			if (access(path.c_str(), R_OK) != 0)
-			{
-				throw ParseError("Root directory is not readable: " + path, _tokenizer.front().line, _tokenizer.front().column);
-			}
-		}
-		else if (s_isReg(path_stat.st_mode))
-		{
-			if (access(path.c_str(), R_OK) != 0)
-			{
-				throw ParseError("Root file is not readable: " + path, _tokenizer.front().line, _tokenizer.front().column);
-			}
-		}
-		else
-		{
-			throw ParseError("Root path must be a file or directory: " + path, _tokenizer.front().line, _tokenizer.front().column);
-		}
+		throw ParseError("Root path must be a directory: " + path, _tokenizer.front().line, _tokenizer.front().column);
 	}
-	else
+	
+	if (access(path.c_str(), R_OK) != 0)
 	{
-		if (!s_isDir(path_stat.st_mode))
-		{
-			throw ParseError("Server root path must be a directory: " + path, _tokenizer.front().line, _tokenizer.front().column);
-		}
-		
-		if (access(path.c_str(), R_OK) != 0)
-		{
-			throw ParseError("Root directory is not readable: " + path, _tokenizer.front().line, _tokenizer.front().column);
-		}
+		throw ParseError("Root directory is not readable: " + path, _tokenizer.front().line, _tokenizer.front().column);
 	}
 }
 
 void ConfigParser::validateErrorPagePath(const std::string& path)
 {
-
-	if (!path.empty() && path[0] == '/')
+	if (!isPathAccessible(path))
 	{
-		if (!isPathAccessible(path))
-		{
-			throw ParseError("Error page file does not exist: " + path, _tokenizer.front().line, _tokenizer.front().column);
-		}
-		
-		struct stat path_stat;
-		if (stat(path.c_str(), &path_stat) == 0 && s_isDir(path_stat.st_mode))
-		{
-			throw ParseError("Error page path cannot be a directory: " + path, _tokenizer.front().line, _tokenizer.front().column);
-		}
-		
-		if (access(path.c_str(), R_OK) != 0)
-		{
-			throw ParseError("Error page file is not readable: " + path, _tokenizer.front().line, _tokenizer.front().column);
-		}
+		throw ParseError("Error page file does not exist: " + path, _tokenizer.front().line, _tokenizer.front().column);
+	}
+	
+	struct stat path_stat;
+	if (stat(path.c_str(), &path_stat) == 0 && s_isDir(path_stat.st_mode))
+	{
+		throw ParseError("Error page path cannot be a directory: " + path, _tokenizer.front().line, _tokenizer.front().column);
+	}
+	
+	if (access(path.c_str(), R_OK) != 0)
+	{
+		throw ParseError("Error page file is not readable: " + path, _tokenizer.front().line, _tokenizer.front().column);
 	}
 }
 
