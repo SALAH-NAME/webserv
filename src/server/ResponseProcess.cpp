@@ -7,7 +7,7 @@ void	Client::generateDynamicResponse() {
 	_CGI_OutPipeFD = _responseHandler->GetCgiOutPipe().getReadFd();
 	
 	try {
-		addSocketToEpoll(_epfd, _CGI_OutPipeFD, (EPOLLIN | EPOLLHUP | EPOLLERR | EPOLLET));
+		addSocketToEpoll(_epfd, _CGI_OutPipeFD, (EPOLLIN | EPOLLHUP | EPOLLERR));
 		std::cout << "Pipe fd: " << _CGI_OutPipeFD << " Added successfully to epoll: " << _epfd << "\n";
 	}
 	catch(std::runtime_error& e)
@@ -16,7 +16,7 @@ void	Client::generateDynamicResponse() {
 		_CGI_OutPipeFD = -1;
 		_state = DefaultState;
 		throw e.what();
-	}	
+	}
 
 	if (_responseHandler->IsPost()) {
 
@@ -97,18 +97,13 @@ void	Client::generateStaticResponse() {
 }
 
 void	Client::buildResponse() {
-	_responseHandler->SetServerConf(getMatchingServerConfig(_allServersConfig, _httpRequest), _clientInfos);
+	_correctServerConfig = getMatchingServerConfig(_allServersConfig, _httpRequest);
+	_responseHandler->SetServerConf(_correctServerConfig, _clientInfos);
+	_isChunked = _httpRequest.isCunked();
 	
 	_responseHandler->Run(_httpRequest);
 	
-	
-	_isChunked = _httpRequest.isCunked();
-
-	// std::cout << "is Chunked: " << _isChunked << "\n";
-	// std::cout << "is CGI required: " << _responseHandler->RequireCgi() << "\n";
-
 	modifyEpollEvents(_epfd, _socket.getFd(), (EPOLLIN | EPOLLOUT | EPOLLHUP | EPOLLERR));
-	// std::cout << "   ====>>> Added EPOLLOUT flag <<<===\n";
 
 	if (_responseHandler->RequireCgi())
 		generateDynamicResponse();

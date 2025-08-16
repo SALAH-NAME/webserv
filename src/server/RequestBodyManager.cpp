@@ -41,9 +41,9 @@ void	Client::validateChunkBodySize(void) {
 		if (_pendingRequestDataHolder.find(_CRLF) != std::string::npos) {
 			try {
 				_chunkBodySize = _httpRequest.validateChunkSize(_pendingRequestDataHolder);
-				if ((_uploadedBytes + _chunkBodySize) > _conf.getClientMaxBodySize()) {
+				if ((_uploadedBytes + _chunkBodySize) > _correctServerConfig->getClientMaxBodySize()) {
 					_isBodyTooLarge = true;
-					_state = Completed;
+					_state = InvalidBody;
 					return ;
 				}
 
@@ -129,7 +129,7 @@ void	Client::writeBodyToTargetFile(void) {
 
 	if (_isChunked) {
 		_chunkBodySize = -1;
-		if (_uploadedBytes == _conf.getClientMaxBodySize())
+		if (_uploadedBytes == _correctServerConfig->getClientMaxBodySize())
 			_state = Completed;
 		else {
 			if (!_pendingRequestDataHolder.size())
@@ -166,7 +166,7 @@ void	Client::pipeBodyToCGI(void) {
 	_uploadedBytes += bytesToWrite;
 
 	if (_isChunked) {
-		if (_uploadedBytes == _conf.getClientMaxBodySize())
+		if (_uploadedBytes == _correctServerConfig->getClientMaxBodySize())
 			_state = Completed;
 		else {
 			if (_pendingRequestDataHolder.size())

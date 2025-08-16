@@ -1,8 +1,6 @@
 #include "ServerManager.hpp"
 
-void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
-
-	(void)serverIndex;
+void    ServerManager::consumeCgiOutput(Client& client) {
 
 	ResponseHandler* responseHandler = client.getResponseHandler();
 	Pipe& cgiOutPipe = responseHandler->GetCgiOutPipe();
@@ -87,7 +85,7 @@ void    ServerManager::consumeCgiOutput(Client& client, int serverIndex) {
 				// printRequestAndResponse("response header", client.getResponseHolder());
 				client.setResponseHeaderFlag(RESPONSE_HEADER_READY);
 				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
-				client.closeAndDeregisterPipe(client.getCGI_OutpipeFD());
+				client.closeAndDeregisterPipe(OUT_PIPE);
 				responseHandler->GetTargetFilePtr()->seekg(0);
 				
 			} catch (ResponseHandler::ResponseHandlerError& e) {

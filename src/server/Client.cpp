@@ -1,9 +1,8 @@
 
 #include "Client.hpp"
 
-Client::Client(Socket sock, const ServerConfig& conf, const std::vector<ServerConfig>& allServersConfig, int epfd, ClientInfos clientInfos) : _socket(sock)
+Client::Client(Socket sock, const std::vector<ServerConfig>& allServersConfig, int epfd, ClientInfos clientInfos) : _socket(sock)
 											, _epfd(epfd)
-											, _conf(conf)
 											, _allServersConfig(allServersConfig)
 											, _clientInfos(clientInfos)
 											, _CGI_OutPipeFD(-1)
@@ -40,8 +39,8 @@ Client::Client(Socket sock, const ServerConfig& conf, const std::vector<ServerCo
 
 Client::Client(const Client& other) : _socket(other._socket)
 									, _epfd(other._epfd)
-									, _conf(other._conf)
 									, _allServersConfig(other._allServersConfig)
+									, _correctServerConfig(other._correctServerConfig)
 									, _clientInfos(other._clientInfos)
 									, _CGI_OutPipeFD(other._CGI_OutPipeFD)
 									, _CGI_InPipeFD(other._CGI_InPipeFD)
@@ -90,6 +89,10 @@ Socket &Client::getSocket()
 
 int	Client::getEpfd(void){
 	return _epfd;
+}
+
+ServerConfig*	Client::getCorrectServerConfig(void) {
+	return _correctServerConfig;
 }
 
 int	Client::getCGI_OutpipeFD(void) {
@@ -412,24 +415,30 @@ void	Client::sendFileBody(void) {
 	_isResponseBodySendable = NOT_SENDABLE;
 }
 
-void    Client::closeAndDeregisterPipe(int pipeFD) {
+void    Client::closeAndDeregisterPipe(bool pipe) {
     std::cout << "============================================================\n";
-    epoll_ctl(_epfd, EPOLL_CTL_DEL, pipeFD, NULL);
-    std::cout << "  ## Removed Pipe fd: " << pipeFD << " from epoll  ## \n";
-    close(pipeFD);
-    pipeFD = -1;
-    std::cout << "  ## closed Pipe fd: " << pipeFD << "              ## \n";
+	int* pipePTR;
+	if (pipe == IN_PIPE)
+		pipePTR = &_CGI_InPipeFD;
+	else
+		pipePTR = &_CGI_OutPipeFD;
+
+    epoll_ctl(_epfd, EPOLL_CTL_DEL, *pipePTR, NULL);
+    std::cout << "  ## Removed Pipe fd: " << *pipePTR << " from epoll  ## \n";
+    close(*pipePTR);
+    *pipePTR = -1;
+    std::cout << "  ## closed Pipe fd: " << *pipePTR << "              ## \n";
     std::cout << "============================================================\n\n";
     
 }
 
 void    Client::CgiExceptionHandler() {
     if (_CGI_OutPipeFD != -1) {
-        closeAndDeregisterPipe(_CGI_OutPipeFD);
+        closeAndDeregisterPipe(OUT_PIPE);
         _isPipeClosedByPeer = PIPE_IS_NOT_CLOSED;
     }
     if (_CGI_InPipeFD != -1) {
-        closeAndDeregisterPipe(_CGI_InPipeFD);
+        closeAndDeregisterPipe(IN_PIPE);
         _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
     }
 

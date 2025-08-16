@@ -22,16 +22,18 @@ static void	ipToString(std::string& ip, uint32_t rawAddr) {
     ip = ss.str();
 }
 
-static void	getClientsInfos(ClientInfos* clientinfos, uint32_t rawIP, uint16_t netPort) {
+static void	getClientsInfos(ClientInfos* clientinfos, struct HostPort serverInfo, uint32_t rawIP, uint16_t netPort) {
 	// Convert it to host byte order
 	rawIP = ntohl(rawIP);
 	
 	ipToString(clientinfos->clientAddr, rawIP);
 	extractPort(clientinfos->port, netPort);
+
+	clientinfos->serverInfos.ip = serverInfo.ip;
+	clientinfos->port = serverInfo.port;
 }
 
-
-void	Server::incomingConnection(int NewEvent_fd) {
+void	ServerManager::incomingConnection(int event_fd) {
 	struct sockaddr_in	serverSockAddr;
 	struct sockaddr_in	clientAddr;
 	socklen_t			serverSockAddrLen = sizeof(serverSockAddr);
@@ -39,23 +41,22 @@ void	Server::incomingConnection(int NewEvent_fd) {
 	ClientInfos 		clientinfos;
 	int					clientSocketFD;
 
-	for (size_t i = 0; i < _listeningSockets.size(); i++) {
-		if (_listeningSockets[i].getFd() != NewEvent_fd)
+	for (size_t i = 0; i < _listenSockets.size(); i++) {
+		if (_listenSockets[i].getFd() != event_fd)
 			continue ;
-		
+
 		std::memset(&clientAddr, 0, clientAddrLen);
-		std::memset(&serverSockAddr, 0, serverSockAddrLen); 
+		std::memset(&serverSockAddr, 0, serverSockAddrLen);
 		try {
 			while (true) {
 				try {
-					Socket sock = _listeningSockets[i].accept((struct sockaddr*)&clientAddr, &clientAddrLen);
+					Socket sock = _listenSockets[i].accept((struct sockaddr*)&clientAddr, &clientAddrLen);
 					clientSocketFD = sock.getFd();
 					getsockname(clientSocketFD, (struct sockaddr*)&serverSockAddr, &serverSockAddrLen);
-					getClientsInfos(&clientinfos, clientAddr.sin_addr.s_addr, serverSockAddr.sin_port);
+					getClientsInfos(&clientinfos, _portsAndHosts[event_fd], clientAddr.sin_addr.s_addr, serverSockAddr.sin_port);
 					// std::cout << "  ======>>> accept : " << clientSocketFD << " <<====== \n";
-					addSocketToEpoll(_epfd, clientSocketFD, (EPOLLIN | EPOLLHUP | EPOLLERR | EPOLLET)); // make the client socket Edge-Triggered
-
-					std::pair<int, Client> entry(clientSocketFD, Client(sock, _serverConfig, _allServersConfig, _epfd, clientinfos));
+					addSocketToEpoll(_epfd, clientSocketFD, (EPOLLIN | EPOLLHUP | EPOLLERR)); // make the client socket Level-Triggered
+					std::pair<int, Client> entry(clientSocketFD, Client(sock, _serversConfig, _epfd, clientinfos));
 					_clients.insert(entry);
 				}
 				catch (const char *errorMssg) {
@@ -67,68 +68,71 @@ void	Server::incomingConnection(int NewEvent_fd) {
 			perror(e.what());
 			break ; // some sys calls failed
 		}
-		break ; // once found the listening socket where even came from accept evens on that socket and break
+	
 	}
+
 }
 
-void	ServerManager::processEvent(int serverIndex) {
-	int								event_fd;
+bool	ServerManager::processEvent(int i) {
+	// int								event_fd;
 	uint32_t						events;
-	Server&							server =_servers[serverIndex];
+	// Server&							server =_servers[serverIndex];
 	std::map<int, Client>::iterator	clientIterator;
 
-	for (int i = 0; i < _nfds; i++) {
-		event_fd = _events[i].data.fd;
-		events = _events[i].events;
-		
-		// std::cout << "  ### Event on: " << event_fd << " ###\n";
-		if (server.verifyServerSocketsFDs(event_fd)) {
-			// std::cout << "########### got an event on the server socket {" << event_fd << "} ##############\n";
-			server.incomingConnection(event_fd);
-		}
-		else if ((clientIterator = server.verifyClientsFD(event_fd)) != server.getClients().end()) {
-			// std::cout << "############  got an event on an existing client socket or pipe fd " << event_fd << " #############\n";
-			Client& client = clientIterator->second;
-			if (clientIterator->first == event_fd) {
-				if ((events & EPOLLHUP) || (events & EPOLLERR)) {
-					server.closeConnection(client);
-					continue ;
-				}
-				if (client.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_OFF)
-					client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_ON);
-
-				client.setIsOutputAvailable(events & EPOLLOUT);
-			}
+	int event_fd = _events[i].data.fd;
+	events = _events[i].events;
+	
+	// std::cout << "  ### Event on: " << event_fd << " ###\n";
+	if (verifyLsteningSocketsFDs(event_fd)) {
+		// std::cout << "########### got an event on the server socket {" << event_fd << "} ##############\n";
+		incomingConnection(event_fd);
+		return false;
+	}
+	else if ((clientIterator = verifyClientsFD(event_fd)) != _clients.end()) {
+		// std::cout << "############  got an event on an existing client socket or pipe fd " << event_fd << " #############\n";
+		Client& client = clientIterator->second;
+		if (clientIterator->first == event_fd) {
+			// event on client socket
+			if ((events & EPOLLHUP) || (events & EPOLLERR))
+				closeConnection(client);
 			else {
-				// event on one of client pipes
-				
-				if (event_fd == client.getCGI_InpipeFD()) {
-					if ((events & EPOLLHUP) || (events & EPOLLERR)) { // if an error occured
-						client.closeAndDeregisterPipe(event_fd);
-						_servers[serverIndex].closeConnection(client);
-					}
-					else
-						client.setIsCgiInputAvailable(events & EPOLLOUT); // check if PIPE is available for writing
+				if ((events & EPOLLIN) && client.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_OFF)
+					client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_ON);
+				else
+					client.setIsOutputAvailable(events & EPOLLOUT);
+				return true;
+			}
+		}
+		else {
+			// event on one of client pipes
+			
+			if (event_fd == client.getCGI_InpipeFD()) {
+				if ((events & EPOLLHUP) || (events & EPOLLERR)) { // if an error occured
+					client.closeAndDeregisterPipe(IN_PIPE);
+					closeConnection(client);
 				}
+				else
+					client.setIsCgiInputAvailable(events & EPOLLOUT); // check if PIPE is available for writing
+			}
 
-				else if (event_fd == client.getCGI_OutpipeFD()
-							&& client.getIsCgiRequired() == CGI_REQUIRED) { // check if PIPE is ready from reading
-					
-					if ((events & EPOLLHUP) && (events & EPOLLIN)) {
-						// std::cout << "set pipe to \"PIPE_IS_CLOSED WITH INPUT\" (ready to read)\n";
-						client.setIsPipeClosedByPeer(PIPE_IS_CLOSED);
-						client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
-					}
-					else if (events & EPOLLHUP) {
-						// std::cout << "set pipe to \"PIPE_IS_CLOSED WITH NO INPUT\n";
-						client.setIsPipeClosedByPeer(PIPE_CLOSED_NO_INPUT);
-						client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
-					}
+			else if (event_fd == client.getCGI_OutpipeFD()
+						&& client.getIsCgiRequired() == CGI_REQUIRED) { // check if PIPE is ready from reading
+				
+				if ((events & EPOLLHUP) && (events & EPOLLIN)) {
+					// std::cout << "set pipe to \"PIPE_IS_CLOSED WITH INPUT\" (ready to read)\n";
+					client.setIsPipeClosedByPeer(PIPE_IS_CLOSED);
+					client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
+				}
+				else if (events & EPOLLHUP) {
+					// std::cout << "set pipe to \"PIPE_IS_CLOSED WITH NO INPUT\n";
+					client.setIsPipeClosedByPeer(PIPE_CLOSED_NO_INPUT);
+					client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
 				}
 			}
 		}
 	}
-	server.eraseMarked();
+	eraseMarked();
+	return false;
 }
 
 void    ServerManager::waitingForEvents(void) {
@@ -143,15 +147,13 @@ void    ServerManager::waitingForEvents(void) {
 			throw "epoll_wait failed";
 			
 		checkTimeOut();
-		
-		for (size_t x = 0; x < _servers.size(); x++) {
-			if (!_servers[x].getListeningSockets().size())
-				continue ;
 
-			processEvent(x);			
-			receiveClientsData(x);
-			generatResponses(x);
-			sendClientsResponse(x);
+		for (int	i = 0; i < _nfds; i++) {
+			if (!processEvent(i)) // not a client event (pipeFD/listenSocket)
+				continue ;
+			receiveClientsData(i);
+			generatResponses(i);
+			sendClientsResponse(i);
 		}
 	}
 }

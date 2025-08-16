@@ -23,110 +23,184 @@ void deleteEpollEvents(int epfd, int fd) {
         throw std::runtime_error("epoll_ctl(MOD) failed");
 }
 
-void	ServerManager::generatResponses(int serverIndex) {
-	std::map<int, Client>& clients = _servers[serverIndex].getClients();
-	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		Client& client = it->second;
+void	ServerManager::generatResponses(int i) {
 
-		if (client.getGenerateInProcess() == GENERATE_RESPONSE_OFF)
-			continue ;
-		
-		try {
-			it->second.buildResponse();
-		}
-		catch(std::runtime_error& e) {
-			_servers[serverIndex].closeConnection(client);
-			perror(e.what());
-			continue ;
-		}
-		client.setGenerateResponseInProcess(GENERATE_RESPONSE_OFF);
+	std::map<int, Client>::iterator it = _clients.find(_events[i].data.fd);
+	if (it == _clients.end())
+		return ;
+	Client& client = it->second;
+	
+
+	if (client.getGenerateInProcess() == GENERATE_RESPONSE_OFF)
+		return ;
+	
+	try {
+		it->second.buildResponse();
 	}
-	_servers[serverIndex].eraseMarked();
+	catch(std::runtime_error& e) {
+		closeConnection(client);
+		perror(e.what());
+		return ;
+	}
+	client.setGenerateResponseInProcess(GENERATE_RESPONSE_OFF);
+	eraseMarked();
 }
 
-void ServerManager::checkTimeOut(void)
-{
-	for (size_t x = 0; x < _servers.size(); x++)
-	{
-		std::map<int, Client>& clients = _servers[x].getClients();
-		for (std::map<int, Client>::iterator it = clients.begin();
-				 it != clients.end(); it++)
-		{
-			if (std::time(NULL) - it->second.getLastConnectionTime() >
-					_servers[x].getTimeOut())
-			{
-				std::cout << "Time out: " << _servers[x].getTimeOut() << "\n";
-				_servers[x].closeConnection(it->second);
-			}
+void	ServerManager::closeConnection(Client& client) {
+	int clientFD = client.getSocket().getFd();
 
-			if (it->second.getIsCgiRequired()) {
-				try {
-					it->second.getResponseHandler()->CheckCgiChildState();
-				} catch (ResponseHandler::ResponseHandlerError& e) {
-					std::cout << "------> the exception was caught by the server <------" << std::endl;
-					std::cout << e.what() << std::endl;
-					it->second.getResponseHandler()->LoadErrorPage(e.what(), e.getStatusCode());
-					it->second.CgiExceptionHandler();
-				}
+	if (client.getIsCgiRequired() && client.getResponseHandler()->GetCgiChildPid())
+		kill(client.getResponseHandler()->GetCgiChildPid(), SIGKILL);
+	if (client.getIsCgiRequired()) {
+		if (client.getCGI_InpipeFD() != -1)
+			close(client.getCGI_InpipeFD());
+		if (client.getCGI_OutpipeFD() != -1)
+			close(client.getCGI_OutpipeFD());
+	}
+
+	epoll_ctl(_epfd, EPOLL_CTL_DEL, clientFD, NULL);
+	_markedForEraseSockets.push_back(clientFD);
+}
+
+void	ServerManager::eraseMarked() {
+	for (std::vector<int>::const_iterator fdIt = _markedForEraseSockets.begin(); fdIt != _markedForEraseSockets.end(); ++fdIt) {
+        std::map<int, Client>::iterator clientIt = _clients.find(*fdIt);
+        if (clientIt != _clients.end())
+            _clients.erase(clientIt);
+    }
+	_markedForEraseSockets.clear();
+}
+
+void ServerManager::checkTimeOut()
+{
+	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+		Client& client = it->second;
+		if (std::time(NULL) - client.getLastConnectionTime() > _timeOut)
+		{
+			std::cout << "\n    ==>> * Connection Time out: " << _timeOut << "  * <<==\n\n";
+			closeConnection(client);
+		}
+
+		if (client.getIsCgiRequired()) {
+			try {
+				client.getResponseHandler()->CheckCgiChildState();
+			} catch (ResponseHandler::ResponseHandlerError& e) {
+				std::cout << "\n    ==>>  * CGI Time Out *  <<==\n\n";
+				std::cout << e.what() << std::endl;
+				client.getResponseHandler()->LoadErrorPage(e.what(), e.getStatusCode());
+				client.CgiExceptionHandler();
 			}
 		}
-		_servers[x].eraseMarked();
+	}
+	eraseMarked();
+}
+
+bool	ServerManager::verifyLsteningSocketsFDs(int event_fd) {
+	for (size_t i = 0; i < _listenSockets.size(); i++) {
+		if (event_fd == _listenSockets[i].getFd())
+			return true;
+	}
+	return false;
+}
+
+std::map<int, Client>::iterator		ServerManager::verifyClientsFD(int client_fd) {
+	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+		if (client_fd == it->first || client_fd == it->second.getCGI_OutpipeFD() || client_fd == it->second.getCGI_InpipeFD())
+			return it ;
+	}
+	return _clients.end();
+}
+
+static void resolveIPv4(const std::string& host, struct in_addr& outAddr) {
+    struct addrinfo hints, *res = NULL;
+
+    std::memset(&hints, 0, sizeof(hints));
+
+    int status = getaddrinfo(host.c_str(), NULL, &hints, &res);
+    if (status != 0 || res == NULL)
+        throw std::runtime_error("getaddrinfo failed: " + std::string(gai_strerror(status)));
+
+    // Extract the IPv4 address
+    struct sockaddr_in* ipv4 = reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
+    outAddr = ipv4->sin_addr;
+
+    freeaddrinfo(res);
+}
+
+void	ServerManager::setup_sockaddr(int configIndex, int port) {
+    _Address.sin_family = _domain;              // AF_INET
+    _Address.sin_port = htons(port);           // Desired port
+
+    struct in_addr resolvedAddr;
+    resolveIPv4(_serversConfig[configIndex].getHost(), resolvedAddr);       // Resolve IP
+    _Address.sin_addr = resolvedAddr;          // Set resolved IPr;
+}
+
+void	ServerManager::createListenignSockets(int configIndex) {
+	std::vector<unsigned int> ports = _serversConfig[configIndex].getListens();
+
+	for (size_t i = 0; i < ports.size(); i++) {
+		_listenSockets.push_back(Socket());
+		Socket& socket = _listenSockets.back();
+		try {
+			socket.create();
+			
+			int reuse = 1;
+			socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+			// fixed this problem ==>  the OS keeps the port in a "cool-down" period (TIME_WAIT)
+			// ==> It’s mainly for quick restart development or for binding during graceful restarts.
+			setup_sockaddr(configIndex, ports[i]);
+			socket.bind(reinterpret_cast<sockaddr*>(&_Address), sizeof(struct sockaddr));
+			socket.listen();
+			
+			HostPort hp;
+			hp.ip = _serversConfig[configIndex].getHost();
+			hp.port = ports[i];
+			_portsAndHosts.insert(std::make_pair(socket.getFd(), hp));
+
+			std::cout << "Server(" << (configIndex + 1) << ") {socket: " << socket << "} is listening on => ";
+			std::cout << _serversConfig[configIndex].getHost() << ":" << ports[i] << "\n";
+
+		} catch (std::runtime_error& e) {
+			_listenSockets.pop_back();
+			perror(e.what());
+		}
 	}
 }
 
 void ServerManager::setUpServers(void) {
 
 	std::cout << "----------------- Set Up Servers ----------------------\n";
-
 	for (size_t i = 0; i < _serversConfig.size(); i++)
 	{
-		try {
-			_servers.push_back(Server(_serversConfig, _serversConfig[i], (_servers.size() + 1)));
-		}
-		catch (const char* errorMssg) {
-			perror(errorMssg);
-		}
+		if (_timeOut != -1)
+			_timeOut = _serversConfig[i].getConnectionTimeout();
+
+		createListenignSockets(i);
 	}
-	if (!_servers.size())
+	if (!_listenSockets.size())
 		throw "    ===>>>> Can't run the program, None of the servers is running!! <<<<===\n";
 }
 
 void ServerManager::addToEpollSet(void) {
 
 	std::cout << "----------------- Add To Epoll Set ----------------------\n";
-	int runningServers = 0;
-	for (size_t i = 0; i < _servers.size(); i++) {
-		int AddedSockets = 0;
-		std::vector<Socket>& listeningSockets = _servers[i].getListeningSockets();
-		if (!listeningSockets.size())
-			continue;
 
-		_servers[i].setEPFD(_epfd);
 
-		for (size_t x = 0; x < listeningSockets.size(); x++) {
-			std::memset(&_event, 0, sizeof(_event)); // std
-
-			try {
-				addSocketToEpoll(_epfd, listeningSockets[x].getFd(), (EPOLLIN | EPOLLET)); // make the listening socket Edge-triggered
-				AddedSockets++;
-			} catch (const std::runtime_error& e) {
-				_servers[i].getMarkedForEraseUnusedSocket().push_back(listeningSockets[x].getFd());
-				perror(e.what());
-				continue ;
-			}
-		}
+	int AddedSockets = 0;
+	int listenSocketFD;
+	for (size_t i = 0; i < _listenSockets.size(); i++) {
 		try {
-			if (!AddedSockets)  {
-				throw " * server is not Available, None if its sockets is added to epoll set *";
-			} 
-			else
-				runningServers++;
-		} catch (const char* errorMssg) {
-			std::cerr << errorMssg << "\n\n";
+			listenSocketFD = _listenSockets[i].getFd();
+			addSocketToEpoll(_epfd, listenSocketFD, (EPOLLIN | EPOLLET)); // make the listening socket Edge-triggered
+			AddedSockets++;
+		} catch (const std::runtime_error& e) {
+			_markedForEraseSockets.push_back(listenSocketFD);
+			perror(e.what());
 			continue ;
 		}
 	}
-	if (!runningServers)
+	if (!AddedSockets)
 		throw "    ===>>>> Can't run the program, None of the servers is running!! <<<<===\n";
 }
 
@@ -140,60 +214,26 @@ void ServerManager::createEpoll() {
 						<< ")\n";
 }
 
-void ServerManager::printRunningServers(void) {
-    std::cout << "----------------- Running Servers -----------------------\n";
-
-    for (size_t i = 0; i < _servers.size(); ++i) {
-		int serverID = _servers[i].getID();
-        const std::vector<Socket>& ListeningSockets = _servers[i].getListeningSockets();
-
-        std::cout << "Server[" << serverID << "]: sockets nums(" << ListeningSockets.size() << ") ==> {";  
-		
-        for (size_t j = 0; j < ListeningSockets.size(); ++j) {
-			std::cout << ListeningSockets[j].getFd();
-            if (j + 1 < ListeningSockets.size())
-			std::cout << ", ";
-        }
-		std::cout << "}\n";
-    }
-}
-
 void ServerManager::eraseUnusedSockets() {
-
-	for (size_t i = 0; i < _servers.size(); i++) {
-
-		std::vector<Socket>&	listeningSockets = _servers[i].getListeningSockets();
-		std::vector<int>&		markedForEraseUnusedClient = _servers[i].getMarkedForEraseUnusedSocket();
-
-    	for (size_t x = 0; x < listeningSockets.size(); ) {
-    	    int fd = listeningSockets[x].getFd();
-    	    bool shouldErase = false;
-
-    	    for (size_t j = 0; j < markedForEraseUnusedClient.size(); ++j) {
-    	        if (markedForEraseUnusedClient[j] == fd) {
-    	            shouldErase = true;
-    	            break;
-    	        }
-    	    }
-
-    	    if (shouldErase) {
-    	        listeningSockets.erase(listeningSockets.begin() + x);
-    	    } else {
-    	        ++x;
-    	    }
-    	}
-		markedForEraseUnusedClient.clear();
+	for (std::vector<int>::const_iterator fdIt = _markedForEraseSockets.begin(); fdIt != _markedForEraseSockets.end(); ++fdIt) {
+        for (std::vector<Socket>::iterator sockIt = _listenSockets.begin(); sockIt != _listenSockets.end(); ) {
+            if (sockIt->getFd() == *fdIt)
+                sockIt = _listenSockets.erase(sockIt);
+            else
+                ++sockIt;
+        }
 	}
+	_markedForEraseSockets.clear();
 }
 
 ServerManager::ServerManager(const std::vector<ServerConfig>& serversInfo)
-		: _serversConfig(serversInfo) {
-
+		: _serversConfig(serversInfo), _domain(AF_INET), _type(SOCK_STREAM | SOCK_NONBLOCK)
+		,  _timeOut(1) {
+	
 	createEpoll();
 	setUpServers();
 	addToEpollSet();
 	eraseUnusedSockets();
-	printRunningServers();
 }
 
 ServerManager::~ServerManager(void) {}

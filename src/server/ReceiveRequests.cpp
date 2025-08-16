@@ -16,10 +16,10 @@ void	isolateAndRecordBody(Client& client) {
 	client.setPendingRequestData(headerPart); // here we save the data ('next request' or 'current request body')
 	client.getHeaderPart().clear();
 	client.setRequestDataPreloadedFlag(REQUEST_DATA_PRELOADED_ON);
-	std::cout << "ISOLATED\n";
+	// std::cout << "ISOLATED\n";
 }
 
-void    ServerManager::collectRequestData(Client& client, int serverIndex) {
+void    ServerManager::collectRequestData(Client& client) {
 	ssize_t	readbytes;
 
 	if (client.getResponseBodyFlag()) {
@@ -35,7 +35,7 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 			readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
 		if (readbytes <= 0) {
 			if (!readbytes)
-				_servers[serverIndex].closeConnection(client);
+				closeConnection(client);
 			return ;
 		}
 		
@@ -84,7 +84,7 @@ void    ServerManager::collectRequestData(Client& client, int serverIndex) {
 	}
 }
 
-void	ServerManager::transferBodyToFile(Client& client, int serverIndex) {
+void	ServerManager::transferBodyToFile(Client& client) {
 
 	PostMethodProcessingState& state = client.getState();	
 
@@ -118,33 +118,34 @@ void	ServerManager::transferBodyToFile(Client& client, int serverIndex) {
         	break;
 		
 		case CloseConnection:
-			_servers[serverIndex].closeConnection(client);
+			closeConnection(client);
 			break ;
 
 		case InvalidBody:
 			client.handleInvalidBody();
-			_servers[serverIndex].closeConnection(client);
+			closeConnection(client);
 			// close the connection at the moment // should send a resposne first
 	}
 }
 
+void	ServerManager::receiveClientsData(int i) {
+	std::map<int, Client>::iterator it = _clients.find(_events[i].data.fd);
+	if (it == _clients.end())
+		return ;
 
-void	ServerManager::receiveClientsData(int serverIndex) {
-	std::map<int, Client>& clients = _servers[serverIndex].getClients();
+	Client& client = it->second;
 
-	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->second.getIsPipeClosedByPeer() == PIPE_IS_CLOSED || it->second.getIsPipeClosedByPeer() == PIPE_CLOSED_NO_INPUT) {
-			// std::cout << " ***** input is ready to read from Pipe : " << it->second.getResponseHandler()->GetCgiOutPipe().getReadFd() << "  ****\n";
-			consumeCgiOutput(it->second, serverIndex);
-		}
-		else if (it->second.getIncomingHeaderDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
-			// std::cout << " ***** incoming Header data from : " << it->second.getSocket().getFd() << "  ****\n";
-			collectRequestData(it->second, serverIndex);
-		}
-		else if (it->second.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_ON) {
-			// std::cout << " ***** incoming Body data from : " << it->second.getSocket().getFd() << "  ****\n";
-			transferBodyToFile(it->second, serverIndex);
-		}
+	if (client.getIsPipeClosedByPeer() == PIPE_IS_CLOSED || client.getIsPipeClosedByPeer() == PIPE_CLOSED_NO_INPUT) {
+		// std::cout << " ***** input is ready to read from Pipe : " << client.getResponseHandler()->GetCgiOutPipe().getReadFd() << "  ****\n";
+		consumeCgiOutput(client);
 	}
-	_servers[serverIndex].eraseMarked();
+	else if (client.getIncomingHeaderDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
+		// std::cout << " ***** incoming Header data from : " << client.getSocket().getFd() << "  ****\n";
+		collectRequestData(client);
+	}
+	else if (client.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_ON) {
+		// std::cout << " ***** incoming Body data from : " << client.getSocket().getFd() << "  ****\n";
+		transferBodyToFile(client);
+	}
+	eraseMarked();
 }

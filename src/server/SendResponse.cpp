@@ -1,18 +1,21 @@
 
-#include "Server.hpp"
+#include "ServerManager.hpp"
 
-void	ServerManager::handleKeepAlive(Client& client, int serverIndex) {
+void	ServerManager::handleKeepAlive(Client& client) {
 
 	// std::cout << "   ###################### Is keep alive: " << client.getResponseHandler()->KeepConnectioAlive() << " ##############\n";
 
 	if (client.getResponseHandler()->KeepConnectioAlive()) {
 		int clientFD = client.getSocket().getFd();
-		modifyEpollEvents(client.getEpfd(), clientFD, (EPOLLIN | EPOLLHUP | EPOLLERR | EPOLLET));
-		// std::cout << "     ===>>> RERMOVED EPOLLOUT flag  <<<===\n";
+		try {
+			modifyEpollEvents(client.getEpfd(), clientFD, (EPOLLIN | EPOLLHUP | EPOLLERR));
+		} catch (std::exception& e) {
+			closeConnection(client);
+		}
 		client.resetAttributes();
 	}
 	else
-		_servers[serverIndex].closeConnection(client);
+		closeConnection(client);
 }
 
 void	ServerManager::transmitResponseHeader(Client& client) {
@@ -43,18 +46,20 @@ void	ServerManager::transmitFileResponse(Client& client) {
 	}
 }
 
-void    ServerManager::sendClientsResponse(int serverIndex) {
-	std::map<int, Client>& clients = _servers[serverIndex].getClients();
+void    ServerManager::sendClientsResponse(int i) {
 
-	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); it++) {
-		if (it->second.getResponseHeaderFlag() == RESPONSE_HEADER_READY ||
-		it->second.getFullResponseFlag() == FULL_RESPONSE_READY)
-			transmitResponseHeader(it->second); // send Response header to client
-		else if (it->second.getResponseBodyFlag() == RESPONSE_BODY_READY)
-			transmitFileResponse(it->second); // read Response body from target file and send it to client
+	std::map<int, Client>::iterator it = _clients.find(_events[i].data.fd);
+	if (it == _clients.end())
+		return ;
+	Client& client = it->second;
 
-		if (it->second.getResponseSent() == SENT)
-			handleKeepAlive(it->second, serverIndex);
-	}
-	_servers[serverIndex].eraseMarked();
+	if (client.getResponseHeaderFlag() == RESPONSE_HEADER_READY ||
+		client.getFullResponseFlag() == FULL_RESPONSE_READY)
+			transmitResponseHeader(client); // send Response header to client
+	else if (client.getResponseBodyFlag() == RESPONSE_BODY_READY)
+		transmitFileResponse(client); // read Response body from target file and send it to client
+
+	if (client.getResponseSent() == SENT)
+		handleKeepAlive(client);
+	eraseMarked();
 }

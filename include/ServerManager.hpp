@@ -67,6 +67,9 @@
 #define IS_CHUNKED true
 #define NOT_CHUNKED false
 
+#define IN_PIPE 1
+#define OUT_PIPE 0
+
 #define _2CRLF "\r\n\r\n"
 #define _CRLF "\r\n"
 
@@ -95,7 +98,6 @@
 #include "ConfigPrinter.hpp"
 #include "Socket.hpp"
 
-class Server;
 class Client;
 class ResponseHandler;
 
@@ -111,43 +113,69 @@ enum PostMethodProcessingState {
 	InvalidBody				// Ex: received unexpected data while Expecting CRLF 
 };
 
+struct HostPort
+{
+	unsigned int	port;
+	std::string		ip;
+
+};
+
 struct ClientInfos
 {
 	std::string clientAddr;
 	std::string port;
+	struct HostPort serverInfos;
 };
-
 
 class ServerManager {
 	private:
 
 		int									_epfd;
 		int									_nfds;
-		std::vector<Server>					_servers;
 		const std::vector<ServerConfig>&	_serversConfig;
 		struct epoll_event					_event;
 		struct epoll_event					_events[MAX_EVENTS];
 		char								_buffer[BUFFERSIZE];
 
+		std::vector<Socket>					_listenSockets;
+		std::map<int, struct HostPort>		_portsAndHosts;
+		std::map<int, Client>				_clients;
+		std::vector<int>					_markedForEraseSockets;
+		int									_domain;
+		int									_type;
+		int									_timeOut;
+		sockaddr_in							_Address;
+
+		void								setup_sockaddr(int, int);
+		void								createListenignSockets(int);
+		void								closeConnection(Client&);
+		void								eraseMarked();
+
+
 		void								createEpoll(void);
 		void								setUpServers(void);
 		void    							addToEpollSet(void);
 		void								eraseUnusedSockets(void);
-		void								printRunningServers(void);
+		// void								printListenSockets(void);
 		
-		void								checkTimeOut(void);
-		void								collectRequestData(Client&, int);
+		void								checkTimeOut();
+		void								collectRequestData(Client&);
 		void								transmitResponseHeader(Client&);
-		void								transferBodyToFile(Client&, int);
+		void								transferBodyToFile(Client&);
 		void								transmitFileResponse(Client&);
-		void								consumeCgiOutput(Client& , int);
+		void								consumeCgiOutput(Client&);
 		void								transferBodyToCgi(Client& client, int serverIndex);
 
-		void								processEvent(int);
+		void								incomingConnection(int);
+
+		bool								verifyLsteningSocketsFDs(int);
+		std::map<int, Client>::iterator		verifyClientsFD(int);
+		void								handleKeepAlive(Client&);
+
+		bool								processEvent(int);
 		void								receiveClientsData(int);
 		void								generatResponses(int);
 		void								sendClientsResponse(int);
-		void								handleKeepAlive(Client&, int);
 
 	public:
 
@@ -162,7 +190,6 @@ void										addSocketToEpoll(int epfd, int fd, uint32_t events);
 void										modifyEpollEvents(int epfd, int fd, uint32_t events);
 void										deleteEpollEvents(int epfd, int fd);
 
-#include "Server.hpp"
 #include "Client.hpp"
 #include "ResponseHandler.hpp"
 

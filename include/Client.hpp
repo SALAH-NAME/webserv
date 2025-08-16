@@ -14,8 +14,8 @@ class Client {
 	private:
 		Socket								_socket;
 		int									_epfd;
-		const ServerConfig&					_conf;
 		const std::vector<ServerConfig>&	_allServersConfig;
+		ServerConfig*						_correctServerConfig;
 		ClientInfos							_clientInfos;
 		int									_CGI_OutPipeFD;
 		int									_CGI_InPipeFD;
@@ -67,12 +67,13 @@ class Client {
 		void								extractBodyFromPendingRequestHolder(void);
 
 		public:		
-		/**/								Client(Socket, const ServerConfig&, const std::vector<ServerConfig>&, int, ClientInfos);
+		/**/								Client(Socket, const std::vector<ServerConfig>&, int, ClientInfos);
 		/**/								Client(const Client& other);
 		/**/								~Client();
 
 		Socket&								getSocket();
 		int									getEpfd(void);
+		ServerConfig*						getCorrectServerConfig(void);
 		int									getCGI_OutpipeFD(void);
 		int									getCGI_InpipeFD(void);
 		PostMethodProcessingState&			getState(void);
@@ -160,7 +161,7 @@ class Client {
 		void								updateHeaderStateAfterSend(size_t);
 		void								sendFileBody(void);
 		void								readFileBody(void);
-		void								closeAndDeregisterPipe(int);
+		void								closeAndDeregisterPipe(bool);
 		void								CgiExceptionHandler();
 		void								resetAttributes(void);
 		void								handleKeepAlive(void);
@@ -176,4 +177,3 @@ class Client {
 };
 
 #endif
-
