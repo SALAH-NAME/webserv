@@ -292,3 +292,25 @@ void ServerManager::cleanup(void) {
 	_cleanupPerformed = true;
 	std::cout << "Server cleanup completed." << std::endl;
 }
+
+void	ServerManager::cleanupChildDescriptors(void) {
+	for (size_t i = 0; i < _listenSockets.size(); i++) {
+		_listenSockets[i].close();
+	}
+
+	for (std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++) {
+		int CGI_InPipe = it->second.getCGI_InpipeFD();
+		int CGI_OutPipe = it->second.getCGI_OutpipeFD();
+		if (CGI_InPipe != -1) {
+			close(CGI_InPipe);
+			it->second.setCgiInputPipe(-1);
+		}
+		if (CGI_OutPipe != -1) {
+			close(CGI_OutPipe);
+			it->second.setCgiOutPipe(-1);
+		}
+		it->second.getSocket().close();
+	}
+
+	close(_epfd);
+}
