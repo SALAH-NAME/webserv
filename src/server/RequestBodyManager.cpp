@@ -52,6 +52,9 @@ void	Client::validateChunkBodySize(void) {
 				_chunkBodySize = _httpRequest.validateChunkSize(_pendingRequestDataHolder);
 				if ((_uploadedBytes + _chunkBodySize) > _correctServerConfig->getClientMaxBodySize()) {
 					_isBodyTooLarge = true;
+					_httpRequest.setRequestValid(false);
+					_httpRequest.setStatusCode(413);
+					_httpRequest.setErrorMsg("Payload Too Large: Chunk size too large");
 					_state = InvalidBody;
 					return ;
 				}
@@ -59,6 +62,7 @@ void	Client::validateChunkBodySize(void) {
 			} catch (const HttpRequestException& e) {
 				_httpRequest.setRequestValid(false);
 				_httpRequest.setStatusCode(e.statusCode());
+				_httpRequest.setErrorMsg(e.what());
 				_state = InvalidBody;
 				return ;
 			}

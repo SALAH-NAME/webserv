@@ -143,6 +143,7 @@ public:
 
     void setStatusCode(int code);
     void setRequestValid(bool isValid);
+    void setErrorMsg(const std::string &msg);
 
 private:
     int hexCharToDecimal(char c) const;

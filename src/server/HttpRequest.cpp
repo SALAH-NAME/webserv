@@ -743,3 +743,8 @@ void HttpRequest::setRequestValid(bool isValid)
 {
     valid = isValid;
 }
+
+void HttpRequest::setErrorMsg(const std::string &msg)
+{
+    error_msg = msg;
+}
