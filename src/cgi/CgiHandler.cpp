@@ -24,9 +24,11 @@ void	CgiHandler::SetCgiChildFileDescriptors()
 {
 	output_pipe.closeRead();
 	dup2(output_pipe.getWriteFd(), STDOUT_FILENO);
+	close(output_pipe.getWriteFd());
 	if (is_POST){
 		input_pipe.closeWrite();
 		dup2(input_pipe.getReadFd(), STDIN_FILENO);
+		close(input_pipe.getReadFd());
 	}
 	else
 		close(STDIN_FILENO);
