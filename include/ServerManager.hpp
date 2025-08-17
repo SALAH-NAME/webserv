@@ -6,14 +6,6 @@
 #define BYTES_TO_READ 1000 * 1023
 #define BYTES_TO_SEND 1000 * 1023
 #define BUFFERSIZE (((BYTES_TO_READ > BYTES_TO_SEND) ? BYTES_TO_READ : BYTES_TO_SEND) + 1)
-#define RESPONSESIZE 746 // Fix size for the temp response
-
-#define INCOMING_HEADER_DATA_ON true
-#define INCOMING_HEADER_DATA_OFF false
-#define CONNECTION_ERROR (EPOLLIN | EPOLLERR | EPOLLHUP)
-
-#define INCOMING_BODY_DATA_ON true
-#define INCOMING_BODY_DATA_OFF false
 
 #define GENERATE_RESPONSE_ON true
 #define GENERATE_RESPONSE_OFF false
@@ -44,10 +36,6 @@
 
 #define PIPE_IS_READABLE true
 #define PIPE_IS_NOT_READABLE false
-
-#define PIPE_IS_CLOSED 1
-#define PIPE_IS_NOT_CLOSED 0
-#define PIPE_CLOSED_NO_INPUT 2
 
 #define CGI_REQUIRED true
 #define CGI_IS_NOT_REQUIRED false
@@ -115,6 +103,14 @@ enum PostMethodProcessingState {
 	InvalidBody				// Ex: received unexpected data while Expecting CRLF 
 };
 
+enum ClientInputState {
+    INPUT_PIPE_HAS_DATA,       // CGI pipe closed, data available
+    INPUT_PIPE_NO_DATA,        // CGI pipe closed, no data
+    INPUT_HEADER_READY,        // Incoming header data
+    INPUT_BODY_READY,          // Incoming body data
+    INPUT_NONE                 // No input detected
+};
+
 struct HostPort
 {
 	unsigned int	port;
@@ -159,7 +155,6 @@ class ServerManager {
 		void								setUpServers(void);
 		void    							addToEpollSet(void);
 		void								eraseUnusedSockets(void);
-		// void								printListenSockets(void);
 		
 		void								checkTimeOut();
 		void								collectRequestData(Client&);

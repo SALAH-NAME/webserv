@@ -46,9 +46,8 @@ void    ServerManager::collectRequestData(Client& client) {
 		if (std::string(_buffer, readbytes) == "\r\n")
 		{
 			// in case of receive empty line (Press Enter) !!
-			client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
+			client.setInputState(INPUT_NONE);
 			client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
-			// std::cout << " ==> Empty line\n";
 		}
 
 		HttpRequest &req = client.getHttpRequest();
@@ -57,13 +56,13 @@ void    ServerManager::collectRequestData(Client& client) {
 		if (req.getState() == HttpRequest::STATE_BODY) {
 			// std::cout << "   ====>> request is completed <<=====\n";
 			isolateAndRecordBody(client);
-			client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
+			client.setInputState(INPUT_NONE);
 			client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 		}
 	
 		if (req.getState() == HttpRequest::STATE_ERROR)
 		{
-			client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
+			client.setInputState(INPUT_NONE);
 			client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 			return; // Return instead of throwing to allow response generation
 		}
@@ -72,14 +71,14 @@ void    ServerManager::collectRequestData(Client& client) {
 		std::string error_msg = "HTTP Request Error: ";
 		error_msg += e.what();
 		std::cerr << error_msg << std::endl;
-		client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
+		client.setInputState(INPUT_NONE);
 		client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 	}
 	catch (const std::exception &e) {
 		std::string error_msg = "Parsing error: ";
 		error_msg += e.what();
 		std::cerr << error_msg << std::endl;
-		client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF);
+		client.setInputState(INPUT_NONE);
 		client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
 	}
 }
@@ -134,18 +133,28 @@ void	ServerManager::receiveClientsData(int i) {
 		return ;
 
 	Client& client = it->second;
+	ClientInputState inputState = client.getInputState();
 
-	if (client.getIsPipeClosedByPeer() == PIPE_IS_CLOSED || client.getIsPipeClosedByPeer() == PIPE_CLOSED_NO_INPUT) {
-		// std::cout << " ***** input is ready to read from Pipe : " << client.getResponseHandler()->GetCgiOutPipe().getReadFd() << "  ****\n";
-		consumeCgiOutput(client);
-	}
-	else if (client.getIncomingHeaderDataDetectedFlag() == INCOMING_HEADER_DATA_ON) {
-		// std::cout << " ***** incoming Header data from : " << client.getSocket().getFd() << "  ****\n";
-		collectRequestData(client);
-	}
-	else if (client.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_ON) {
-		// std::cout << " ***** incoming Body data from : " << client.getSocket().getFd() << "  ****\n";
-		transferBodyToFile(client);
+	switch (inputState)
+	{
+		case INPUT_NONE:
+			break ;
+
+		case INPUT_HEADER_READY:
+			collectRequestData(client);
+			break ;
+		
+		case INPUT_BODY_READY:
+			transferBodyToFile(client);
+			break;
+		
+		case INPUT_PIPE_HAS_DATA:
+			consumeCgiOutput(client);
+			break ;
+		
+		case INPUT_PIPE_NO_DATA:
+			consumeCgiOutput(client);
+			break ;
 	}
 	eraseMarked();
 }

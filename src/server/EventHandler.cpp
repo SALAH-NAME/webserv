@@ -97,8 +97,8 @@ bool	ServerManager::processEvent(int i) {
 			if ((events & EPOLLHUP) || (events & EPOLLERR))
 				closeConnection(client);
 			else {
-				if ((events & EPOLLIN) && client.getIncomingBodyDataDetectedFlag() == INCOMING_BODY_DATA_OFF)
-					client.setIncomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_ON);
+				if ((events & EPOLLIN) && client.getInputState() == INPUT_NONE)
+					client.setInputState(INPUT_HEADER_READY);
 				else
 					client.setIsOutputAvailable(events & EPOLLOUT);
 				return true;
@@ -121,12 +121,12 @@ bool	ServerManager::processEvent(int i) {
 				
 				if ((events & EPOLLHUP) && (events & EPOLLIN)) {
 					// std::cout << "set pipe to \"PIPE_IS_CLOSED WITH INPUT\" (ready to read)\n";
-					client.setIsPipeClosedByPeer(PIPE_IS_CLOSED);
+					client.setInputState(INPUT_PIPE_HAS_DATA);
 					client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
 				}
 				else if (events & EPOLLHUP) {
 					// std::cout << "set pipe to \"PIPE_IS_CLOSED WITH NO INPUT\n";
-					client.setIsPipeClosedByPeer(PIPE_CLOSED_NO_INPUT);
+					client.setInputState(INPUT_PIPE_NO_DATA);
 					client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
 				}
 			}

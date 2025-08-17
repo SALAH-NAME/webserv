@@ -7,7 +7,7 @@ void    ServerManager::consumeCgiOutput(Client& client) {
 	ssize_t readBytes;
 	char    buffer[BYTES_TO_READ+1];
 
-	if (client.getIsPipeClosedByPeer() == PIPE_CLOSED_NO_INPUT) {
+	if (client.getInputState() == INPUT_PIPE_NO_DATA) {
 		responseHandler->LoadErrorPage(client.getHttpRequest().getVersion() + " 502 Bad Gateway", 502);
 		client.CgiExceptionHandler();
 		return ;
@@ -22,7 +22,7 @@ void    ServerManager::consumeCgiOutput(Client& client) {
 			try {
 				responseHandler->AppendCgiOutput(buffer);
 			} catch (ResponseHandler::ResponseHandlerError& e) {
-				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
+				client.setInputState(INPUT_NONE);
 				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
 
@@ -32,34 +32,28 @@ void    ServerManager::consumeCgiOutput(Client& client) {
 		else if (!readBytes){
 			try {
 				responseHandler->CheckForContentType();
-
-				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
+				client.setInputState(INPUT_NONE);
 				client.setPipeReadComplete(READ_PIPE_COMPLETE);
-
 			} catch (ResponseHandler::ResponseHandlerError& e) {
-				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
+				client.setInputState(INPUT_NONE);
 				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
-
 				client.CgiExceptionHandler();
 			}
-
 		}
 		else
 			return ;
 	}
 	else {
 		// reading CGI body
-
 		if (!client.getSetTargetFile()) {
 			client.setSetTargetFile(true);
 			try {
 				client.getResponseHandler()->SetTargetFileForCgi(client.getSocket().getFd());
 			} catch (ResponseHandler::ResponseHandlerError& e) {
-				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
+				client.setInputState(INPUT_NONE);
 				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				client.getResponseHandler()->LoadErrorPage(e.what(), e.getStatusCode());
-
 				client.CgiExceptionHandler();
 			}
 		}
@@ -71,10 +65,9 @@ void    ServerManager::consumeCgiOutput(Client& client) {
 			try {
 				responseHandler->AppendBufferToTmpFile(buffer);
 			} catch (ResponseHandler::ResponseHandlerError& e) {
-				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
+				client.setInputState(INPUT_NONE);
 				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
-				
 				client.CgiExceptionHandler();
 			}
 		}
@@ -82,17 +75,14 @@ void    ServerManager::consumeCgiOutput(Client& client) {
 			try {
 				responseHandler->FinishCgiResponse();
 				client.setResponseHolder(responseHandler->GetResponseHeader());
-				// printRequestAndResponse("response header", client.getResponseHolder());
 				client.setResponseHeaderFlag(RESPONSE_HEADER_READY);
-				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
+				client.setInputState(INPUT_NONE);
 				client.closeAndDeregisterPipe(OUT_PIPE);
 				responseHandler->GetTargetFilePtr()->seekg(0);
-				
 			} catch (ResponseHandler::ResponseHandlerError& e) {
-				client.setIsPipeClosedByPeer(PIPE_IS_NOT_CLOSED);
+				client.setInputState(INPUT_NONE);
 				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
-
 				client.CgiExceptionHandler();
 			}
 		}

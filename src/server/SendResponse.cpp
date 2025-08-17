@@ -15,6 +15,7 @@ void	ServerManager::handleKeepAlive(Client& client) {
 	}
 	else
 		closeConnection(client);
+	// std::cout << " ====>> Sent Response Seccessfully\n";
 }
 
 void	ServerManager::transmitResponseHeader(Client& client) {

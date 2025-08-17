@@ -8,15 +8,9 @@ bool ResponseHandler::NeedToRedirect(){
 
 ServerConfig* getMatchingServerConfig(const std::vector<ServerConfig>& configs, const HttpRequest& httpRequest, ClientInfos ip_info)
 {
-    std::cout << "---------server name matcher called----------" << std::endl;//logger
-    
-    std::cout << "client ip = " << ip_info.clientAddr << std::endl << "client port = " << ip_info.port << std::endl;//logger
-    std::cout << "connection address: " << ip_info.serverInfos.ip << std::endl; //logger
-    std::cout << "connection port: " << ip_info.serverInfos.port << std::endl; //logger
     std::string host = "";
     if (httpRequest.getHeaders().find("host") != httpRequest.getHeaders().end())
         host = httpRequest.normalizeHostHeader(httpRequest.getHeaders()["host"]);
-    std::cout << "req host = " << host << std::endl;//logger
 
     ServerConfig *default_conf = NULL;
     for (size_t i = 0; i < configs.size(); i++)

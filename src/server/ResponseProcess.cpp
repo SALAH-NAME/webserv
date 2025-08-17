@@ -28,7 +28,7 @@ void	Client::generateDynamicResponse() {
 		try {
 			addSocketToEpoll(_epfd, _CGI_InPipeFD, (EPOLLOUT | EPOLLHUP | EPOLLERR)); // make the inpipe EPOLLOUT for only writing in it
 			std::cout << "Add CGI input pipe to Epoll set (EPOLLOUT)";
-			_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
+			_InputState = INPUT_BODY_READY;
 			_pipeBodyToCgi = PIPE_TO_CGI;
 			
 		}
@@ -82,7 +82,7 @@ void	Client::generateStaticResponse() {
 			else
 				_state = ReceivingData;
 
-			_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_ON;
+			_InputState = INPUT_BODY_READY;
 			_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
 		}
 		else {
@@ -97,9 +97,7 @@ void	Client::generateStaticResponse() {
 }
 
 void	Client::buildResponse() {
-	std::cout << "  ==>> getMatchingServerConfig <<==\n";
 	_correctServerConfig = getMatchingServerConfig(_allServersConfig, _httpRequest, _clientInfos);
-	std::cout << "  ==>> SetServerConf <<==\n";
 	_responseHandler->SetServerConf(_correctServerConfig, _clientInfos);
 	_isChunked = _httpRequest.isCunked();
 	

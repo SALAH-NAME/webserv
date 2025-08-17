@@ -26,6 +26,7 @@ class Client {
 		std::string							_pendingRequestDataHolder;
 
 		PostMethodProcessingState			_state;
+		ClientInputState					_InputState;
 
 		time_t								_lastTimeConnection;
 		size_t								_contentLength;
@@ -36,8 +37,6 @@ class Client {
 		HttpRequest							_httpRequest;
 		ResponseHandler*					_responseHandler;
 
-		bool								_incomingHeaderDataDetectedFlag;
-		bool								_incomingBodyDataDetectedFlag;
 		bool								_responseHeaderFlag;
 		bool								_responseBodyFlag;
 		bool								_fullResponseFlag;
@@ -50,7 +49,6 @@ class Client {
 
 		bool								_isCgiRequired;
 		bool								_isPipeReadable;
-		int									_isPipeClosedByPeer;
 		bool								_pipeReadComplete;
 
 		bool								_setTargetFile;
@@ -77,8 +75,8 @@ class Client {
 		int									getCGI_OutpipeFD(void);
 		int									getCGI_InpipeFD(void);
 		PostMethodProcessingState&			getState(void);
+		ClientInputState					getInputState(void);
 		time_t								getLastConnectionTime(void);
-		bool								getIncomingHeaderDataDetectedFlag(void);
 
 		std::string&						getRequestBodyPart(void);
 		std::string&						getPendingRequestData(void);
@@ -96,7 +94,6 @@ class Client {
 		std::string&						getHeaderPart(void);
 		std::string&						getBodyPart(void);
 		size_t								getResponseSize(void);
-		bool								getIncomingBodyDataDetectedFlag(void);
 		size_t								getUploadedBytes(void);
 		bool								getBodyDataPreloadedFlag(void);
 		bool								getRequestDataPreloadedFlag(void);
@@ -109,13 +106,13 @@ class Client {
 		bool								getIsRequestBodyWritable(void);
 		bool								getIsCgiRequired(void);
 		bool 								getIsPipeReadable(void);
-		int									getIsPipeClosedByPeer(void);
 
 		bool								getSetTargetFile(void);
 		bool								getResponseSent(void);
 		bool								getIsOutputAvailable(void);
 		bool								getPipeBodyToCgi(void);
 
+		void								setInputState(ClientInputState);
 		void								appendToHeaderPart(const std::string& requestData);
 		void								appendToBodyPart(const std::string& requestData);
 		void								resetLastConnectionTime(void);
@@ -124,13 +121,11 @@ class Client {
 		void								setResponseHolder(const std::string responseData);
 		void								setSentBytes(size_t bytes);
 		void								resetSendBytes(void);
-		void								setIncomingHeaderDataDetectedFlag(int mode);
 		void								setGenerateResponseInProcess(bool);
 		void								setResponseSize(size_t);
 		void								setBodyDataPreloadedFlag(bool);
 		void								setRequestDataPreloadedFlag(bool value);
 		void								setPendingHeaderFlag(bool);
-		void								setIncomingBodyDataDetectedFlag(bool);
 		void								setRequestBodyPart(std::string);
 		void								resetUploadedBytes(void);
 		void								setPendingRequestData(std::string);
@@ -142,7 +137,6 @@ class Client {
 
 		void								setIsRequestBodyWritable(bool);
 		void								setIsPipeReadable(bool);
-		void								setIsPipeClosedByPeer(int);
 		void								setIsCgiRequired(bool);
 		void								setPipeReadComplete(bool);
 

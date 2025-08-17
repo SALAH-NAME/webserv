@@ -8,14 +8,13 @@ Client::Client(Socket sock, const std::vector<ServerConfig>& allServersConfig, i
 											, _CGI_OutPipeFD(-1)
 											, _CGI_InPipeFD(-1)
 											, _state(DefaultState)
+											, _InputState(INPUT_NONE)
 											, _lastTimeConnection(std::time(NULL))
 											, _contentLength(0)
 											, _chunkBodySize(-1)
 											, _isChunked(NOT_CHUNKED)
 											, _uploadedBytes(0)
 											, _responseHandler(new ResponseHandler())
-											, _incomingHeaderDataDetectedFlag(INCOMING_HEADER_DATA_OFF)
-											, _incomingBodyDataDetectedFlag(INCOMING_BODY_DATA_OFF)
 											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)
 											, _responseBodyFlag(RESPONSE_BODY_NOT_READY)
 											, _fullResponseFlag(FULL_RESPONSE_NOT_READY)
@@ -27,7 +26,6 @@ Client::Client(Socket sock, const std::vector<ServerConfig>& allServersConfig, i
 											, _pendingHeaderFlag(false)
 											, _isCgiRequired(CGI_IS_NOT_REQUIRED)
 											, _isPipeReadable(PIPE_IS_NOT_READABLE)
-											, _isPipeClosedByPeer(PIPE_IS_NOT_CLOSED)
 											, _pipeReadComplete(READ_PIPE_NOT_COMPLETE)
 											, _setTargetFile(false)
 											, _responseSent(NOT_SENT)
@@ -45,14 +43,13 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _CGI_OutPipeFD(other._CGI_OutPipeFD)
 									, _CGI_InPipeFD(other._CGI_InPipeFD)
 									, _state(other._state)
+									, _InputState(other._InputState)
 									, _lastTimeConnection(other._lastTimeConnection)
 									, _contentLength(other._contentLength)
 									, _chunkBodySize(other._chunkBodySize)
 									, _isChunked(other._isChunked)
 									, _uploadedBytes(other._uploadedBytes)
 									, _responseHandler(other._responseHandler)
-									, _incomingHeaderDataDetectedFlag(other._incomingHeaderDataDetectedFlag)
-									, _incomingBodyDataDetectedFlag(other._incomingBodyDataDetectedFlag)
 									, _responseHeaderFlag(other._responseHeaderFlag)
 									, _responseBodyFlag(other._responseBodyFlag)
 									, _fullResponseFlag(other._fullResponseFlag)
@@ -64,7 +61,6 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _pendingHeaderFlag(other._pendingHeaderFlag)
 									, _isCgiRequired(other._isCgiRequired)
 									, _isPipeReadable(other._isPipeReadable)
-									, _isPipeClosedByPeer(other._isPipeClosedByPeer)
 									, _pipeReadComplete(other._pipeReadComplete)
 									, _setTargetFile(other._setTargetFile)
 									, _responseSent(other._responseSent)
@@ -107,13 +103,13 @@ PostMethodProcessingState&	Client::getState(void) {
 	return _state;
 }
 
+ClientInputState	Client::getInputState(void) {
+	return _InputState;
+}
+
 time_t Client::getLastConnectionTime(void)
 {
 	return _lastTimeConnection;
-}
-
-bool	Client::getIncomingHeaderDataDetectedFlag(void) {
-	return _incomingHeaderDataDetectedFlag;
 }
 
 std::string&	Client::getRequestBodyPart(void) {
@@ -156,10 +152,6 @@ std::string &Client::getBodyPart(void)
 	return _requestBodyPart;
 }
 
-bool	Client::getIncomingBodyDataDetectedFlag(void) {
-	return _incomingBodyDataDetectedFlag;
-}
-
 bool	Client::getIsRequestBodyWritable(void) {
 	return _isRequestBodyWritable;
 }
@@ -170,10 +162,6 @@ bool	Client::getIsCgiRequired(void) {
 
 bool	Client::getIsPipeReadable(void) {
 	return _isPipeReadable;
-}
-
-int	Client::getIsPipeClosedByPeer(void) {
-	return _isPipeClosedByPeer;
 }
 
 void Client::setResponseHeaderFlag(bool value)
@@ -242,6 +230,10 @@ bool	Client::getPipeBodyToCgi(void) {
 	return _pipeBodyToCgi;
 }
 
+void	Client::setInputState(ClientInputState value) {
+	_InputState = value;
+}
+
 void Client::appendToBodyPart(const std::string &bodyData)
 {
 	_requestBodyPart += bodyData;
@@ -249,10 +241,6 @@ void Client::appendToBodyPart(const std::string &bodyData)
 
 void	Client::resetLastConnectionTime(void){
 	_lastTimeConnection = std::time(NULL);
-}
-
-void	Client::setIncomingHeaderDataDetectedFlag(int mode) {
-	_incomingHeaderDataDetectedFlag = mode;
 }
 
 void Client::setGenerateResponseInProcess(bool value)
@@ -296,10 +284,6 @@ void	Client::resetContentLength(void) {
 	_contentLength = 0;
 }
 
-void	Client::setIncomingBodyDataDetectedFlag(bool value) {
-	_incomingBodyDataDetectedFlag = value;
-}
-
 void	Client::setHeaderPart(std::string HeaderData) {
 	_requestHeaderPart = HeaderData;
 }
@@ -314,10 +298,6 @@ void	Client::setIsRequestBodyWritable(bool value) {
 
 void	Client::setIsPipeReadable(bool value) {
 	_isPipeReadable = value;
-}
-
-void	Client::setIsPipeClosedByPeer(int	value) {
-	_isPipeClosedByPeer = value;
 }
 
 void	Client::setIsCgiRequired(bool value) {
@@ -435,11 +415,11 @@ void    Client::closeAndDeregisterPipe(bool pipe) {
 void    Client::CgiExceptionHandler() {
     if (_CGI_OutPipeFD != -1) {
         closeAndDeregisterPipe(OUT_PIPE);
-        _isPipeClosedByPeer = PIPE_IS_NOT_CLOSED;
+		_InputState = INPUT_NONE;
     }
     if (_CGI_InPipeFD != -1) {
         closeAndDeregisterPipe(IN_PIPE);
-        _incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+		_InputState = INPUT_NONE;
     }
 
     if (_responseHandler->GetTargetFilePtr()) {
@@ -452,21 +432,7 @@ void    Client::CgiExceptionHandler() {
     }
 }
 
-void				Client::printClientStatus(void) {
-	std::cout << "\n ------------------------------------------------------\n";
-	std::cout << "  ## _CGI_OutPipeFD: " <<  _CGI_OutPipeFD << " ## \n";
-	std::cout << "  ##  _requestHeaderPart size : " << _requestHeaderPart.size() << "  ## \n";
-	std::cout << "  ##  _requestBodyPart size : " << _requestBodyPart.size() << "  ## \n";
-	std::cout << "  ##  _responseHolder size : " << _responseHolder.size() << "  ## \n";
-	std::cout << "  ##  _pendingRequestDataHolder size : " << _pendingRequestDataHolder.size() << "  ## \n";
-	std::cout << "  ##  _contentLength : " << _contentLength << "  ## \n";
-	std::cout << "  ##  _uploadedBytes : " << _uploadedBytes << "  ## \n";
-	std::cout << "  ##  _responseSent : " << _responseSent << "  ## \n";
-	std::cout << "--------------------------------------------------------\n\n";
-}
-
 void	Client::resetAttributes(void) {
-	// std::memset((void*)&_clientInfos, 0, sizeof(ClientInfos));
 	_CGI_OutPipeFD = -1;
 	_CGI_InPipeFD = -1;
 	_state = DefaultState;
@@ -480,10 +446,10 @@ void	Client::resetAttributes(void) {
 	_responseHandler = new ResponseHandler();
 
 	if (_requestDataPreloadedFlag || _pendingHeaderFlag)
-		_incomingHeaderDataDetectedFlag = INCOMING_HEADER_DATA_ON;
+		_InputState = INPUT_HEADER_READY;
 	else
-		_incomingHeaderDataDetectedFlag =  INCOMING_HEADER_DATA_OFF;
-	_incomingBodyDataDetectedFlag =  INCOMING_BODY_DATA_OFF;
+		_InputState = INPUT_NONE;
+
 	_responseHeaderFlag =  RESPONSE_HEADER_NOT_READY;
 	_responseBodyFlag =  RESPONSE_BODY_NOT_READY;
 	_fullResponseFlag =  FULL_RESPONSE_NOT_READY;
@@ -494,7 +460,6 @@ void	Client::resetAttributes(void) {
 	_pendingHeaderFlag = false;
 	_isCgiRequired =  CGI_IS_NOT_REQUIRED;
 	_isPipeReadable =  PIPE_IS_NOT_READABLE;
-	_isPipeClosedByPeer =  PIPE_IS_NOT_CLOSED;
 	_pipeReadComplete =  READ_PIPE_NOT_COMPLETE;
 	_setTargetFile =  false;
 	_responseSent = NOT_SENT;

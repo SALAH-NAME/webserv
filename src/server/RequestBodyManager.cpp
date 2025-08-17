@@ -89,6 +89,8 @@ void	Client::extractBodyFromPendingData(void) {
 
 	if (!_pendingRequestDataHolder.size())
 		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
+	else
+		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_ON;
 
 	if (_isChunked) {
 		if (_chunkBodySize == 0) {
@@ -194,7 +196,7 @@ void	Client::pipeBodyToCGI(void) {
 
 void	Client::finalizeBodyProccess(void) {
 	
-	_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+	_InputState = INPUT_NONE;
 	_state = DefaultState;
 
 	if (_isBodyTooLarge) {
@@ -225,7 +227,7 @@ void	Client::finalizeBodyProccess(void) {
 
 void	Client::handleInvalidBody(void) {
 	_state = DefaultState;
-	_incomingBodyDataDetectedFlag = INCOMING_BODY_DATA_OFF;
+	_InputState = INPUT_NONE;
 	// here where to handle the invalid cases
 	// need to generate a response
 }
