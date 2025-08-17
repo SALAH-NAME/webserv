@@ -15,8 +15,7 @@ void    ServerManager::consumeCgiOutput(Client& client) {
 
 	if (!responseHandler->ReachedCgiBodyPhase()) {
 		// reading CGI header
-		readBytes = cgiOutPipe.read(buffer, BYTES_TO_READ); // reade cgi headers
-		// std::cout << "read header bytes from CGI: " << readBytes << "\n";
+		readBytes = cgiOutPipe.read(buffer, BYTES_TO_READ);
 		if (readBytes > 0) {
 			buffer[readBytes] = 0;
 			try {
@@ -48,14 +47,12 @@ void    ServerManager::consumeCgiOutput(Client& client) {
 				client.getResponseHandler()->SetTargetFileForCgi(client.getSocket().getFd());
 			} catch (ResponseHandler::ResponseHandlerError& e) {
 				client.setInputState(INPUT_NONE);
-				// client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				client.getResponseHandler()->LoadErrorPage(e.what(), e.getStatusCode());
 				client.CgiExceptionHandler();
 			}
 		}
 
 		readBytes = cgiOutPipe.read(buffer, BYTES_TO_READ);
-		// std::cout << "read body bytes from pipe: " << readBytes << "\n";
 		if (readBytes > 0) {
 			buffer[readBytes] = 0;
 			try {

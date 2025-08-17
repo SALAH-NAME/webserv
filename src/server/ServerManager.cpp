@@ -151,8 +151,6 @@ void	ServerManager::createListenignSockets(int configIndex) {
 			
 			int reuse = 1;
 			socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
-			// fixed this problem ==>  the OS keeps the port in a "cool-down" period (TIME_WAIT)
-			// ==> It’s mainly for quick restart development or for binding during graceful restarts.
 			setup_sockaddr(configIndex, ports[i]);
 			socket.bind(reinterpret_cast<sockaddr*>(&_Address), sizeof(struct sockaddr));
 			socket.listen();
@@ -196,7 +194,7 @@ void ServerManager::addToEpollSet(void) {
 	for (size_t i = 0; i < _listenSockets.size(); i++) {
 		try {
 			listenSocketFD = _listenSockets[i].getFd();
-			addSocketToEpoll(_epfd, listenSocketFD, (EPOLLIN | EPOLLET)); // make the listening socket Edge-triggered
+			addSocketToEpoll(_epfd, listenSocketFD, (EPOLLIN | EPOLLET));
 			AddedSockets++;
 		} catch (const std::runtime_error& e) {
 			_markedForEraseSockets.push_back(listenSocketFD);
@@ -231,7 +229,7 @@ void ServerManager::eraseUnusedSockets() {
 }
 
 ServerManager::ServerManager(const std::vector<ServerConfig>& serversInfo)
-		: _serversConfig(serversInfo), _domain(AF_INET), _type(SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC)
+		: _serversConfig(serversInfo), _domain(AF_INET)
 		,  _timeOut(1), _cleanupPerformed(false) {
 	
 	createEpoll();

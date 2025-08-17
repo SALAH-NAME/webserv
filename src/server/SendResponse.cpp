@@ -3,7 +3,6 @@
 
 void	ServerManager::handleKeepAlive(Client& client) {
 
-	// std::cout << "   ###################### Is keep alive: " << client.getResponseHandler()->KeepConnectioAlive() << " ##############\n";
 	if (client.getResponseHandler()->KeepConnectioAlive()) {
 		int clientFD = client.getSocket().getFd();
 		try {
@@ -15,18 +14,16 @@ void	ServerManager::handleKeepAlive(Client& client) {
 	}
 	else
 		closeConnection(client);
-	// std::cout << " ====>> Sent Response Seccessfully\n";
 }
 
 void	ServerManager::transmitResponseHeader(Client& client) {
 
 	if (!client.getIsOutputAvailable() == ON)
-		return ; // socket is not available "!EPOLLOUT"
+		return ;
 
 	std::string& response = client.getResponseHolder();
 
 	int bytesToSendNow =  client.getBytesToSendNow();
-	// std::cout << "Bytes to send now: " << bytesToSendNow << "\n";
 
 	size_t sentBytes;
 	try {
@@ -39,7 +36,6 @@ void	ServerManager::transmitResponseHeader(Client& client) {
 		std::cerr << e.what() << std::endl;
 		return ;
 	}
-	// std::cout << "Sent bytes: " << sentBytes << "\n";
 	client.resetLastConnectionTime();
 	client.updateHeaderStateAfterSend(bytesToSendNow);
 }
@@ -62,9 +58,9 @@ void    ServerManager::sendClientsResponse(int i) {
 
 	if (client.getResponseHeaderFlag() == ON ||
 		client.getFullResponseFlag() == ON)
-			transmitResponseHeader(client); // send Response header to client
+			transmitResponseHeader(client);
 	else if (client.getResponseBodyFlag() == ON)
-		transmitFileResponse(client); // read Response body from target file and send it to client
+		transmitFileResponse(client);
 
 	if (client.getResponseSent() == ON)
 		handleKeepAlive(client);

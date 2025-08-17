@@ -12,12 +12,12 @@
 
 class Client {
 	private:
+		ServerManager*						_serverManagerPtr;
 		Socket								_socket;
 		int									_epfd;
 		const std::vector<ServerConfig>&	_allServersConfig;
 		ServerConfig*						_correctServerConfig;
 		ClientInfos							_clientInfos;
-		ServerManager*						_serverManagerPtr;
 		int									_CGI_OutPipeFD;
 		int									_CGI_InPipeFD;
 		std::string							_requestHeaderPart;

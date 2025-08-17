@@ -6,7 +6,6 @@ void	Client::generateDynamicResponse() {
 	
 	try {
 		addSocketToEpoll(_epfd, _CGI_OutPipeFD, (EPOLLIN | EPOLLHUP | EPOLLERR));
-		std::cout << "Pipe fd: " << _CGI_OutPipeFD << " Added successfully to epoll: " << _epfd << "\n";
 	}
 	catch(std::runtime_error& e)
 	{
@@ -17,15 +16,12 @@ void	Client::generateDynamicResponse() {
 	}
 
 	if (_responseHandler->IsPost()) {
-
-		// std::cout << " ===>> CGI POST <<===\n";
 		std::stringstream ss(_httpRequest.getHeaders()["content-length"]);
 			ss >> _contentLength;
 		_CGI_InPipeFD = _responseHandler->GetCgiInPipe().getWriteFd();
 
 		try {
-			addSocketToEpoll(_epfd, _CGI_InPipeFD, (EPOLLOUT | EPOLLHUP | EPOLLERR)); // make the inpipe EPOLLOUT for only writing in it
-			std::cout << "Add CGI input pipe to Epoll set (EPOLLOUT)";
+			addSocketToEpoll(_epfd, _CGI_InPipeFD, (EPOLLOUT | EPOLLHUP | EPOLLERR)); 
 			_InputState = INPUT_BODY_READY;
 			_pipeBodyToCgi = ON;
 		} catch(std::runtime_error& e)
@@ -50,21 +46,16 @@ void	Client::generateDynamicResponse() {
 void	Client::generateStaticResponse() {
 
 	if (!_responseHandler->GetTargetFilePtr()) {
-		// std::cout << "     =====>>>  No target file needed : {" << _socket.getFd() << "} <<<===== \n";
 		_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
-			// std::cout << "got full response (header + body)\n";
 		setFullResponseFlag(ON);
 	}
 	else {
 		if (_responseHandler->IsPost()) {
-			// std::cout << "     =====>>>  write body to target file <<<===== \n";
-
 			if (_isChunked)
 				_contentLength = -1;
 			else {
 				std::stringstream ss(_httpRequest.getHeaders()["content-length"]);
 				ss >> _contentLength;
-				// std::cout << "Body Content-Length ==> " << _contentLength << "\n
 			}
 
 			if (!_isChunked && !_contentLength)
@@ -82,11 +73,7 @@ void	Client::generateStaticResponse() {
 			_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
 		}
 		else {
-
-			// std::cout << "    =======>>> Read data from target file to send <<<=====\n";
-
 			_responseHolder = _responseHandler->GetResponseHeader();
-			// std::cout << "Got only Response Header\n";
 			_responseHeaderFlag = ON;
 		}
 	}

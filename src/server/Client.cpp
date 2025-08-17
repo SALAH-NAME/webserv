@@ -1,11 +1,12 @@
 
 #include "Client.hpp"
 
-Client::Client(ServerManager* serverManagerPtr, Socket sock, const std::vector<ServerConfig>& allServersConfig, int epfd, ClientInfos clientInfos) : _socket(sock)
+Client::Client(ServerManager* serverManager, Socket sock, const std::vector<ServerConfig>& allServersConfig, int epfd, ClientInfos clientInfos) :
+											_serverManagerPtr (serverManager)
+											, _socket(sock)
 											, _epfd(epfd)
 											, _allServersConfig(allServersConfig)
 											, _clientInfos(clientInfos)
-											, _serverManagerPtr(serverManagerPtr)
 											, _CGI_OutPipeFD(-1)
 											, _CGI_InPipeFD(-1)
 											, _state(DefaultState)
@@ -15,7 +16,7 @@ Client::Client(ServerManager* serverManagerPtr, Socket sock, const std::vector<S
 											, _chunkBodySize(-1)
 											, _isChunked(OFF)
 											, _uploadedBytes(0)
-											, _responseHandler(new ResponseHandler(_serverManagerPtr))
+											, _responseHandler(new ResponseHandler(serverManager))
 											, _responseHeaderFlag(OFF)
 											, _responseBodyFlag(OFF)
 											, _fullResponseFlag(OFF)
@@ -32,12 +33,13 @@ Client::Client(ServerManager* serverManagerPtr, Socket sock, const std::vector<S
 											, _isBodyTooLarge(false)
 {}
 
-Client::Client(const Client& other) : _socket(other._socket)
+Client::Client(const Client& other) :
+									_serverManagerPtr(other._serverManagerPtr)
+									, _socket(other._socket)
 									, _epfd(other._epfd)
 									, _allServersConfig(other._allServersConfig)
 									, _correctServerConfig(other._correctServerConfig)
 									, _clientInfos(other._clientInfos)
-									, _serverManagerPtr(other._serverManagerPtr)
 									, _CGI_OutPipeFD(other._CGI_OutPipeFD)
 									, _CGI_InPipeFD(other._CGI_InPipeFD)
 									, _state(other._state)
@@ -318,13 +320,11 @@ void	Client::updateHeaderStateAfterSend(size_t sentBytes) {
 		if (_responseHeaderFlag == ON) {
 			_responseHeaderFlag = OFF;
 			_responseBodyFlag = ON;
-			// std::cout << " ==> Sent Header Successfully <==\n";
 		}
 		else {
 			_fullResponseFlag = OFF;
 			_responseBodyFlag = OFF;
 			_responseSent = ON;
-			// std::cout << " ==> Sent Full Response Successfully <==\n";
 		}
 	}
 }
@@ -337,7 +337,6 @@ void	Client::readFileBody(void) {
 	ssize_t _bytesReadFromFile = targetFile->gcount();
 	if (_bytesReadFromFile < 0)
 		return ;
-	// std::cout << "read bytes: " << _bytesReadFromFile << "\n";
 
 	buffer[_bytesReadFromFile] = 0;
 	_responseHolder = std::string(buffer, _bytesReadFromFile);
@@ -363,13 +362,11 @@ void	Client::sendFileBody(void) {
 		}
 		resetLastConnectionTime();
 	}
-	// std::cout << "send bytes: " << sentBytes << "\n";
 	
 	if (_responseHolder.size() < BYTES_TO_SEND) {
 		_isResponseBodySendable = OFF;
 		_responseBodyFlag = OFF;
 		_responseSent = ON;
-		// std::cout << " ==>> Send response body Successfully \n";
 		return ;
 	}
 	
@@ -377,7 +374,6 @@ void	Client::sendFileBody(void) {
 }
 
 void    Client::closeAndDeregisterPipe(bool pipe) {
-    std::cout << "============================================================\n";
 	int* pipePTR;
 	if (pipe == IN_PIPE)
 		pipePTR = &_CGI_InPipeFD;
@@ -385,11 +381,8 @@ void    Client::closeAndDeregisterPipe(bool pipe) {
 		pipePTR = &_CGI_OutPipeFD;
 
     epoll_ctl(_epfd, EPOLL_CTL_DEL, *pipePTR, NULL);
-    std::cout << "  ## Removed Pipe fd: " << *pipePTR << " from epoll  ## \n";
     close(*pipePTR);
     *pipePTR = -1;
-    std::cout << "  ## closed Pipe fd: " << *pipePTR << "              ## \n";
-    std::cout << "============================================================\n\n";
     
 }
 
@@ -447,8 +440,6 @@ void	Client::resetAttributes(void) {
 	_requestHeaderPart.clear();
 	_requestBodyPart.clear();
 	_responseHolder.clear();
-
-	// std::cout << " ## RESETED ##\n";
 }
 
 void	Client::getBufferFromPendingData(char* buffer, ssize_t* readBytes) {
