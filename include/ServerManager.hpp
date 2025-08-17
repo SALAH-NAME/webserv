@@ -7,53 +7,8 @@
 #define BYTES_TO_SEND 1000 * 1023
 #define BUFFERSIZE (((BYTES_TO_READ > BYTES_TO_SEND) ? BYTES_TO_READ : BYTES_TO_SEND) + 1)
 
-#define GENERATE_RESPONSE_ON true
-#define GENERATE_RESPONSE_OFF false
-
-#define RESPONSE_HEADER_READY		true
-#define RESPONSE_HEADER_NOT_READY	false
-
-#define RESPONSE_BODY_READY		true
-#define RESPONSE_BODY_NOT_READY	false
-
-#define FULL_RESPONSE_READY		true
-#define FULL_RESPONSE_NOT_READY	false
-
-#define SENDABLE		true
-#define NOT_SENDABLE	false
-
-#define WRITABLE		true
-#define NOT_WRITABLE	false
-
-#define UPLOAD_ACTIVE   true
-#define UPLOAD_NOT_ACTIVE false
-
-#define BODY_DATA_PRELOADED_ON true
-#define BODY_DATA_PRELOADED_OFF false
-
-#define REQUEST_DATA_PRELOADED_ON true
-#define REQUEST_DATA_PRELOADED_OFF false
-
-#define PIPE_IS_READABLE true
-#define PIPE_IS_NOT_READABLE false
-
-#define CGI_REQUIRED true
-#define CGI_IS_NOT_REQUIRED false
-
-#define READ_PIPE_COMPLETE true
-#define READ_PIPE_NOT_COMPLETE false
-
-#define AVAILABLE true
-#define NOT_AVAILABLE false
-
-#define SENT true
-#define NOT_SENT false
-
-#define PIPE_TO_CGI true
-#define NO_PIPE false
-
-#define IS_CHUNKED true
-#define NOT_CHUNKED false
+#define ON true
+#define OFF false
 
 #define IN_PIPE 1
 #define OUT_PIPE 0
@@ -134,7 +89,6 @@ class ServerManager {
 		struct epoll_event					_event;
 		struct epoll_event					_events[MAX_EVENTS];
 		char								_buffer[BUFFERSIZE];
-
 		std::vector<Socket>					_listenSockets;
 		std::map<int, struct HostPort>		_portsAndHosts;
 		std::map<int, Client>				_clients;
@@ -149,13 +103,10 @@ class ServerManager {
 		void								createListenignSockets(int);
 		void								closeConnection(Client&);
 		void								eraseMarked();
-
-
 		void								createEpoll(void);
 		void								setUpServers(void);
 		void    							addToEpollSet(void);
 		void								eraseUnusedSockets(void);
-		
 		void								checkTimeOut();
 		void								collectRequestData(Client&);
 		void								transmitResponseHeader(Client&);
@@ -163,13 +114,10 @@ class ServerManager {
 		void								transmitFileResponse(Client&);
 		void								consumeCgiOutput(Client&);
 		void								transferBodyToCgi(Client& client, int serverIndex);
-
 		void								incomingConnection(int);
-
 		bool								verifyLsteningSocketsFDs(int);
 		std::map<int, Client>::iterator		verifyClientsFD(int);
 		void								handleKeepAlive(Client&);
-
 		bool								processEvent(int);
 		void								receiveClientsData(int);
 		void								generatResponses(int);

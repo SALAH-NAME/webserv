@@ -88,9 +88,9 @@ void	Client::extractBodyFromPendingData(void) {
 	_pendingRequestDataHolder = _pendingRequestDataHolder.substr(BytesToExtract);
 
 	if (!_pendingRequestDataHolder.size())
-		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
+		_requestDataPreloadedFlag = OFF;
 	else
-		_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_ON;
+		_requestDataPreloadedFlag = ON;
 
 	if (_isChunked) {
 		if (_chunkBodySize == 0) {
@@ -207,7 +207,7 @@ void	Client::finalizeBodyProccess(void) {
 	}
 	else {
 		if (_pipeBodyToCgi) {
-			_pipeBodyToCgi = NO_PIPE;
+			_pipeBodyToCgi = OFF;
 			try {
 				deleteEpollEvents(_epfd, _CGI_InPipeFD);
 			} catch(std::runtime_error& e) {
@@ -221,7 +221,7 @@ void	Client::finalizeBodyProccess(void) {
 			_CGI_InPipeFD = -1;
 		}
 		else
-		_fullResponseFlag = FULL_RESPONSE_READY;
+		_fullResponseFlag = ON;
 	}
 }
 

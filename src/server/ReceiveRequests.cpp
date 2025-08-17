@@ -6,8 +6,7 @@ void	isolateAndRecordBody(Client& client) {
 
 	if (!headerPart.size()) {
 		// no body-data received after header ==> no need to save
-		client.setRequestDataPreloadedFlag(REQUEST_DATA_PRELOADED_OFF);
-		client.setBodyDataPreloadedFlag(BODY_DATA_PRELOADED_OFF);
+		client.setRequestDataPreloadedFlag(OFF);
 		return ;
 	}
 	
@@ -15,7 +14,7 @@ void	isolateAndRecordBody(Client& client) {
 	
 	client.setPendingRequestData(headerPart); // here we save the data ('next request' or 'current request body')
 	client.getHeaderPart().clear();
-	client.setRequestDataPreloadedFlag(REQUEST_DATA_PRELOADED_ON);
+	client.setRequestDataPreloadedFlag(ON);
 	// std::cout << "ISOLATED\n";
 }
 
@@ -29,7 +28,7 @@ void    ServerManager::collectRequestData(Client& client) {
 
 	std::memset(_buffer, 0, sizeof(_buffer));
 	try {
-		if (client.getRequestDataPreloadedFlag() == REQUEST_DATA_PRELOADED_ON)
+		if (client.getRequestDataPreloadedFlag() == ON)
 			client.getBufferFromPendingData(_buffer, &readbytes);
 		else
 			readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
@@ -47,7 +46,7 @@ void    ServerManager::collectRequestData(Client& client) {
 		{
 			// in case of receive empty line (Press Enter) !!
 			client.setInputState(INPUT_NONE);
-			client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+			client.setGenerateResponseInProcess(ON);
 		}
 
 		HttpRequest &req = client.getHttpRequest();
@@ -57,13 +56,13 @@ void    ServerManager::collectRequestData(Client& client) {
 			// std::cout << "   ====>> request is completed <<=====\n";
 			isolateAndRecordBody(client);
 			client.setInputState(INPUT_NONE);
-			client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+			client.setGenerateResponseInProcess(ON);
 		}
 	
 		if (req.getState() == HttpRequest::STATE_ERROR)
 		{
 			client.setInputState(INPUT_NONE);
-			client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+			client.setGenerateResponseInProcess(ON);
 			return; // Return instead of throwing to allow response generation
 		}
 	}
@@ -72,14 +71,14 @@ void    ServerManager::collectRequestData(Client& client) {
 		error_msg += e.what();
 		std::cerr << error_msg << std::endl;
 		client.setInputState(INPUT_NONE);
-		client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+		client.setGenerateResponseInProcess(ON);
 	}
 	catch (const std::exception &e) {
 		std::string error_msg = "Parsing error: ";
 		error_msg += e.what();
 		std::cerr << error_msg << std::endl;
 		client.setInputState(INPUT_NONE);
-		client.setGenerateResponseInProcess(GENERATE_RESPONSE_ON);
+		client.setGenerateResponseInProcess(ON);
 	}
 }
 

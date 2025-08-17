@@ -23,9 +23,7 @@ void    ServerManager::consumeCgiOutput(Client& client) {
 				responseHandler->AppendCgiOutput(buffer);
 			} catch (ResponseHandler::ResponseHandlerError& e) {
 				client.setInputState(INPUT_NONE);
-				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
-
 				client.CgiExceptionHandler();
 			}
 		}
@@ -33,10 +31,8 @@ void    ServerManager::consumeCgiOutput(Client& client) {
 			try {
 				responseHandler->CheckForContentType();
 				client.setInputState(INPUT_NONE);
-				client.setPipeReadComplete(READ_PIPE_COMPLETE);
 			} catch (ResponseHandler::ResponseHandlerError& e) {
 				client.setInputState(INPUT_NONE);
-				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
 				client.CgiExceptionHandler();
 			}
@@ -52,7 +48,7 @@ void    ServerManager::consumeCgiOutput(Client& client) {
 				client.getResponseHandler()->SetTargetFileForCgi(client.getSocket().getFd());
 			} catch (ResponseHandler::ResponseHandlerError& e) {
 				client.setInputState(INPUT_NONE);
-				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
+				// client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				client.getResponseHandler()->LoadErrorPage(e.what(), e.getStatusCode());
 				client.CgiExceptionHandler();
 			}
@@ -66,7 +62,6 @@ void    ServerManager::consumeCgiOutput(Client& client) {
 				responseHandler->AppendBufferToTmpFile(buffer);
 			} catch (ResponseHandler::ResponseHandlerError& e) {
 				client.setInputState(INPUT_NONE);
-				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
 				client.CgiExceptionHandler();
 			}
@@ -75,13 +70,12 @@ void    ServerManager::consumeCgiOutput(Client& client) {
 			try {
 				responseHandler->FinishCgiResponse();
 				client.setResponseHolder(responseHandler->GetResponseHeader());
-				client.setResponseHeaderFlag(RESPONSE_HEADER_READY);
+				client.setResponseHeaderFlag(ON);
 				client.setInputState(INPUT_NONE);
 				client.closeAndDeregisterPipe(OUT_PIPE);
 				responseHandler->GetTargetFilePtr()->seekg(0);
 			} catch (ResponseHandler::ResponseHandlerError& e) {
 				client.setInputState(INPUT_NONE);
-				client.setIsPipeReadable(PIPE_IS_NOT_READABLE);
 				responseHandler->LoadErrorPage(e.what(), e.getStatusCode());
 				client.CgiExceptionHandler();
 			}

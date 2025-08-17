@@ -31,18 +31,17 @@ void	ServerManager::generatResponses(int i) {
 	Client& client = it->second;
 	
 
-	if (client.getGenerateInProcess() == GENERATE_RESPONSE_OFF)
+	if (client.getGenerateInProcess() == OFF)
 		return ;
 	
 	try {
 		it->second.buildResponse();
-	}
-	catch(std::runtime_error& e) {
+	} catch(std::runtime_error& e) {
 		closeConnection(client);
 		perror(e.what());
 		return ;
 	}
-	client.setGenerateResponseInProcess(GENERATE_RESPONSE_OFF);
+	client.setGenerateResponseInProcess(OFF);
 	eraseMarked();
 }
 

@@ -20,7 +20,7 @@ void	ServerManager::handleKeepAlive(Client& client) {
 
 void	ServerManager::transmitResponseHeader(Client& client) {
 
-	if (!client.getIsOutputAvailable())
+	if (!client.getIsOutputAvailable() == ON)
 		return ; // socket is not available "!EPOLLOUT"
 
 	std::string& response = client.getResponseHolder();
@@ -45,10 +45,10 @@ void	ServerManager::transmitResponseHeader(Client& client) {
 }
 
 void	ServerManager::transmitFileResponse(Client& client) {
-	if (client.getIsResponseBodySendable() == NOT_SENDABLE) {
+	if (client.getIsResponseBodySendable() == OFF) {
 		client.readFileBody();
 	}
-	else if (client.getIsResponseBodySendable() == SENDABLE) {
+	else if (client.getIsResponseBodySendable() == ON) {
 		client.sendFileBody();
 	}
 }
@@ -60,13 +60,13 @@ void    ServerManager::sendClientsResponse(int i) {
 		return ;
 	Client& client = it->second;
 
-	if (client.getResponseHeaderFlag() == RESPONSE_HEADER_READY ||
-		client.getFullResponseFlag() == FULL_RESPONSE_READY)
+	if (client.getResponseHeaderFlag() == ON ||
+		client.getFullResponseFlag() == ON)
 			transmitResponseHeader(client); // send Response header to client
-	else if (client.getResponseBodyFlag() == RESPONSE_BODY_READY)
+	else if (client.getResponseBodyFlag() == ON)
 		transmitFileResponse(client); // read Response body from target file and send it to client
 
-	if (client.getResponseSent() == SENT)
+	if (client.getResponseSent() == ON)
 		handleKeepAlive(client);
 	eraseMarked();
 }

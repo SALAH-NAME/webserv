@@ -1,9 +1,7 @@
 #include "ServerManager.hpp"
 
 void	Client::generateDynamicResponse() {
-	_isCgiRequired = CGI_REQUIRED;
-	// std::cout << "Is CGI required: " << _isCgiRequired << std::endl;
-
+	_isCgiRequired = ON;
 	_CGI_OutPipeFD = _responseHandler->GetCgiOutPipe().getReadFd();
 	
 	try {
@@ -29,10 +27,8 @@ void	Client::generateDynamicResponse() {
 			addSocketToEpoll(_epfd, _CGI_InPipeFD, (EPOLLOUT | EPOLLHUP | EPOLLERR)); // make the inpipe EPOLLOUT for only writing in it
 			std::cout << "Add CGI input pipe to Epoll set (EPOLLOUT)";
 			_InputState = INPUT_BODY_READY;
-			_pipeBodyToCgi = PIPE_TO_CGI;
-			
-		}
-		catch(std::runtime_error& e)
+			_pipeBodyToCgi = ON;
+		} catch(std::runtime_error& e)
 		{
 			close(_CGI_InPipeFD);
 			_CGI_InPipeFD = -1;
@@ -57,7 +53,7 @@ void	Client::generateStaticResponse() {
 		// std::cout << "     =====>>>  No target file needed : {" << _socket.getFd() << "} <<<===== \n";
 		_responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
 			// std::cout << "got full response (header + body)\n";
-		setFullResponseFlag(FULL_RESPONSE_READY);
+		setFullResponseFlag(ON);
 	}
 	else {
 		if (_responseHandler->IsPost()) {
@@ -73,7 +69,7 @@ void	Client::generateStaticResponse() {
 
 			if (!_isChunked && !_contentLength)
 				_state = UploadingToFile;
-			else if (_requestDataPreloadedFlag == REQUEST_DATA_PRELOADED_ON) {
+			else if (_requestDataPreloadedFlag == ON) {
 				if (_isChunked)
 					_state = ValidateChunkSize;
 				else
@@ -91,7 +87,7 @@ void	Client::generateStaticResponse() {
 
 			_responseHolder = _responseHandler->GetResponseHeader();
 			// std::cout << "Got only Response Header\n";
-			_responseHeaderFlag = RESPONSE_HEADER_READY;
+			_responseHeaderFlag = ON;
 		}
 	}
 }

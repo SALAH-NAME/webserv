@@ -117,17 +117,17 @@ bool	ServerManager::processEvent(int i) {
 			}
 
 			else if (event_fd == client.getCGI_OutpipeFD()
-						&& client.getIsCgiRequired() == CGI_REQUIRED) { // check if PIPE is ready from reading
+						&& client.getIsCgiRequired() == ON) { // check if PIPE is ready from reading
 				
 				if ((events & EPOLLHUP) && (events & EPOLLIN)) {
 					// std::cout << "set pipe to \"PIPE_IS_CLOSED WITH INPUT\" (ready to read)\n";
 					client.setInputState(INPUT_PIPE_HAS_DATA);
-					client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
+					client.setIsCgiRequired(OFF);
 				}
 				else if (events & EPOLLHUP) {
 					// std::cout << "set pipe to \"PIPE_IS_CLOSED WITH NO INPUT\n";
 					client.setInputState(INPUT_PIPE_NO_DATA);
-					client.setIsCgiRequired(CGI_IS_NOT_REQUIRED);
+					client.setIsCgiRequired(OFF);
 				}
 			}
 		}

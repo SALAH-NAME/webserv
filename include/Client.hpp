@@ -18,43 +18,30 @@ class Client {
 		ServerConfig*						_correctServerConfig;
 		ClientInfos							_clientInfos;
 		ServerManager*						_serverManagerPtr;
-
 		int									_CGI_OutPipeFD;
 		int									_CGI_InPipeFD;
-
 		std::string							_requestHeaderPart;
 		std::string							_requestBodyPart;
 		std::string							_responseHolder;
 		std::string							_pendingRequestDataHolder;
-
 		PostMethodProcessingState			_state;
 		ClientInputState					_InputState;
-
 		time_t								_lastTimeConnection;
 		size_t								_contentLength;
 		int									_chunkBodySize;
 		int									_isChunked;
 		size_t								_uploadedBytes;
-
 		HttpRequest							_httpRequest;
 		ResponseHandler*					_responseHandler;
-
 		bool								_responseHeaderFlag;
 		bool								_responseBodyFlag;
 		bool								_fullResponseFlag;
 		bool								_generateInProcess;
 		bool								_isResponseBodySendable;
-		bool								_isRequestBodyWritable;
-		bool								_bodyDataPreloadedFlag;
 		bool								_requestDataPreloadedFlag;
 		bool								_pendingHeaderFlag;
-
 		bool								_isCgiRequired;
-		bool								_isPipeReadable;
-		bool								_pipeReadComplete;
-
 		bool								_setTargetFile;
-
 		bool								_responseSent;
 		bool								_isOutputAvailable;
 		bool								_isCgiInputAvailable;
@@ -79,17 +66,13 @@ class Client {
 		PostMethodProcessingState&			getState(void);
 		ClientInputState					getInputState(void);
 		time_t								getLastConnectionTime(void);
-
 		std::string&						getRequestBodyPart(void);
 		std::string&						getPendingRequestData(void);
-
 		bool								getResponseHeaderFlag(void);
 		bool								getResponseBodyFlag(void);
 		bool								getFullResponseFlag(void);
-
 		std::string&						getResponseHolder(void);
 		ResponseHandler*					getResponseHandler(void);
-
 		int									getBytesToSendNow(void);
 		bool								getGenerateInProcess(void);
 		HttpRequest&						getHttpRequest(void);
@@ -100,15 +83,9 @@ class Client {
 		bool								getBodyDataPreloadedFlag(void);
 		bool								getRequestDataPreloadedFlag(void);
 		size_t								getContentLength(void);
-
 		bool								getIsResponseBodySendable(void);
-
 		size_t								getSavedBytes(void);
-
-		bool								getIsRequestBodyWritable(void);
 		bool								getIsCgiRequired(void);
-		bool 								getIsPipeReadable(void);
-
 		bool								getSetTargetFile(void);
 		bool								getResponseSent(void);
 		bool								getIsOutputAvailable(void);
@@ -133,28 +110,19 @@ class Client {
 		void								setPendingRequestData(std::string);
 		void								setCgiInputPipe(int);
 		void								setCgiOutPipe(int);
-
 		void								setContentLength(int);
 		void								resetContentLength(void);
 		void								setHeaderPart(std::string);
 		void								setUploadedBytes(size_t);
-
-		void								setIsRequestBodyWritable(bool);
-		void								setIsPipeReadable(bool);
 		void								setIsCgiRequired(bool);
-		void								setPipeReadComplete(bool);
-
 		void								setSetTargetFile(bool);
 		void								setIsOutputAvailable(bool value);
 		void								setIsCgiInputAvailable(bool value);
-
 		bool								parseRequest(void);
 		void								prinfRequestinfos(void);
-
 		void								buildResponse();
 		void								trimBufferedBodyToContentLength(void);
 		void								readTargetFileContent(void);
-
 		void								receiveRequestBody(void);
 		void								updateHeaderStateAfterSend(size_t);
 		void								sendFileBody(void);

@@ -13,26 +13,22 @@ Client::Client(ServerManager* serverManagerPtr, Socket sock, const std::vector<S
 											, _lastTimeConnection(std::time(NULL))
 											, _contentLength(0)
 											, _chunkBodySize(-1)
-											, _isChunked(NOT_CHUNKED)
+											, _isChunked(OFF)
 											, _uploadedBytes(0)
 											, _responseHandler(new ResponseHandler(_serverManagerPtr))
-											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)
-											, _responseBodyFlag(RESPONSE_BODY_NOT_READY)
-											, _fullResponseFlag(FULL_RESPONSE_NOT_READY)
-											, _generateInProcess(GENERATE_RESPONSE_OFF)
-											, _isResponseBodySendable(NOT_SENDABLE)
-											, _isRequestBodyWritable(NOT_WRITABLE)
-											, _bodyDataPreloadedFlag(BODY_DATA_PRELOADED_OFF)
-											, _requestDataPreloadedFlag(REQUEST_DATA_PRELOADED_OFF)
+											, _responseHeaderFlag(OFF)
+											, _responseBodyFlag(OFF)
+											, _fullResponseFlag(OFF)
+											, _generateInProcess(OFF)
+											, _isResponseBodySendable(OFF)
+											, _requestDataPreloadedFlag(OFF)
 											, _pendingHeaderFlag(false)
-											, _isCgiRequired(CGI_IS_NOT_REQUIRED)
-											, _isPipeReadable(PIPE_IS_NOT_READABLE)
-											, _pipeReadComplete(READ_PIPE_NOT_COMPLETE)
+											, _isCgiRequired(OFF)
 											, _setTargetFile(false)
-											, _responseSent(NOT_SENT)
-											, _isOutputAvailable(NOT_AVAILABLE)
-											, _isCgiInputAvailable(NOT_AVAILABLE)
-											, _pipeBodyToCgi(NO_PIPE)
+											, _responseSent(OFF)
+											, _isOutputAvailable(OFF)
+											, _isCgiInputAvailable(OFF)
+											, _pipeBodyToCgi(OFF)
 											, _isBodyTooLarge(false)
 {}
 
@@ -57,13 +53,9 @@ Client::Client(const Client& other) : _socket(other._socket)
 									, _fullResponseFlag(other._fullResponseFlag)
 									, _generateInProcess(other._generateInProcess)
 									, _isResponseBodySendable(other._isResponseBodySendable)
-									, _isRequestBodyWritable(other._isRequestBodyWritable)
-									, _bodyDataPreloadedFlag(other._bodyDataPreloadedFlag)
 									, _requestDataPreloadedFlag(other._requestDataPreloadedFlag)
 									, _pendingHeaderFlag(other._pendingHeaderFlag)
 									, _isCgiRequired(other._isCgiRequired)
-									, _isPipeReadable(other._isPipeReadable)
-									, _pipeReadComplete(other._pipeReadComplete)
 									, _setTargetFile(other._setTargetFile)
 									, _responseSent(other._responseSent)
 									, _isOutputAvailable(other._isOutputAvailable)
@@ -154,16 +146,8 @@ std::string &Client::getBodyPart(void)
 	return _requestBodyPart;
 }
 
-bool	Client::getIsRequestBodyWritable(void) {
-	return _isRequestBodyWritable;
-}
-
 bool	Client::getIsCgiRequired(void) {
 	return _isCgiRequired;
-}
-
-bool	Client::getIsPipeReadable(void) {
-	return _isPipeReadable;
 }
 
 void Client::setResponseHeaderFlag(bool value)
@@ -190,10 +174,6 @@ bool	Client::getFullResponseFlag(void) {
 
 size_t	Client::getUploadedBytes(void) {
 	return _uploadedBytes;
-}
-
-bool	Client::getBodyDataPreloadedFlag(void) {
-	return _bodyDataPreloadedFlag;
 }
 
 bool	Client::getRequestDataPreloadedFlag(void) {
@@ -250,10 +230,6 @@ void Client::setGenerateResponseInProcess(bool value)
 	_generateInProcess = value;
 }
 
-void	Client::setBodyDataPreloadedFlag(bool value) {
-	_bodyDataPreloadedFlag = value;
-}
-
 void	Client::setRequestDataPreloadedFlag(bool value) {
 	_requestDataPreloadedFlag = value;
 }
@@ -302,20 +278,8 @@ void	Client::setResponseHolder(const std::string responseData) {
 	_responseHolder = responseData;
 }
 
-void	Client::setIsRequestBodyWritable(bool value) {
-	_isRequestBodyWritable = value;
-}
-
-void	Client::setIsPipeReadable(bool value) {
-	_isPipeReadable = value;
-}
-
 void	Client::setIsCgiRequired(bool value) {
 	_isCgiRequired = value;
-}
-
-void	Client::setPipeReadComplete(bool value) {
-	_pipeReadComplete = value;
 }
 
 void	Client::setSetTargetFile(bool value) {
@@ -351,15 +315,15 @@ void Client::prinfRequestinfos(void)
 void	Client::updateHeaderStateAfterSend(size_t sentBytes) {
 	_responseHolder = _responseHolder.substr(sentBytes);
 	if (!_responseHolder.size()) {
-		if (_responseHeaderFlag == RESPONSE_HEADER_READY) {
-			_responseHeaderFlag = RESPONSE_HEADER_NOT_READY;
-			_responseBodyFlag = RESPONSE_BODY_READY;
+		if (_responseHeaderFlag == ON) {
+			_responseHeaderFlag = OFF;
+			_responseBodyFlag = ON;
 			// std::cout << " ==> Sent Header Successfully <==\n";
 		}
 		else {
-			_fullResponseFlag = FULL_RESPONSE_NOT_READY;
-			_responseBodyFlag = RESPONSE_BODY_NOT_READY;
-			_responseSent = SENT;
+			_fullResponseFlag = OFF;
+			_responseBodyFlag = OFF;
+			_responseSent = ON;
 			// std::cout << " ==> Sent Full Response Successfully <==\n";
 		}
 	}
@@ -377,7 +341,7 @@ void	Client::readFileBody(void) {
 
 	buffer[_bytesReadFromFile] = 0;
 	_responseHolder = std::string(buffer, _bytesReadFromFile);
-	_isResponseBodySendable = SENDABLE;
+	_isResponseBodySendable = ON;
 }
 
 void	Client::sendFileBody(void) {
@@ -402,14 +366,14 @@ void	Client::sendFileBody(void) {
 	// std::cout << "send bytes: " << sentBytes << "\n";
 	
 	if (_responseHolder.size() < BYTES_TO_SEND) {
-		_isResponseBodySendable = NOT_SENDABLE;
-		_responseBodyFlag = RESPONSE_BODY_NOT_READY;
-		_responseSent = SENT;
+		_isResponseBodySendable = OFF;
+		_responseBodyFlag = OFF;
+		_responseSent = ON;
 		// std::cout << " ==>> Send response body Successfully \n";
 		return ;
 	}
 	
-	_isResponseBodySendable = NOT_SENDABLE;
+	_isResponseBodySendable = OFF;
 }
 
 void    Client::closeAndDeregisterPipe(bool pipe) {
@@ -441,11 +405,11 @@ void    Client::CgiExceptionHandler() {
 
     if (_responseHandler->GetTargetFilePtr()) {
         _responseHolder = _responseHandler->GetResponseHeader();
-        _responseHeaderFlag = RESPONSE_HEADER_READY;
+        _responseHeaderFlag = ON;
     }
     else {
         _responseHolder = _responseHandler->GetResponseHeader() + _responseHandler->GetResponseBody();
-        _fullResponseFlag = FULL_RESPONSE_READY;
+        _fullResponseFlag = ON;
     }
 }
 
@@ -456,7 +420,7 @@ void	Client::resetAttributes(void) {
 	_lastTimeConnection =  std::time(NULL);
 	_contentLength =  0;
 	_chunkBodySize = -1;
-	_isChunked = NOT_CHUNKED;
+	_isChunked = OFF;
 	_uploadedBytes =  0;
 	_httpRequest.reset();
 	delete _responseHandler;
@@ -467,21 +431,17 @@ void	Client::resetAttributes(void) {
 	else
 		_InputState = INPUT_NONE;
 
-	_responseHeaderFlag =  RESPONSE_HEADER_NOT_READY;
-	_responseBodyFlag =  RESPONSE_BODY_NOT_READY;
-	_fullResponseFlag =  FULL_RESPONSE_NOT_READY;
-	_generateInProcess =  GENERATE_RESPONSE_OFF;
-	_isResponseBodySendable =  NOT_SENDABLE;
-	_isRequestBodyWritable =  NOT_WRITABLE;
-	_bodyDataPreloadedFlag =  BODY_DATA_PRELOADED_OFF;
+	_responseHeaderFlag =  OFF;
+	_responseBodyFlag =  OFF;
+	_fullResponseFlag =  OFF;
+	_generateInProcess =  OFF;
+	_isResponseBodySendable =  OFF;
 	_pendingHeaderFlag = false;
-	_isCgiRequired =  CGI_IS_NOT_REQUIRED;
-	_isPipeReadable =  PIPE_IS_NOT_READABLE;
-	_pipeReadComplete =  READ_PIPE_NOT_COMPLETE;
+	_isCgiRequired =  OFF;
 	_setTargetFile =  false;
-	_responseSent = NOT_SENT;
-	_isCgiInputAvailable = NOT_AVAILABLE;
-	_pipeBodyToCgi = NO_PIPE;
+	_responseSent = OFF;
+	_isCgiInputAvailable = OFF;
+	_pipeBodyToCgi = OFF;
 	_isBodyTooLarge = false;
 
 	_requestHeaderPart.clear();
@@ -500,5 +460,5 @@ void	Client::getBufferFromPendingData(char* buffer, ssize_t* readBytes) {
 	*readBytes = i;
 
 	_pendingRequestDataHolder.clear();
-	_requestDataPreloadedFlag = REQUEST_DATA_PRELOADED_OFF;
+	_requestDataPreloadedFlag = OFF;
 }
