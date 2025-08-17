@@ -154,6 +154,7 @@ void ResponseHandler::MakeLocationFromSrvConf()
     tmp->setPath("/");
     tmp->setRoot(conf->getRoot());
     loc_config = tmp;
+    is_location_allocated = true;
 }
 
 void ResponseHandler::RouteResolver(const std::string &req_path, const std::string &method)
