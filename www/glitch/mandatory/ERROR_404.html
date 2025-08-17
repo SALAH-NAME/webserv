@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Error - WebServ</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .error-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .error-content-container {
+            background: var(--color-bg-glass);
+            border: 2px solid var(--color-border-primary);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-2xl);
+            backdrop-filter: blur(15px);
+            max-width: 700px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            animation: 
+                formPulse 6s ease-in-out infinite,
+                formFloat 8s ease-in-out infinite;
+        }
+
+        .error-content-container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: var(--gradient-primary);
+            border-radius: var(--border-radius-lg);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+
+        .error-content-container:hover::before {
+            opacity: 0.3;
+        }
+
+        .error-code {
+            font-size: clamp(4rem, 15vw, 12rem);
+            font-weight: var(--font-weight-extra-bold);
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin: 0;
+            position: relative;
+            line-height: 0.8;
+            animation: errorCodeGlitch 4s ease-in-out infinite;
+        }
+
+        .error-code::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: var(--color-primary-pink);
+            z-index: -1;
+            animation: errorGlitchColor1 4s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .error-code::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: var(--color-primary-cyan);
+            z-index: -1;
+            animation: errorGlitchColor2 4.5s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .error-title {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: var(--font-weight-extra-bold);
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: var(--spacing-lg) 0 var(--spacing-base) 0;
+            position: relative;
+            animation: titleGlitchSubtle 4s ease-in-out infinite;
+        }
+
+        .error-message {
+            font-size: var(--font-size-lg);
+            color: var(--color-text-muted);
+            margin: var(--spacing-base) 0 var(--spacing-xl) 0;
+            line-height: 1.6;
+            font-family: var(--font-family-primary);
+        }
+
+        .error-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-base);
+            align-items: center;
+        }
+
+        .action-button {
+            padding: var(--spacing-base) var(--spacing-xl);
+            background: linear-gradient(45deg, var(--color-primary-pink), var(--color-primary-cyan));
+            border: 2px solid var(--color-primary-pink);
+            color: var(--color-black);
+            font-family: var(--font-family-primary);
+            font-weight: var(--font-weight-bold);
+            font-size: var(--font-size-base);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-decoration: none;
+            cursor: pointer;
+            border-radius: var(--border-radius-base);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            min-width: 200px;
+        }
+
+        .action-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .action-button:hover {
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 15px rgba(255, 0, 128, 0.4),
+                0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .action-button:hover::before {
+            left: 100%;
+        }
+
+        .action-button:active {
+            transform: scale(0.98);
+        }
+
+        .action-button.secondary {
+            background: var(--color-bg-glass);
+            border: 2px solid var(--color-border-primary);
+            color: var(--color-text-primary);
+        }
+
+        .action-button.secondary:hover {
+            background: var(--color-bg-glass-strong);
+            border-color: var(--color-border-accent);
+        }
+
+        .back-button {
+            position: fixed;
+            top: var(--spacing-xl);
+            left: var(--spacing-xl);
+            padding: var(--spacing-base) var(--spacing-lg);
+            background: var(--color-bg-glass);
+            border: 1px solid var(--color-border-primary);
+            color: var(--color-text-primary);
+            font-family: var(--font-family-primary);
+            font-weight: var(--font-weight-bold);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: var(--border-radius-base);
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-base);
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            background: var(--color-bg-glass-strong);
+            border-color: var(--color-border-accent);
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 15px rgba(255, 0, 128, 0.3),
+                0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .error-details {
+            margin-top: var(--spacing-xl);
+            padding: var(--spacing-lg);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--color-border-primary);
+            border-radius: var(--border-radius-base);
+            backdrop-filter: blur(5px);
+        }
+
+        .error-details h3 {
+            font-size: var(--font-size-lg);
+            color: var(--color-text-primary);
+            margin: 0 0 var(--spacing-base) 0;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .error-details p {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .error-details .error-code-small {
+            font-family: var(--font-family-primary);
+            background: rgba(255, 0, 128, 0.1);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-sm);
+            color: var(--color-primary-pink);
+            font-weight: var(--font-weight-bold);
+        }
+
+        @keyframes formPulse {
+            0%, 100% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            50% { 
+                transform: scale(1.01);
+                filter: brightness(1.05);
+            }
+        }
+
+        @keyframes formFloat {
+            0%, 100% { 
+                transform: translateY(0px);
+            }
+            33% { 
+                transform: translateY(-3px);
+            }
+            66% { 
+                transform: translateY(3px);
+            }
+        }
+
+        @keyframes errorCodeGlitch {
+            0%, 98%, 100% { 
+                transform: scale(1);
+                filter: hue-rotate(0deg);
+            }
+            99% { 
+                transform: scale(1.02) translate(-2px, 2px);
+                filter: hue-rotate(15deg) contrast(1.2);
+            }
+        }
+
+        @keyframes titleGlitchSubtle {
+            0%, 98%, 100% { 
+                transform: scale(1);
+                filter: hue-rotate(0deg);
+            }
+            99% { 
+                transform: scale(1.01) translate(-1px, 1px);
+                filter: hue-rotate(15deg);
+            }
+        }
+
+        @keyframes errorGlitchColor1 {
+            0%, 95%, 100% { 
+                filter: hue-rotate(0deg);
+                text-shadow: -3px 0 var(--color-primary-pink);
+                opacity: 0;
+            }
+            96%, 98% {
+                filter: hue-rotate(45deg);
+                text-shadow: -4px 0 var(--color-secondary-pink);
+                opacity: 0.6;
+            }
+            97%, 99% {
+                filter: hue-rotate(-45deg);
+                text-shadow: -5px 0 var(--color-primary-pink);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes errorGlitchColor2 {
+            0%, 95%, 100% { 
+                filter: hue-rotate(0deg);
+                text-shadow: 3px 0 var(--color-primary-cyan);
+                opacity: 0;
+            }
+            96%, 98% {
+                filter: hue-rotate(-60deg);
+                text-shadow: 4px 0 var(--color-secondary-cyan);
+                opacity: 0.6;
+            }
+            97%, 99% {
+                filter: hue-rotate(120deg);
+                text-shadow: 5px 0 var(--color-primary-cyan);
+                opacity: 0.8;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .error-container {
+                padding: var(--spacing-lg);
+            }
+            
+            .error-content-container {
+                padding: var(--spacing-lg);
+            }
+            
+            .error-code {
+                font-size: clamp(3rem, 12vw, 8rem);
+            }
+            
+            .error-title {
+                font-size: clamp(1.2rem, 5vw, 2rem);
+            }
+            
+            .error-actions {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+            }
+            
+            .action-button {
+                min-width: 180px;
+                padding: var(--spacing-sm) var(--spacing-lg);
+            }
+            
+            .back-button {
+                top: var(--spacing-base);
+                left: var(--spacing-base);
+                padding: var(--spacing-sm) var(--spacing-base);
+            }
+        }
+
+        @media (min-width: 769px) {
+            .error-actions {
+                flex-direction: row;
+                justify-content: center;
+                gap: var(--spacing-lg);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .error-content-container,
+            .error-code,
+            .error-title,
+            .back-button {
+                animation: none !important;
+            }
+            
+            .error-code::before,
+            .error-code::after {
+                animation: none !important;
+                opacity: 0 !important;
+            }
+        }
+
+        @media (prefers-contrast: high) {
+            .error-content-container,
+            .action-button,
+            .back-button,
+            .error-details {
+                border-width: 3px;
+                border-color: var(--color-white);
+            }
+            
+            .error-content-container {
+                background: rgba(0, 0, 0, 0.9);
+            }
+            
+            .error-details {
+                background: rgba(0, 0, 0, 0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <!-- Back button -->
+        <a href="/#mandatory" class="back-button" data-text="← Back">
+            ← Back
+        </a>
+
+        <!-- Main error content container -->
+        <div class="error-content-container">
+            <h1 class="error-code" data-text="404">
+                404
+            </h1>
+            
+            <h2 class="error-title">
+                Page Not Found
+            </h2>
+            
+            <p class="error-message">
+                The requested resource could not be found on this server.<br>
+                It seems like you've ventured into uncharted digital territory.
+            </p>
+            
+            <div class="error-actions">
+                <a href="/" class="action-button">
+                    Return Home
+                </a>
+                <button onclick="history.back()" class="action-button secondary">
+                    Go Back
+                </button>
+            </div>
+            
+            <div class="error-details">
+                <h3>Error Details</h3>
+                <p>
+                    <strong>Status Code:</strong> <span class="error-code-small">404 Not Found</span><br>
+                    <strong>Description:</strong> The server cannot find the requested resource.<br>
+                    <strong>Possible Causes:</strong> Mistyped URL, moved content, or broken link.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorCode = document.querySelector('.error-code');
+            const errorTitle = document.querySelector('.error-title');
+            const backButton = document.querySelector('.back-button');
+            const actionButtons = document.querySelectorAll('.action-button');
+            
+            function randomErrorGlitch() {
+                if (Math.random() < 0.08) { 
+                    errorCode.style.transform = `translate(${Math.random() * 3 - 1.5}px, ${Math.random() * 3 - 1.5}px)`;
+                    errorCode.style.filter = `hue-rotate(${Math.random() * 20 - 10}deg) contrast(${100 + Math.random() * 20}%)`;
+                    
+                    setTimeout(() => {
+                        errorCode.style.transform = '';
+                        errorCode.style.filter = '';
+                    }, 150);
+                }
+            }
+            
+            setInterval(randomErrorGlitch, 6000 + Math.random() * 4000);
+            
+            backButton.addEventListener('mouseenter', function() {
+                this.style.textShadow = `
+                    1px 0 var(--color-primary-pink),
+                    -1px 0 var(--color-primary-cyan)
+                `;
+            });
+            
+            backButton.addEventListener('mouseleave', function() {
+                this.style.textShadow = '';
+            });
+            
+            actionButtons.forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    if (!this.classList.contains('secondary')) {
+                        this.style.textShadow = `
+                            0 0 5px rgba(0, 0, 0, 0.5)
+                        `;
+                    } else {
+                        this.style.textShadow = `
+                            1px 0 var(--color-primary-pink),
+                            -1px 0 var(--color-primary-cyan)
+                        `;
+                    }
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    this.style.textShadow = '';
+                });
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    backButton.click();
+                } else if (e.key === 'Enter' || e.key === ' ') {
+                    const homeButton = document.querySelector('.action-button:not(.secondary)');
+                    if (homeButton) homeButton.click();
+                } else if (e.key === 'Backspace') {
+                    const backActionButton = document.querySelector('.action-button.secondary');
+                    if (backActionButton) backActionButton.click();
+                }
+            });
+            
+            setTimeout(() => {
+                const container = document.querySelector('.error-content-container');
+                container.style.transform = 'scale(1.1) translateY(-15px)';
+                container.style.filter = 'blur(3px) hue-rotate(180deg) saturate(150%)';
+                
+                errorCode.style.textShadow = `
+                    5px 0 var(--color-primary-pink),
+                    -5px 0 var(--color-primary-cyan),
+                    0 5px var(--color-accent-yellow)
+                `;
+                
+                setTimeout(() => {
+                    container.style.transform = '';
+                    container.style.filter = '';
+                    errorCode.style.textShadow = '';
+                }, 700);
+            }, 400);
+            
+            function subtleTitleGlitch() {
+                if (Math.random() < 0.1) {
+                    errorTitle.style.transform = `translate(${Math.random() * 2 - 1}px, ${Math.random() * 2 - 1}px)`;
+                    errorTitle.style.filter = `hue-rotate(${Math.random() * 15 - 7.5}deg)`;
+                    
+                    setTimeout(() => {
+                        errorTitle.style.transform = '';
+                        errorTitle.style.filter = '';
+                    }, 100);
+                }
+            }
+            
+            setInterval(subtleTitleGlitch, 8000 + Math.random() * 7000);
+            
+            const currentPath = window.location.pathname;
+            if (currentPath && currentPath !== '/') {
+                const errorDetails = document.querySelector('.error-details p');
+                if (errorDetails) {
+                    errorDetails.innerHTML += `<br><strong>Requested Path:</strong> <span class="error-code-small">${currentPath}</span>`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
