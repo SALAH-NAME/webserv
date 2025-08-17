@@ -16,7 +16,16 @@ void	Client::receiveFromSocket(void) {
 	char	buffer[BYTES_TO_READ+1];
 	std::memset(buffer, 0, sizeof(buffer));
 
-	ssize_t	readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
+	ssize_t	readBytes;
+	try
+	{
+		readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
+	}
+	catch(const std::runtime_error& e)
+	{
+		_state = CloseConnection;
+		return ;
+	}
 
 	if (readBytes <= 0) {
 		if (!readBytes)

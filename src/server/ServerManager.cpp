@@ -42,6 +42,11 @@ void	ServerManager::generatResponses(int i) {
 		perror(e.what());
 		return ;
 	}
+	catch(const char* msg)
+	{
+		std::cerr << msg << std::endl;
+		return ;
+	}
 	client.setGenerateResponseInProcess(GENERATE_RESPONSE_OFF);
 	eraseMarked();
 }
