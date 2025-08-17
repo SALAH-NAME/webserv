@@ -131,8 +131,6 @@ void	ServerManager::transferBodyToFile(Client& client) {
 
 		case InvalidBody:
 			client.handleInvalidBody();
-			closeConnection(client);
-			// close the connection at the moment // should send a resposne first
 	}
 }
 

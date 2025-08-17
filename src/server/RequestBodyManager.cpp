@@ -214,7 +214,7 @@ void	Client::finalizeBodyProccess(void) {
 
 	if (_isBodyTooLarge) {
 		// should remove the the connection
-		_responseHandler->LoadErrorPage("Payload Too Large", 413);
+		_responseHandler->LoadErrorPage(_httpRequest.getVersion() + " 413 Payload Too Large", 413);
 		CgiExceptionHandler();
 		return ;
 	}
@@ -241,6 +241,7 @@ void	Client::finalizeBodyProccess(void) {
 void	Client::handleInvalidBody(void) {
 	_state = DefaultState;
 	_InputState = INPUT_NONE;
-	// here where to handle the invalid cases
-	// need to generate a response
+	std::remove(_responseHandler->GetResourcePath().c_str());
+	_responseHandler->LoadErrorPage(_httpRequest.getVersion() + " 413 Payload Too Large: Chunk size too large", 413);
+	CgiExceptionHandler();
 }
