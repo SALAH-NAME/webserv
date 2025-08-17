@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login System - WebServ</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card {
+            background: var(--color-bg-glass);
+            border: 2px solid var(--color-border-primary);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-2xl);
+            backdrop-filter: blur(15px);
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            animation: 
+                cardPulse 6s ease-in-out infinite,
+                cardFloat 8s ease-in-out infinite;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: var(--gradient-primary);
+            border-radius: var(--border-radius-lg);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+
+        .login-card:hover::before {
+            opacity: 0.5;
+            animation: borderGlitch 2s ease-in-out infinite;
+        }
+
+        .login-title {
+            font-size: var(--font-size-4xl);
+            font-weight: var(--font-weight-extra-bold);
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            position: relative;
+            display: block;
+            animation: titleGlow 4s ease-in-out infinite alternate;
+        }
+
+        .login-title::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            z-index: -1;
+            animation: titleShift 3s ease-in-out infinite;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: var(--spacing-xl);
+            border-radius: var(--border-radius-base);
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-tab {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: var(--spacing-base);
+            color: var(--color-text-secondary);
+            font-family: inherit;
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-bold);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            position: relative;
+        }
+
+        .auth-tab.active {
+            color: var(--color-primary-cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .auth-tab:hover {
+            color: var(--color-primary-pink);
+            background: rgba(255, 0, 128, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-xl);
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-bold);
+            margin-bottom: var(--spacing-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: color var(--transition-base);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--spacing-base);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--color-border-primary);
+            border-radius: var(--border-radius-base);
+            color: var(--color-text-primary);
+            font-family: inherit;
+            font-size: var(--font-size-base);
+            transition: all var(--transition-base);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--color-primary-pink);
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 
+                0 0 20px rgba(255, 0, 128, 0.3),
+                inset 0 0 20px rgba(255, 0, 128, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-input:focus + .form-label,
+        .form-group:focus-within .form-label {
+            color: var(--color-primary-cyan);
+            text-shadow: 0 0 10px var(--color-primary-cyan);
+        }
+
+        .submit-button {
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: var(--border-radius-base);
+            padding: var(--spacing-base) var(--spacing-2xl);
+            color: var(--color-text-primary);
+            font-weight: var(--font-weight-bold);
+            font-family: inherit;
+            font-size: var(--font-size-lg);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .submit-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-primary-reverse);
+            transition: left var(--transition-base);
+            z-index: -1;
+        }
+
+        .submit-button:hover::before {
+            left: 0;
+        }
+
+        .submit-button:hover {
+            transform: scale(1.02) translateY(-2px);
+            box-shadow: var(--shadow-button);
+            animation: buttonPulse 0.6s ease-in-out;
+        }
+
+        .back-button {
+            position: absolute;
+            top: var(--spacing-xl);
+            left: var(--spacing-xl);
+            background: var(--color-bg-glass-strong);
+            border: 1px solid var(--color-border-accent);
+            border-radius: var(--border-radius-base);
+            padding: var(--spacing-sm) var(--spacing-base);
+            color: var(--color-text-primary);
+            text-decoration: none;
+            font-family: inherit;
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-bold);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all var(--transition-base);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            opacity: 1;
+            box-shadow: 0 0 10px rgba(255, 0, 128, 0.2);
+            z-index: 5;
+        }
+
+        .back-button:hover {
+            color: var(--color-primary-cyan);
+            border-color: var(--color-primary-cyan);
+            background: var(--color-bg-glass-strong);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            transform: translateX(-5px) scale(1.02);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        @keyframes cardPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 128, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(0, 255, 255, 0.2); }
+        }
+
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
+            50% { text-shadow: 0 0 30px rgba(255, 0, 128, 0.8), 0 0 40px rgba(0, 255, 255, 0.5); }
+        }
+
+        @keyframes titleShift {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-1px, 1px); }
+            50% { transform: translate(1px, -1px); }
+            75% { transform: translate(-1px, -1px); }
+        }
+
+        @keyframes borderGlitch {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; transform: skew(1deg); }
+        }
+
+        @keyframes buttonPulse {
+            0%, 100% { transform: scale(1.02) translateY(-2px); }
+            50% { transform: scale(1.05) translateY(-4px); }
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                padding: var(--spacing-base);
+            }
+            
+            .login-card {
+                padding: var(--spacing-xl);
+                max-width: 100%;
+            }
+            
+            .login-title {
+                font-size: var(--font-size-3xl);
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/#bonus" class="back-button">Back to Home</a>
+    
+    <div class="login-container">
+        <div class="login-card">
+            <h1 class="login-title" data-text="Authentication">Authentication</h1>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+                <button class="auth-tab" onclick="switchTab('register')">Register</button>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active" action="/loginManager.py" method="post">
+                <input type="hidden" name="action" value="login">
+                
+                <div class="form-group">
+                    <label class="form-label" for="login_username">Username</label>
+                    <input type="text" id="login_username" name="username" class="form-input" placeholder="Enter your username" required />
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="login_password">Password</label>
+                    <input type="password" id="login_password" name="password" class="form-input" placeholder="Enter your password" required />
+                </div>
+                
+                <button type="submit" class="submit-button">Login</button>
+            </form>
+            
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form" action="/loginManager.py" method="post">
+                <input type="hidden" name="action" value="register">
+                
+                <div class="form-group">
+                    <label class="form-label" for="reg_username">Username</label>
+                    <input type="text" id="reg_username" name="username" class="form-input" placeholder="Choose a username" required />
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="reg_email">Email</label>
+                    <input type="email" id="reg_email" name="email" class="form-input" placeholder="Enter your email" required />
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="reg_password">Password</label>
+                    <input type="password" id="reg_password" name="password" class="form-input" placeholder="Choose a password" required />
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="reg_confirm">Confirm Password</label>
+                    <input type="password" id="reg_confirm" name="confirm_password" class="form-input" placeholder="Confirm your password" required />
+                </div>
+                
+                <button type="submit" class="submit-button">Register</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+            
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.getElementById('registerForm').classList.add('active');
+            }
+        }
+        
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const password = document.getElementById('reg_password').value;
+            const confirm = document.getElementById('reg_confirm').value;
+            
+            if (password !== confirm) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+                return false;
+            }
+            
+            if (password.length < 6) {
+                e.preventDefault();
+                alert('Password must be at least 6 characters long!');
+                return false;
+            }
+        });
+
+        function checkLoginStatus() {
+            const sessionId = getCookie('session_id');
+            if (sessionId) {
+                const referrer = document.referrer;
+                if (!referrer.includes('loginManager.py')) {
+                    window.location.href = '/loginManager.py';
+                }
+            }
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        document.addEventListener('DOMContentLoaded', checkLoginStatus);
+    </script>
+</body>
+</html>

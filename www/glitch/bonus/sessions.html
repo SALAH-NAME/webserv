@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Management - WebServ</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .session-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .session-form-container {
+            background: var(--color-bg-glass);
+            border: 2px solid var(--color-border-primary);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-2xl);
+            backdrop-filter: blur(15px);
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            animation: 
+                formPulse 6s ease-in-out infinite,
+                formFloat 8s ease-in-out infinite;
+        }
+
+        .session-form-container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: var(--gradient-primary);
+            border-radius: var(--border-radius-lg);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+
+        .session-form-container:hover::before {
+            opacity: 0.5;
+            animation: borderGlitch 2s ease-in-out infinite;
+        }
+
+        .session-title {
+            font-size: var(--font-size-4xl);
+            font-weight: var(--font-weight-extra-bold);
+            text-align: center;
+            margin-bottom: var(--spacing-2xl);
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            position: relative;
+            display: block;
+            animation: titleGlow 4s ease-in-out infinite alternate;
+        }
+
+        .session-title::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            z-index: -1;
+            animation: titleShift 3s ease-in-out infinite;
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-xl);
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-bold);
+            margin-bottom: var(--spacing-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: color var(--transition-base);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--spacing-base);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--color-border-primary);
+            border-radius: var(--border-radius-base);
+            color: var(--color-text-primary);
+            font-family: inherit;
+            font-size: var(--font-size-base);
+            transition: all var(--transition-base);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--color-primary-pink);
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 
+                0 0 20px rgba(255, 0, 128, 0.3),
+                inset 0 0 20px rgba(255, 0, 128, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-input:focus + .form-label,
+        .form-group:focus-within .form-label {
+            color: var(--color-primary-cyan);
+            text-shadow: 0 0 10px var(--color-primary-cyan);
+        }
+
+        .submit-button {
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: var(--border-radius-base);
+            padding: var(--spacing-base) var(--spacing-2xl);
+            color: var(--color-text-primary);
+            font-weight: var(--font-weight-bold);
+            font-family: inherit;
+            font-size: var(--font-size-lg);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .submit-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-primary-reverse);
+            transition: left var(--transition-base);
+            z-index: -1;
+        }
+
+        .submit-button:hover::before {
+            left: 0;
+        }
+
+        .submit-button:hover {
+            transform: scale(1.02) translateY(-2px);
+            box-shadow: var(--shadow-button);
+            animation: buttonPulse 0.6s ease-in-out;
+        }
+
+        .submit-button:active {
+            transform: scale(0.98) translateY(0);
+        }
+
+        @keyframes formPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 128, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(0, 255, 255, 0.2); }
+        }
+
+        @keyframes formFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
+            50% { text-shadow: 0 0 30px rgba(255, 0, 128, 0.8), 0 0 40px rgba(0, 255, 255, 0.5); }
+        }
+
+        @keyframes titleShift {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-1px, 1px); }
+            50% { transform: translate(1px, -1px); }
+            75% { transform: translate(-1px, -1px); }
+        }
+
+        @keyframes borderGlitch {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.8; transform: skew(1deg); }
+        }
+
+        @keyframes buttonPulse {
+            0%, 100% { transform: scale(1.02) translateY(-2px); }
+            50% { transform: scale(1.05) translateY(-4px); }
+        }
+
+        .back-button {
+            position: absolute;
+            top: var(--spacing-xl);
+            left: var(--spacing-xl);
+            background: var(--color-bg-glass-strong);
+            border: 1px solid var(--color-border-accent);
+            border-radius: var(--border-radius-base);
+            padding: var(--spacing-sm) var(--spacing-base);
+            color: var(--color-text-primary);
+            text-decoration: none;
+            font-family: inherit;
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-bold);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all var(--transition-base);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            opacity: 1;
+            box-shadow: 0 0 10px rgba(255, 0, 128, 0.2);
+            z-index: 5;
+        }
+
+        .back-button:hover {
+            color: var(--color-primary-cyan);
+            border-color: var(--color-primary-cyan);
+            background: var(--color-bg-glass-strong);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            transform: translateX(-5px) scale(1.02);
+        }
+
+        @media (max-width: 768px) {
+            .session-container {
+                padding: var(--spacing-base);
+            }
+            
+            .session-form-container {
+                padding: var(--spacing-xl);
+                max-width: 100%;
+            }
+            
+            .session-title {
+                font-size: var(--font-size-3xl);
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/#bonus" class="back-button">Back to Home</a>
+    
+    <div class="session-container">
+        <div class="session-form-container">
+            <h1 class="session-title" data-text="Session Data">Session Data</h1>
+            
+            <form action="/sessionManager.py" method="post">
+                <div class="form-group">
+                    <label class="form-label" for="name">Name</label>
+                    <input type="text" id="name" name="name" class="form-input" placeholder="Enter your name" required />
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="age">Age</label>
+                    <input type="number" id="age" name="age" class="form-input" placeholder="Enter your age" min="1" max="150" required />
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email" required />
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="number">Phone</label>
+                    <input type="tel" id="number" name="number" class="form-input" placeholder="Enter your phone number" required />
+                </div>
+                
+                <button type="submit" class="submit-button">Create Session</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
