@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEBSERV - Test Suite</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header ">
+            <h1 class="glitch-text" data-text="WebServ">WebServ</h1>
+            <h2 class="glitch-text" data-text="Ed,Edd,Eddy">Ed,Edd,Eddy</h2>
+            <p class="subtitle" data-text="HTTP Server Test Suite - When you finally understand why URLs start with HTTP">HTTP Server Test Suite - When you finally understand why URLs start with HTTP</p>
+        </header>
+        
+        <!-- Our Team Section -->
+        <section class="section">
+            <h2 class="section-title hidden-card">Our Team</h2>
+            <div class="cards-grid">
+                <div class="card team-card hidden-card">
+                    <div class="team-member-image-container me-avatar">
+                        <div class="team-member-avatar-fallback" data-initials="-_-"></div>
+                    </div>
+                    <div class="team-member-role">CONFIG Randomizer</div>
+                    <h3 class="card-title">Ed ?#$!&|;</h3>
+                </div>
+                
+                <div class="card team-card hidden-card">
+                    <div class="team-member-image-container">
+                        <img src="https://cdn.intra.42.fr/users/9f0785c7c9e9ecf8c99ac32d659d03d6/midbella.jpeg" alt="Mohamed Idbellaali" class="team-member-image">
+                    </div>
+                    <div class="team-member-role">CGI Master</div>
+                    <h3 class="card-title">Mohamed Idbellaali</h3>
+                </div>
+                
+                <div class="card team-card hidden-card">
+                    <div class="team-member-image-container">
+                        <img src="https://cdn.intra.42.fr/users/6bebf34ebdc825886d848e047f553da4/alaktari.jpeg" alt="Abdelkarim Laktari" class="team-member-image">
+                    </div>
+                    <div class="team-member-role">MULTIPLEX Architect</div>
+                    <h3 class="card-title">Abdelkarim Laktari</h3>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Mandatory Section -->
+        <section id="mandatory" class="section">
+            <h2 class="section-title hidden-card">Mandatory</h2>
+            <div class="cards-grid">
+                <div id="get" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">GET</h3>
+                    <p class="card-description">Try a simple Get Method to display GET.html</p>
+                    <a href="/mandatory/GET.html" class="card-button">Try</a>
+                </div>
+                
+                <div id="post" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">POST</h3>
+                    <p class="card-description">Try a simple Post Method to create a file</p>
+                    <a href="/mandatory/POST.html" class="card-button">Try</a>
+                </div>
+                
+                <div id="delete" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">DELETE</h3>
+                    <p class="card-description">Try Delete Method - remove selected files</p>
+                    <a href="/mandatory/DELETE.html" class="card-button">Try</a>
+                </div>
+                
+                <div id="upload" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">UPLOAD</h3>
+                    <p class="card-description">Upload a File on Server to manipulate_files/</p>
+                    <a href="/mandatory/UPLOAD.html" class="card-button">Try</a>
+                </div>
+                
+                <div id="download" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">DOWNLOAD</h3>
+                    <p class="card-description">Get back the files on manipulate_files/</p>
+                    <a href="/mandatory/DOWNLOAD.html" class="card-button">Try</a>
+                </div>
+                
+                <div id="allowedmethods" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">ALLOWED METHODS</h3>
+                    <p class="card-description">Try to GET path that only allowed DELETE</p>
+                    <a href="/method_not_allowed" class="card-button">Try</a>
+                </div>
+                
+                <div id="internal" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">Internal Redirection</h3>
+                    <p class="card-description">Go to REDIRECT_ENDPOINT with 301 Redirection</p>
+                    <a href="/internal_redirect" class="card-button">Try</a>
+                </div>
+
+                <div id="external" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">External Redirection</h3>
+                    <p class="card-description">Go to https://github.com with 302 Redirection</p>
+                    <a href="/external_redirect" class="card-button">Try</a>
+                </div>
+
+                <div id="autoindexon" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">AUTOINDEX</h3>
+                    <p class="card-description">Auto index (ON)</p>
+                    <a href="/autoindex_is_on" class="card-button">Try</a>
+                </div>
+                
+                <div id="autoindexoff" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">AUTOINDEX</h3>
+                    <p class="card-description">Auto index (OFF)</p>
+                    <a href="/autoindex_is_off" class="card-button">Try</a>
+                </div>
+
+                <div id="customindexon" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">CUSTOM INDEX PAGE</h3>
+                    <p class="card-description">Auto index (ON)</p>
+                    <a href="/index_page_on" class="card-button">Try</a>
+                </div>
+
+                <div id="customindexoff" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">CUSTOM INDEX PAGE</h3>
+                    <p class="card-description">Auto index (OFF)</p>
+                    <a href="/index_page_off" class="card-button">Try</a>
+                </div>
+
+                <div id="defaultindex" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">DEFAULT INDEX PAGE</h3>
+                    <p class="card-description">Auto index (OFF)</p>
+                    <a href="/default_index_page" class="card-button">Try</a>
+                </div>
+
+                <div id="customerror" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">Custom Error Page</h3>
+                    <p class="card-description">Display custom 403 Error Pages</p>
+                    <a href="/custom_error/" class="card-button">Try</a>
+                </div>
+
+                <div id="defaulterror" class="card mandatory-card hidden-card">
+                    <h3 class="card-title">Default Error Page</h3>
+                    <p class="card-description">Display custom 404 Error Pages</p>
+                    <a href="/404" class="card-button">Try</a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Bonus Section -->
+        <section id="bonus" class="section">
+            <h2 class="section-title hidden-card">Bonus</h2>
+            <div class="cards-grid">
+                <div id="cgipython" class="card bonus-card hidden-card">
+                    <h3 class="card-title">CGI PYTHON</h3>
+                    <p class="card-description">Execute a simple CGI python script</p>
+                    <a href="/python_cgi.py" class="card-button">Try</a>
+                </div>
+                
+                <div id="cgibash" class="card bonus-card hidden-card">
+                    <h3 class="card-title">CGI BASH</h3>
+                    <p class="card-description">Execute a simple CGI bash script</p>
+                    <a href="/shell_cgi.sh" class="card-button">Try</a>
+                </div>
+                
+                <div id="cgiphp" class="card bonus-card hidden-card">
+                    <h3 class="card-title">CGI PHP</h3>
+                    <p class="card-description">Execute a simple CGI php script</p>
+                    <a href="/php_cgi.php" class="card-button">Try</a>
+                </div>
+                
+                <div id="lgin" class="card bonus-card hidden-card">
+                    <h3 class="card-title">LOGIN</h3>
+                    <p class="card-description">Create an account, log in, and write private notes</p>
+                    <a href="/login" class="card-button">Try</a>
+                </div>
+                
+                <div id="visit" class="card bonus-card hidden-card">
+                    <h3 class="card-title">Visit Counter</h3>
+                    <p class="card-description">Count visit with cookies</p>
+                    <a href="/cookie" class="card-button">Try</a>
+                </div>
+                
+                <div id="session" class="card bonus-card hidden-card">
+                    <h3 class="card-title">SESSION MANAGEMENT</h3>
+                    <p class="card-description">Test cookies and session handling</p>
+                    <a href="/session" class="card-button">Try</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Heavy Load Section -->
+        <section id="heavy" class="section">
+            <h2 class="section-title hidden-card">Heavy Load Testing</h2>
+            <div class="cards-grid">
+                <div id="heavypage" class="card heavy-card hidden-card">
+                    <h3 class="card-title">Heavy Page</h3>
+                    <p class="card-description">Display a heavy content page to test server performance under load</p>
+                    <a href="/heavy_page" class="card-button">Try</a>
+                </div>
+                
+                <div id="stress" class="card heavy-card hidden-card">
+                    <h3 class="card-title">Stress Test</h3>
+                    <p class="card-description">Multiple concurrent requests to test server stability</p>
+                    <a href="/stress_test" class="card-button">Try</a>
+                </div>
+                
+                <div id="largefile" class="card heavy-card hidden-card">
+                    <h3 class="card-title">Large File Test</h3>
+                    <p class="card-description">Test serving large files and memory management</p>
+                    <a href="/large_file" class="card-button">Try</a>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <script src="./script.js"></script>
+</body>
+</html>
