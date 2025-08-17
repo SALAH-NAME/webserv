@@ -209,7 +209,7 @@ def	WriteToSession():
         <div class="success-card">
             <h1 class="success-title">Success!</h1>
             <div class="success-description">
-                <p>
+                <p style="color: #222;">
                     The submitted data is now stored on the server.<br>
                     If the server host restarts, the session will be deleted.<br>
                     The server recognizes you by the value of the session-id cookie.<br>
