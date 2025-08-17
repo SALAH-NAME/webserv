@@ -131,6 +131,8 @@ class Client {
 		void								setRequestBodyPart(std::string);
 		void								resetUploadedBytes(void);
 		void								setPendingRequestData(std::string);
+		void								setCgiInputPipe(int);
+		void								setCgiOutPipe(int);
 
 		void								setContentLength(int);
 		void								resetContentLength(void);

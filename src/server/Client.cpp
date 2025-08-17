@@ -15,7 +15,7 @@ Client::Client(ServerManager* serverManagerPtr, Socket sock, const std::vector<S
 											, _chunkBodySize(-1)
 											, _isChunked(NOT_CHUNKED)
 											, _uploadedBytes(0)
-											, _responseHandler(new ResponseHandler(NULL))
+											, _responseHandler(new ResponseHandler(_serverManagerPtr))
 											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)
 											, _responseBodyFlag(RESPONSE_BODY_NOT_READY)
 											, _fullResponseFlag(FULL_RESPONSE_NOT_READY)
@@ -276,6 +276,14 @@ void	Client::setUploadedBytes(size_t bytes) {
 
 void	Client::resetUploadedBytes(void) {
 	_uploadedBytes = 0;
+}
+
+void	Client::setCgiInputPipe(int value) {
+	_CGI_InPipeFD = value;
+}
+
+void	Client::setCgiOutPipe(int value) {
+	_CGI_OutPipeFD = value;
 }
 
 void	Client::setContentLength(int length) {
