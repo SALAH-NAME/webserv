@@ -1,8 +1,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <csignal>
 #include "SharedPtr.hpp"
 #include "HttpRequest.hpp"
+
+volatile sig_atomic_t g_shutdown = 0;
 
 void testAllTokenizer();
 void testConfigPrint();

@@ -32,7 +32,7 @@ private:
 		_ptr = p;
 		_refCount = count;
 		if (_refCount)
-			++(*+_refCount);
+			++(*_refCount);
 	}
 
 public:
@@ -89,7 +89,7 @@ public:
 	template<typename U>
 	shared_ptr& operator=(const shared_ptr<U>& other)
 	{
-		shared_ptr* tmp(other);
+		shared_ptr tmp(other);
 		swap(tmp);
 		return *this;
 	}
