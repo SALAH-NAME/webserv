@@ -29,9 +29,16 @@ void	ServerManager::transmitResponseHeader(Client& client) {
 	// std::cout << "Bytes to send now: " << bytesToSendNow << "\n";
 
 	size_t sentBytes;
-	sentBytes = client.getSocket().send(response.c_str(), bytesToSendNow, MSG_NOSIGNAL);
-	if (sentBytes <= 0)
+	try {
+		sentBytes = client.getSocket().send(response.c_str(), bytesToSendNow, MSG_NOSIGNAL);
+		if (sentBytes <= 0)
+			return ;
+	}
+	catch (const std::runtime_error &e)
+	{
+		std::cerr << e.what() << std::endl;
 		return ;
+	}
 	// std::cout << "Sent bytes: " << sentBytes << "\n";
 	client.resetLastConnectionTime();
 	client.updateHeaderStateAfterSend(bytesToSendNow);
