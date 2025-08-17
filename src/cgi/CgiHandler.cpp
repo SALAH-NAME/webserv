@@ -130,7 +130,7 @@ void CgiHandler::ClearData()
 
 void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 				const LocationConfig &cgi_conf, std::string &script_path,
-					ClientInfos &client_info)
+					ClientInfos &client_info, ServerManager *srv_mem)
 {
 	// std::cout << "called run cgi" << std::endl;//logger
 	int 	id;
@@ -156,10 +156,10 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 			std::exit(1); // Fixed: free memory before exit
 		}
 		SetCgiChildFileDescriptors();
-		
+		srv_mem->cleanupChildDescriptors();
 		// close inherited FDs
-		for (int fd = 3; fd < MAX_FDS; fd++)
-			close(fd);
+		// for (int fd = 3; fd < MAX_FDS; fd++)
+		// 	close(fd);
 
 		char **raw_env = env.GetRawEnv();
 		execve(cgi_conf.getCgiPass().c_str(), argv, raw_env);

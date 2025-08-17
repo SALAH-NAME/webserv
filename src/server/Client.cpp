@@ -424,7 +424,7 @@ void	Client::resetAttributes(void) {
 	_uploadedBytes =  0;
 	_httpRequest.reset();
 	delete _responseHandler;
-	_responseHandler = new ResponseHandler(NULL);
+	_responseHandler = new ResponseHandler(_serverManagerPtr);
 
 	if (_requestDataPreloadedFlag || _pendingHeaderFlag)
 		_InputState = INPUT_HEADER_READY;

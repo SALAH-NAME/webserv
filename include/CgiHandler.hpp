@@ -61,7 +61,7 @@ class CgiHandler
 		CgiHandler();
 		void								RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 													const	LocationConfig &cgi_conf, std::string &script_path,
-														ClientInfos &client_info);
+														ClientInfos &client_info, ServerManager* srv_mem);
 		pid_t 								GetChildPid();
 		void								ParseOutputBuffer(const std::string &new_buff);
 		Pipe& 								GetInPipe();

@@ -130,6 +130,7 @@ class ServerManager {
 		/**/								ServerManager(const std::vector<ServerConfig> &);
 		/**/								~ServerManager(void);
 		void								waitingForEvents(void);
+		void								cleanupChildDescriptors(void);
 
 };
 

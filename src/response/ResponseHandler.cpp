@@ -166,7 +166,7 @@ void ResponseHandler::ProccessHttpGET()
 {
 //     std::cout << "inside GET req processor" << std::endl;//logger
     if (require_cgi)
-        return (CgiObj.RunCgi(*req, *conf, *loc_config, resource_path, client_info));    
+        return (CgiObj.RunCgi(*req, *conf, *loc_config, resource_path, client_info, srv_mem_ptr));    
     if (access(resource_path.c_str(), R_OK) != 0 || (IsDir(resource_path.c_str())
         && loc_config->getIndex().empty() && !loc_config->getAutoindex()))
             throw (ResponseHandlerError(req->getVersion() + " 403 Forbidden", 403));
@@ -179,7 +179,7 @@ void ResponseHandler::ProccessHttpPOST()
 {
 //     std::cout << "inside post req processor" << std::endl;//logger
     if (require_cgi)
-        return (CgiObj.RunCgi(*req, *conf, *loc_config, resource_path, client_info));
+        return (CgiObj.RunCgi(*req, *conf, *loc_config, resource_path, client_info, srv_mem_ptr));
     if (access(resource_path.c_str(), F_OK) == 0){
         keep_alive = false;
         throw (ResponseHandlerError(req->getVersion() + " 409 Conflict", 409));
