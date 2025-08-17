@@ -22,7 +22,7 @@ public:
     ~Socket();
     operator int() const;
 
-	void create(int domain = AF_INET, int type = SOCK_STREAM | SOCK_NONBLOCK, int protocol = 0); // Non-Blocking
+	void create(int domain = AF_INET, int type = SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, int protocol = 0); // Non-Blocking
 	void bind(const struct sockaddr* addr, socklen_t addrlen);
 	void listen(int backlog = SOMAXCONN);
 	Socket accept(struct sockaddr* addr = NULL, socklen_t* addreln = NULL);

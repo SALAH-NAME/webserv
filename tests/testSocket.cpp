@@ -34,7 +34,7 @@ static void testSocketBasicOperations()
 		try
 		{
 			Socket s;
-			s.create(AF_INET, SOCK_STREAM, 0);
+			s.create(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
 			passed = (s.isValid() && s.getFd() >= 0);
 		} catch ( const std::exception& e)
 		{
@@ -64,7 +64,7 @@ static void testSocketBasicOperations()
 		try
 		{
 			Socket s;
-			s.create(AF_INET, SOCK_STREAM, 0);
+			s.create(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
 			passed = (s == s.getFd());
 		} catch ( const std::exception& e)
 		{
@@ -183,7 +183,7 @@ static void testSocketDuplication()
 			Socket s;
 			s.create();
 
-			int tempSocket = socket(AF_INET, SOCK_STREAM, 0);
+			int tempSocket = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
 			if (tempSocket >= 0)
 			{
 				s.duplicateTo(tempSocket);

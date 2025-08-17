@@ -231,7 +231,7 @@ void ServerManager::eraseUnusedSockets() {
 }
 
 ServerManager::ServerManager(const std::vector<ServerConfig>& serversInfo)
-		: _serversConfig(serversInfo), _domain(AF_INET), _type(SOCK_STREAM | SOCK_NONBLOCK)
+		: _serversConfig(serversInfo), _domain(AF_INET), _type(SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC)
 		,  _timeOut(1), _cleanupPerformed(false) {
 	
 	createEpoll();
