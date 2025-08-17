@@ -14,7 +14,7 @@ Client::Client(Socket sock, const std::vector<ServerConfig>& allServersConfig, i
 											, _chunkBodySize(-1)
 											, _isChunked(NOT_CHUNKED)
 											, _uploadedBytes(0)
-											, _responseHandler(new ResponseHandler())
+											, _responseHandler(new ResponseHandler(NULL))
 											, _responseHeaderFlag(RESPONSE_HEADER_NOT_READY)
 											, _responseBodyFlag(RESPONSE_BODY_NOT_READY)
 											, _fullResponseFlag(FULL_RESPONSE_NOT_READY)
@@ -443,7 +443,7 @@ void	Client::resetAttributes(void) {
 	_uploadedBytes =  0;
 	_httpRequest.reset();
 	delete _responseHandler;
-	_responseHandler = new ResponseHandler();
+	_responseHandler = new ResponseHandler(NULL);
 
 	if (_requestDataPreloadedFlag || _pendingHeaderFlag)
 		_InputState = INPUT_HEADER_READY;
