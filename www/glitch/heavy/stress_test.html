@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<ht ang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebServ - Stress Test Suite</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="glitch-text" data-text="Stress Test">Stress Test</h1>
+            <p class="subtitle">The Ultimate Server Performance Evaluation... or Not 🤷‍♂️</p>
+        </header>
+        
+        <section class="section">
+            <div class="cards-grid" style="justify-content: center;">
+                <div class="card heavy-card">
+                    <h3 class="card-title">🚀 The Real Test</h3>
+                    <p class="card-description">
+                        I lost A LOT of time trying to build the perfect automated JavaScript stress tester! 
+                        You know how it is... perfectionism is the enemy of a black holes! 🕳️ 😅
+                    </p>
+                    <p class="card-description">
+                        You want to evaluate our server? Here's your mission, should you choose to accept it:
+                    </p>
+                    <div class="command-box">
+                        <code>siege -c 255 -t 30S http://127.0.0.1:8080/empty.html</code>
+                    </div>
+                    <p class="card-description">
+                        If it returns... literally anything... we're good! If it doesn't, well... 
+                        that's what we call "undefined behavior" in the specs! 😎
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="section">
+            <div class="cards-grid" style="justify-content: center;">
+                <div class="card team-card">
+                    <h3 class="card-title">💡 Wisdom of the Day</h3>
+                    <p class="card-description">
+                        "The best stress test is the one that actually gets finished before the deadline." 
+                        - Black Hole, probably.
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <div style="text-align: center; margin: 2rem 0;">
+            <a href="/#heavy" class="card-button" style="display: inline-block;">Back to Home</a>
+        </div>
+    </div>
+    
+    <style>
+        .command-box {
+            background: var(--color-bg-primary);
+            border: 1px solid var(--color-border-accent);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--color-primary-cyan);
+            text-align: center;
+            font-size: 1.1rem;
+            box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.1);
+        }
+        
+        .command-box code {
+            color: var(--color-primary-cyan);
+            background: none;
+            font-weight: bold;
+        }
+        
+        .heavy-card {
+            background: linear-gradient(135deg, var(--color-card-heavy-bg-start), var(--color-card-heavy-bg-end));
+            border-color: var(--color-card-heavy-border);
+        }
+        
+        .heavy-card .card-title {
+            color: var(--color-card-heavy-title);
+        }
+        
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        ul li {
+            margin: 0.5rem 0;
+            padding-left: 1rem;
+        }
+        
+        .card-button:hover {
+            animation: pulse 0.6s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+        }
+    </style>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+            
+            const commandBox = document.querySelector('.command-box');
+            if (commandBox) {
+                commandBox.addEventListener('click', function() {
+                    navigator.clipboard.writeText('siege -c 255 -t 30S http://127.0.0.1:8080/empty.html').then(() => {
+                        const originalText = commandBox.innerHTML;
+                        commandBox.innerHTML = '<code>✅ Copied to clipboard!</code>';
+                        setTimeout(() => {
+                            commandBox.innerHTML = originalText;
+                        }, 2000);
+                    });
+                });
+                
+                commandBox.style.cursor = 'pointer';
+                commandBox.title = 'Click to copy command';
+            }
+        });
+    </script>
+</body>
+</html>
