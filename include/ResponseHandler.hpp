@@ -44,7 +44,8 @@ class ResponseHandler
 		unsigned int				cgi_buffer_size;
 		int							cgi_tmpfile_id;
 		bool						keep_alive;
-		
+		ServerManager 				*srv_mem_ptr;
+
 		void		InitialRequestCheck();
 		void		SetKeepAlive(); 
 		void		ProccessRequest();
@@ -72,7 +73,7 @@ class ResponseHandler
 		void		UpdateCgiChildExitStatus();
 			
 	public:
-		ResponseHandler();
+		ResponseHandler(ServerManager *ptr);
 		void			SetServerConf(ServerConfig *usedCon, const ClientInfos &clientInfos);
 		void			CheckForContentType();			void			LoadErrorPage(const std::string &status_line, int status_code);
 		void 			Run(HttpRequest &request);

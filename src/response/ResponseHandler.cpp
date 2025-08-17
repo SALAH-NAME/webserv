@@ -1,6 +1,6 @@
 #include "ResponseHandler.hpp"
 
-ResponseHandler::ResponseHandler()
+ResponseHandler::ResponseHandler(ServerManager *ptr)
 {
     InitializeStandardContentTypes();
     InitializeStatusPhrases();
@@ -17,6 +17,7 @@ ResponseHandler::ResponseHandler()
     target_file = NULL;
     cgi_tmpfile_id = -1;
     cgi_buffer_size = 0;
+    srv_mem_ptr = ptr;
 }
 
 void    ResponseHandler::CheckForContentType()
