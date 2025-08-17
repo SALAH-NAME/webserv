@@ -31,7 +31,17 @@ void    ServerManager::collectRequestData(Client& client) {
 		if (client.getRequestDataPreloadedFlag() == ON)
 			client.getBufferFromPendingData(_buffer, &readbytes);
 		else
-			readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
+		{
+			try
+			{
+				readbytes = client.getSocket().recv((void*)_buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
+			}
+			catch(const std::runtime_error& e)
+			{
+				std::cerr << e.what() << std::endl;
+				return ;
+			}
+		}
 		if (readbytes <= 0) {
 			if (!readbytes)
 				closeConnection(client);

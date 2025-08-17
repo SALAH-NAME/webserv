@@ -148,7 +148,7 @@ void    ServerManager::waitingForEvents(void) {
 			if (errno == EINTR) {
 				continue;
 			}
-			throw "epoll_wait failed";
+			std::cerr << "epoll_wait failed: " << strerror(errno) << std::endl;
 		}
 			
 		checkTimeOut();
