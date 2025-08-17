@@ -8,7 +8,6 @@ pid_t ResponseHandler::GetCgiChildPid(){return (CgiObj.GetChildPid());}
 
 bool ResponseHandler::ReachedCgiBodyPhase(){return CgiObj.ReachedBodyPhase();}
 
-
 bool ResponseHandler::RequireCgi()
 {
 	return (CgiObj.GetExecutionStartTime() != -1);
@@ -53,11 +52,11 @@ void ResponseHandler::CheckCgiChildState() // use only if cgi is required
 	UpdateCgiChildExitStatus();
 	if (!IsCgiChildRunning() && child_status != 0){
 		DeleteCgiTargetFile();
-// 		std::cout << "--- script failed ---\nshould call load error page" << std::endl;//logger
+		// std::cout << "--- script failed ---\nshould call load error page" << std::endl;//logger
 		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 502));
 	}
 	else if (CheckCgiTimeOut()){
-// 		std::cout << "time out" << std::endl;//logger
+		// std::cout << "time out" << std::endl;//logger
 		DeleteCgiTargetFile(); 
 		CgiObj.KillChild();
 		throw (ResponseHandlerError(req->getVersion() + " 504 Gateway Timeout", 504));
@@ -144,7 +143,11 @@ void ResponseHandler::SetTargetFileForCgi(int id)
 
 	// std::cout << "--------------will set a target file for cgi ----------------" << std::endl;//logger
 	cgi_tmpfile_id = id;
-	CgiObj.PreBodyPhraseChecks();
+	try{
+		CgiObj.PreBodyPhraseChecks();}
+	catch (CgiHandler::BadCgiOutput &ex){
+		throw (ResponseHandlerError(req->getVersion() + " 502 Bad Gateway", 500));
+	}
 	int fd = open(filename.c_str(), O_CREAT, 0644);
 	close(fd);
 	target_file = new std::fstream(filename.c_str(), std::ios::out | std::ios::in | std::ios::trunc | std::ios::binary);

@@ -36,7 +36,6 @@ def SetVisiCount():
 		value = key_value[1].strip()
 		if key == "visit-counter":
 			counter = int(value)
-	print(f"fetched counter = {counter}", file=stderr)
 
 SetVisiCount()
 InitializeCookies()

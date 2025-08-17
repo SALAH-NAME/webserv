@@ -131,8 +131,6 @@ class ServerManager {
 		/**/								~ServerManager(void);
 		void								waitingForEvents(void);
 
-		void								cleanupChildDescriptors(void);
-
 };
 
 ServerConfig*								getMatchingServerConfig(const std::vector<ServerConfig>& configs, const HttpRequest&, ClientInfos);
