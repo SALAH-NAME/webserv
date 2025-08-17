@@ -1,5 +1,9 @@
 #include "CgiHandler.hpp"
 
+#ifndef MAX_FDS
+#define MAX_FDS 1024
+#endif
+
 CgiHandler::CgiHandler()
 {
 	content_length = -1;
@@ -152,6 +156,11 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 			std::exit(1); // Fixed: free memory before exit
 		}
 		SetCgiChildFileDescriptors();
+		
+		// close inherited FDs
+		for (int fd = 3; fd < MAX_FDS; fd++)
+			close(fd);
+
 		char **raw_env = env.GetRawEnv();
 		execve(cgi_conf.getCgiPass().c_str(), argv, raw_env);
 		delete_strings(argv);
