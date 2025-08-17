@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GET Method - WebServ</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .get-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .get-message-container {
+            background: var(--color-bg-glass);
+            border: 2px solid var(--color-border-primary);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-2xl);
+            backdrop-filter: blur(15px);
+            max-width: 1000px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            animation: 
+                formPulse 6s ease-in-out infinite,
+                formFloat 8s ease-in-out infinite;
+        }
+
+        .get-message-container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: var(--gradient-primary);
+            border-radius: var(--border-radius-lg);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+
+        .get-message-container:hover::before {
+            opacity: 0.3;
+        }
+
+        .get-message {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: var(--font-weight-extra-bold);
+            text-align: center;
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 0;
+            position: relative;
+            animation: titleGlitchSubtle 4s ease-in-out infinite;
+        }
+
+        .get-message::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: var(--color-primary-pink);
+            z-index: -1;
+            animation: getGlitchColor1 4s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .get-message::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: var(--color-primary-cyan);
+            z-index: -1;
+            animation: getGlitchColor2 4.5s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .back-button {
+            position: fixed;
+            top: var(--spacing-xl);
+            left: var(--spacing-xl);
+            padding: var(--spacing-base) var(--spacing-lg);
+            background: var(--color-bg-glass);
+            border: 1px solid var(--color-border-primary);
+            color: var(--color-text-primary);
+            font-family: var(--font-family-primary);
+            font-weight: var(--font-weight-bold);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: var(--border-radius-base);
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-base);
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            background: var(--color-bg-glass-strong);
+            border-color: var(--color-border-accent);
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 15px rgba(255, 0, 128, 0.3),
+                0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        @keyframes formPulse {
+            0%, 100% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            50% { 
+                transform: scale(1.01);
+                filter: brightness(1.05);
+            }
+        }
+
+        @keyframes formFloat {
+            0%, 100% { 
+                transform: translateY(0px);
+            }
+            33% { 
+                transform: translateY(-3px);
+            }
+            66% { 
+                transform: translateY(3px);
+            }
+        }
+
+        @keyframes titleGlitchSubtle {
+            0%, 98%, 100% { 
+                transform: scale(1);
+                filter: hue-rotate(0deg);
+            }
+            99% { 
+                transform: scale(1.01) translate(-1px, 1px);
+                filter: hue-rotate(15deg);
+            }
+        }
+
+        @keyframes getGlitchColor1 {
+            0%, 95%, 100% { 
+                filter: hue-rotate(0deg);
+                text-shadow: -2px 0 var(--color-primary-pink);
+                opacity: 0;
+            }
+            96%, 98% {
+                filter: hue-rotate(45deg);
+                text-shadow: -3px 0 var(--color-secondary-pink);
+                opacity: 0.5;
+            }
+            97%, 99% {
+                filter: hue-rotate(-45deg);
+                text-shadow: -4px 0 var(--color-primary-pink);
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes getGlitchColor2 {
+            0%, 95%, 100% { 
+                filter: hue-rotate(0deg);
+                text-shadow: 2px 0 var(--color-primary-cyan);
+                opacity: 0;
+            }
+            96%, 98% {
+                filter: hue-rotate(-60deg);
+                text-shadow: 3px 0 var(--color-secondary-cyan);
+                opacity: 0.5;
+            }
+            97%, 99% {
+                filter: hue-rotate(120deg);
+                text-shadow: 4px 0 var(--color-primary-cyan);
+                opacity: 0.7;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .get-container {
+                padding: var(--spacing-lg);
+            }
+            
+            .get-message-container {
+                padding: var(--spacing-lg);
+            }
+            
+            .get-message {
+                font-size: clamp(1.5rem, 5vw, 2.5rem);
+            }
+            
+            .back-button {
+                top: var(--spacing-base);
+                left: var(--spacing-base);
+                padding: var(--spacing-sm) var(--spacing-base);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .get-message-container,
+            .get-message,
+            .back-button {
+                animation: none !important;
+            }
+            
+            .get-message::before,
+            .get-message::after {
+                animation: none !important;
+                opacity: 0 !important;
+            }
+        }
+
+        @media (prefers-contrast: high) {
+            .get-message-container,
+            .back-button {
+                border-width: 3px;
+                border-color: var(--color-white);
+            }
+            
+            .get-message-container {
+                background: rgba(0, 0, 0, 0.9);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="get-container">
+        <!-- Back button -->
+        <a href="/#mandatory" class="back-button" data-text="← Back">
+            ← Back
+        </a>
+
+        <!-- Main message container -->
+        <div class="get-message-container">
+            <h1 class="get-message" data-text="You Know GET Works Right ?">
+                You Know GET Works Right ?
+            </h1>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const getMessage = document.querySelector('.get-message');
+            const backButton = document.querySelector('.back-button');
+            
+            function randomTitleGlitch() {
+                if (Math.random() < 0.05) {
+                    getMessage.style.transform = `translate(${Math.random() * 2 - 1}px, ${Math.random() * 2 - 1}px)`;
+                    getMessage.style.filter = `hue-rotate(${Math.random() * 30 - 15}deg)`;
+                    
+                    setTimeout(() => {
+                        getMessage.style.transform = '';
+                        getMessage.style.filter = '';
+                    }, 100);
+                }
+            }
+            
+            setInterval(randomTitleGlitch, 5000 + Math.random() * 5000);
+            
+            backButton.addEventListener('mouseenter', function() {
+                this.style.textShadow = `
+                    1px 0 var(--color-primary-pink),
+                    -1px 0 var(--color-primary-cyan)
+                `;
+            });
+            
+            backButton.addEventListener('mouseleave', function() {
+                this.style.textShadow = '';
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    backButton.click();
+                }
+            });
+            
+            setTimeout(() => {
+                const messageContainer = document.querySelector('.get-message-container');
+                messageContainer.style.transform = 'scale(1.1) translateY(-10px)';
+                messageContainer.style.filter = 'blur(2px) hue-rotate(180deg)';
+                
+                setTimeout(() => {
+                    messageContainer.style.transform = '';
+                    messageContainer.style.filter = '';
+                }, 600);
+            }, 300);
+        });
+    </script>
+</body>
+</html>

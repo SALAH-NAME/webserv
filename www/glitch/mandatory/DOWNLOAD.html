@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOWNLOAD Files - WebServ</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .download-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download-content-container {
+            background: var(--color-bg-glass);
+            border: 2px solid var(--color-border-primary);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-2xl);
+            backdrop-filter: blur(15px);
+            max-width: 1000px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            animation: 
+                formPulse 6s ease-in-out infinite,
+                formFloat 8s ease-in-out infinite;
+        }
+
+        .download-content-container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: var(--gradient-primary);
+            border-radius: var(--border-radius-lg);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+
+        .download-content-container:hover::before {
+            opacity: 0.3;
+        }
+
+        .download-title {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: var(--font-weight-extra-bold);
+            text-align: center;
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 0 0 var(--spacing-2xl) 0;
+            position: relative;
+            animation: titleGlitchSubtle 3s ease-in-out infinite;
+        }
+
+        .download-title::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: var(--color-primary-pink);
+            z-index: -1;
+            animation: downloadGlitchColor1 3.5s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .download-title::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: var(--color-primary-cyan);
+            z-index: -1;
+            animation: downloadGlitchColor2 4s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .files-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .section-title {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-primary);
+            margin: 0 0 var(--spacing-lg) 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            position: relative;
+            animation: subtitleGlitch 5s ease-in-out infinite;
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-base);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .file-item {
+            background: var(--color-bg-glass);
+            border: 1px solid var(--color-border-primary);
+            border-radius: var(--border-radius-base);
+            padding: var(--spacing-lg);
+            position: relative;
+            transition: all var(--transition-base);
+            cursor: pointer;
+            overflow: hidden;
+            animation: fileItemFloat 6s ease-in-out infinite;
+        }
+
+        .file-item:nth-child(even) {
+            animation-delay: -3s;
+        }
+
+        .file-item:nth-child(3n) {
+            animation-delay: -1.5s;
+        }
+
+        .file-item:hover {
+            border-color: var(--color-border-accent);
+            background: var(--color-bg-glass-strong);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 
+                0 8px 25px rgba(255, 0, 128, 0.2),
+                0 15px 35px rgba(0, 255, 255, 0.1);
+        }
+
+        .file-item.downloading {
+            pointer-events: none;
+            opacity: 0.7;
+            animation: downloadingPulse 1s ease-in-out infinite;
+        }
+
+        .file-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+            z-index: 0;
+        }
+
+        .file-item:hover::before {
+            left: 100%;
+        }
+
+        .file-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .file-name {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-primary);
+            margin: 0 0 var(--spacing-sm) 0;
+            word-break: break-all;
+        }
+
+        .file-info {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            margin: 0 0 var(--spacing-base) 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+        }
+
+        .file-size {
+            font-weight: var(--font-weight-bold);
+            color: var(--color-primary-cyan);
+        }
+
+        .file-type {
+            background: var(--color-bg-glass-strong);
+            color: var(--color-primary-pink);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-sm);
+            font-size: var(--font-size-xs);
+            text-transform: uppercase;
+            font-weight: var(--font-weight-bold);
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: var(--spacing-base) var(--spacing-lg);
+            background: linear-gradient(45deg, var(--color-primary-cyan), var(--color-primary-pink));
+            border: none;
+            border-radius: var(--border-radius-base);
+            color: var(--color-text-primary);
+            font-family: var(--font-family-primary);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-bold);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-base);
+        }
+
+        .download-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .download-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 15px rgba(255, 0, 128, 0.4),
+                0 0 30px rgba(0, 255, 255, 0.3);
+        }
+
+        .download-btn:hover::before {
+            left: 100%;
+        }
+
+        .download-btn:active {
+            transform: scale(0.98);
+        }
+
+        .download-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-base);
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .action-button {
+            padding: var(--spacing-base) var(--spacing-xl);
+            border: 2px solid var(--color-border-primary);
+            border-radius: var(--border-radius-base);
+            font-family: var(--font-family-primary);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-bold);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-base);
+            background: transparent;
+            min-width: 150px;
+        }
+
+        .action-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .action-button:hover::before {
+            left: 100%;
+        }
+
+        .action-button:active {
+            transform: scale(0.98);
+        }
+
+        .refresh-button {
+            background: var(--color-bg-glass);
+            border-color: var(--color-border-primary);
+            color: var(--color-text-primary);
+        }
+
+        .refresh-button:hover {
+            background: var(--color-bg-glass-strong);
+            border-color: var(--color-border-accent);
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 15px rgba(255, 0, 128, 0.3),
+                0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .status-container {
+            position: fixed;
+            top: var(--spacing-xl);
+            right: var(--spacing-xl);
+            z-index: var(--z-highest);
+            max-width: 400px;
+        }
+
+        .status-message {
+            background: var(--color-bg-glass-strong);
+            border: 2px solid var(--color-border-primary);
+            border-radius: var(--border-radius-base);
+            padding: var(--spacing-base) var(--spacing-lg);
+            color: var(--color-text-primary);
+            font-family: var(--font-family-primary);
+            font-size: var(--font-size-sm);
+            backdrop-filter: blur(10px);
+            animation: slideInRight 0.3s ease-out;
+            margin-bottom: var(--spacing-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-message.success {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .status-message.error {
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .status-message.loading {
+            border-color: var(--color-primary-cyan);
+            color: var(--color-primary-cyan);
+        }
+
+        .status-message::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: statusShimmer 2s infinite;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--color-border-primary);
+            border-radius: 50%;
+            border-top-color: var(--color-primary-cyan);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: var(--spacing-sm);
+        }
+
+        .back-button {
+            position: fixed;
+            top: var(--spacing-xl);
+            left: var(--spacing-xl);
+            padding: var(--spacing-base) var(--spacing-lg);
+            background: var(--color-bg-glass);
+            border: 1px solid var(--color-border-primary);
+            color: var(--color-text-primary);
+            text-decoration: none;
+            font-family: var(--font-family-primary);
+            font-size: var(--font-size-base);
+            font-weight: var(--font-weight-bold);
+            border-radius: var(--border-radius-base);
+            transition: all var(--transition-base);
+            z-index: var(--z-overlay);
+            backdrop-filter: blur(10px);
+            animation: backButtonFloat 4s ease-in-out infinite;
+        }
+
+        .back-button:hover {
+            background: var(--color-bg-glass-strong);
+            border-color: var(--color-border-accent);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow-pink);
+        }
+
+        .back-button::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-primary-pink);
+            opacity: 0;
+            transition: opacity var(--transition-base);
+            z-index: -1;
+        }
+
+        .back-button:hover::before {
+            opacity: 0.3;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-3xl) var(--spacing-xl);
+            color: var(--color-text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: var(--font-size-5xl);
+            margin-bottom: var(--spacing-lg);
+            opacity: 0.5;
+            animation: emptyStateFloat 3s ease-in-out infinite;
+        }
+
+        .empty-state-title {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            margin-bottom: var(--spacing-base);
+            color: var(--color-text-primary);
+        }
+
+        .empty-state-message {
+            font-size: var(--font-size-base);
+            line-height: 1.6;
+        }
+
+        @keyframes downloadGlitchColor1 {
+            0%, 100% { opacity: 0; }
+            10% { opacity: 0.3; transform: translate(-2px, -1px); }
+            20% { opacity: 0; transform: translate(0, 0); }
+            30% { opacity: 0.2; transform: translate(1px, -2px); }
+            40% { opacity: 0; transform: translate(0, 0); }
+        }
+
+        @keyframes downloadGlitchColor2 {
+            0%, 100% { opacity: 0; }
+            15% { opacity: 0; transform: translate(0, 0); }
+            25% { opacity: 0.4; transform: translate(2px, 1px); }
+            35% { opacity: 0; transform: translate(0, 0); }
+            45% { opacity: 0.3; transform: translate(-1px, 2px); }
+            55% { opacity: 0; transform: translate(0, 0); }
+        }
+
+        @keyframes fileItemFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
+
+        @keyframes downloadingPulse {
+            0%, 100% { 
+                opacity: 0.7;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 1;
+                transform: scale(1.01);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes statusShimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes backButtonFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-2px); }
+        }
+
+        @keyframes emptyStateFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-5px) rotate(5deg); }
+        }
+
+        @media (max-width: 768px) {
+            .download-container {
+                padding: var(--spacing-lg);
+            }
+            
+            .download-content-container {
+                padding: var(--spacing-lg);
+            }
+            
+            .download-title {
+                font-size: clamp(1.5rem, 5vw, 2.5rem);
+            }
+            
+            .files-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .action-button {
+                width: 100%;
+            }
+            
+            .back-button {
+                top: var(--spacing-base);
+                left: var(--spacing-base);
+                padding: var(--spacing-sm) var(--spacing-base);
+            }
+
+            .status-container {
+                top: var(--spacing-base);
+                right: var(--spacing-base);
+                left: var(--spacing-base);
+                max-width: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .download-content-container,
+            .download-title,
+            .back-button,
+            .file-item {
+                animation: none !important;
+            }
+            
+            .download-title::before,
+            .download-title::after {
+                animation: none !important;
+                opacity: 0 !important;
+            }
+        }
+
+        @media (prefers-contrast: high) {
+            .download-content-container,
+            .file-item,
+            .action-button,
+            .back-button,
+            .download-btn {
+                border-width: 3px;
+                border-color: var(--color-white);
+            }
+            
+            .download-content-container {
+                background: rgba(0, 0, 0, 0.9);
+            }
+            
+            .file-item {
+                background: rgba(0, 0, 0, 0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="download-container">
+        <!-- Back button -->
+        <a href="/#mandatory" class="back-button" data-text="← Back">
+            ← Back
+        </a>
+
+        <!-- Status container -->
+        <div class="status-container" id="statusContainer"></div>
+
+        <!-- Main content container -->
+        <div class="download-content-container">
+            <h1 class="download-title" data-text="Download Files from Server">
+                Download Files from Server
+            </h1>
+
+            <div class="files-section">
+                <h2 class="section-title">Files in manipulate_files/</h2>
+                
+                <!-- Loading state -->
+                <div id="loadingState" class="empty-state">
+                    <div class="loading-spinner"></div>
+                    <div class="empty-state-title">Loading Files...</div>
+                    <div class="empty-state-message">Scanning server directories for available files</div>
+                </div>
+
+                <!-- Empty state -->
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">📂</div>
+                    <div class="empty-state-title">No Files Available</div>
+                    <div class="empty-state-message">
+                        No files found in manipulate_files/ directory.<br>
+                        Create some files using the POST method first.
+                    </div>
+                </div>
+
+                <!-- Files grid -->
+                <div id="filesGrid" class="files-grid" style="display: none;"></div>
+
+                <!-- Action buttons -->
+                <div class="action-buttons" id="actionButtons" style="display: none;">
+                    <button class="action-button refresh-button" onclick="refreshFiles()">
+                        🔄 Refresh Files
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allFiles = [];
+        let downloadQueue = new Set();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFiles();
+        });
+
+        async function loadFiles() {
+            showStatus('Loading files from server...', 'loading');
+            
+            try {
+                const response = await fetch('/list_file.py', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json, text/html'
+                    }
+                });
+
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        allFiles = data.files || data || [];
+                    } else {
+                        const html = await response.text();
+                        allFiles = parseDirectoryListing(html);
+                    }
+                    
+                    displayFiles();
+                    hideStatus();
+                    
+                    if (allFiles.length > 0) {
+                        showStatus(`Found ${allFiles.length} file(s) available for download`, 'success');
+                    }
+                } else {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error loading files:', error);
+                showError(`Failed to load files: ${error.message}`);
+                showEmptyState();
+            }
+        }
+
+        function parseDirectoryListing(html) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const links = doc.querySelectorAll('a[href]');
+            const files = [];
+
+            links.forEach(link => {
+                const href = link.getAttribute('href');
+                const text = link.textContent.trim();
+                
+                if (href !== '../' && !href.endsWith('/') && text && text !== '..') {
+                    let size = 'Unknown';
+                    const parent = link.parentElement;
+                    if (parent) {
+                        const parentText = parent.textContent;
+                        const sizeMatch = parentText.match(/(\d+(?:\.\d+)?\s*[KMGTB]+)/i);
+                        if (sizeMatch) {
+                            size = sizeMatch[1];
+                        }
+                    }
+                    
+                    files.push({
+                        name: text,
+                        size: size,
+                        type: getFileType(text)
+                    });
+                }
+            });
+
+            return files;
+        }
+
+        function getFileType(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const types = {
+                'txt': 'text',
+                'html': 'web',
+                'htm': 'web',
+                'css': 'style',
+                'js': 'script',
+                'json': 'data',
+                'xml': 'data',
+                'pdf': 'document',
+                'doc': 'document',
+                'docx': 'document',
+                'jpg': 'image',
+                'jpeg': 'image',
+                'png': 'image',
+                'gif': 'image',
+                'svg': 'image',
+                'mp3': 'audio',
+                'wav': 'audio',
+                'mp4': 'video',
+                'avi': 'video',
+                'zip': 'archive',
+                'tar': 'archive',
+                'gz': 'archive'
+            };
+            return types[ext] || 'file';
+        }
+
+        function displayFiles() {
+            const loadingState = document.getElementById('loadingState');
+            const emptyState = document.getElementById('emptyState');
+            const filesGrid = document.getElementById('filesGrid');
+            const actionButtons = document.getElementById('actionButtons');
+
+            loadingState.style.display = 'none';
+
+            if (allFiles.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            filesGrid.style.display = 'grid';
+            actionButtons.style.display = 'flex';
+
+            filesGrid.innerHTML = '';
+
+            allFiles.forEach((file, index) => {
+                const fileItem = createFileItem(file, index);
+                filesGrid.appendChild(fileItem);
+            });
+        }
+
+        function createFileItem(file, index) {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.dataset.filename = file.name;
+            item.style.animationDelay = `${index * 0.1}s`;
+
+            item.innerHTML = `
+                <div class="file-content">
+                    <div class="file-name">${escapeHtml(file.name)}</div>
+                    <div class="file-info">
+                        <span class="file-size">${file.size}</span>
+                        <span class="file-type">${file.type}</span>
+                    </div>
+                    <button class="download-btn" onclick="downloadFile('${escapeHtml(file.name)}', '${escapeHtml(file.url || file.name)}')">
+                        ⬇️ Download
+                    </button>
+                </div>
+            `;
+
+            return item;
+        }
+
+        function showEmptyState() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('filesGrid').style.display = 'none';
+            document.getElementById('actionButtons').style.display = 'none';
+        }
+
+        async function downloadFile(filename, url) {
+            if (downloadQueue.has(filename)) {
+                showStatus('Download already in progress...', 'loading');
+                return;
+            }
+
+            downloadQueue.add(filename);
+            const fileItem = document.querySelector(`[data-filename="${filename}"]`);
+            const downloadBtn = fileItem.querySelector('.download-btn');
+            
+            fileItem.classList.add('downloading');
+            downloadBtn.innerHTML = '<span class="loading-spinner"></span> Downloading...';
+            downloadBtn.disabled = true;
+
+            showStatus(`Downloading ${filename}...`, 'loading');
+
+            try {
+                let response = await tryDownloadEndpoints(filename, url);
+
+                if (!response || !response.ok) {
+                    throw new Error(`HTTP ${response ? response.status : 'Unknown'}: ${response ? response.statusText : 'Network error'}`);
+                }
+
+                const blob = await response.blob();
+                
+                if (blob.size === 0) {
+                    throw new Error('Downloaded file is empty');
+                }
+
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+
+                hideStatus();
+                showStatus(`✓ Successfully downloaded ${filename} (${formatFileSize(blob.size)})`, 'success');
+
+            } catch (error) {
+                console.error('Download error:', error);
+                hideStatus();
+                showError(`Failed to download ${filename}: ${error.message}`);
+            } finally {
+                downloadQueue.delete(filename);
+                fileItem.classList.remove('downloading');
+                downloadBtn.innerHTML = '⬇️ Download';
+                downloadBtn.disabled = false;
+            }
+        }
+
+        async function tryDownloadEndpoints(filename, originalUrl) {
+            const endpoints = [
+                `/manipulate_files/${filename}`,
+                `/download/${filename}`, 
+                `/files/${filename}`,
+                filename
+            ];
+
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint);
+                    if (response.ok) {
+                        return response;
+                    }
+                } catch (error) {
+                    console.warn(`Download endpoint ${endpoint} failed:`, error);
+                }
+            }
+            return null;
+        }
+
+        function refreshFiles() {
+            allFiles = [];
+            downloadQueue.clear();
+            
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('filesGrid').style.display = 'none';
+            document.getElementById('actionButtons').style.display = 'none';
+            
+            loadFiles();
+        }
+
+        function showStatus(message, type = 'info') {
+            const container = document.getElementById('statusContainer');
+            
+            if (type === 'loading') {
+                const existingLoading = container.querySelectorAll('.status-message.loading');
+                existingLoading.forEach(msg => msg.remove());
+            }
+            
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status-message ${type}`;
+            
+            if (type === 'loading') {
+                statusDiv.innerHTML = `<span class="loading-spinner"></span>${message}`;
+            } else {
+                statusDiv.textContent = message;
+            }
+            
+            container.appendChild(statusDiv);
+            
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    if (statusDiv.parentNode) {
+                        statusDiv.remove();
+                    }
+                }, type === 'error' ? 7000 : 4000);
+            }
+        }
+
+        function showError(message) {
+            showStatus(`❌ ${message}`, 'error');
+        }
+
+        function hideStatus() {
+            const container = document.getElementById('statusContainer');
+            const loadingMessages = container.querySelectorAll('.status-message.loading');
+            loadingMessages.forEach(msg => msg.remove());
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'r':
+                        e.preventDefault();
+                        refreshFiles();
+                        break;
+                }
+            }
+            
+            if (e.key === 'Escape') {
+                window.location.href = '/';
+            }
+        });
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && allFiles.length === 0) {
+                refreshFiles();
+            }
+        });
+    </script>
+</body>
+</html>

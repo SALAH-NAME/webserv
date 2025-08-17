@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POST Method - WebServ</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .post-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .post-form-container {
+            background: var(--color-bg-glass);
+            border: 2px solid var(--color-border-primary);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-2xl);
+            backdrop-filter: blur(15px);
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            animation: 
+                formPulse 6s ease-in-out infinite,
+                formFloat 8s ease-in-out infinite;
+        }
+
+        .post-form-container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: var(--gradient-primary);
+            border-radius: var(--border-radius-lg);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+
+        .post-form-container:hover::before {
+            opacity: 0.3;
+        }
+
+        .post-title {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: var(--font-weight-extra-bold);
+            text-align: center;
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--spacing-xl);
+            position: relative;
+            animation: titleGlitchSubtle 4s ease-in-out infinite;
+        }
+
+        .post-title::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: var(--color-primary-pink);
+            z-index: -1;
+            animation: postGlitchColor1 4s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .post-title::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: var(--color-primary-cyan);
+            z-index: -1;
+            animation: postGlitchColor2 4.5s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .post-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            position: relative;
+        }
+
+        .form-label {
+            font-family: var(--font-family-primary);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: var(--font-size-sm);
+            position: relative;
+            padding-left: var(--spacing-base);
+        }
+
+        .form-label::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            color: var(--color-primary-pink);
+            animation: cursorBlink 1.5s infinite;
+        }
+
+        .form-input,
+        .form-textarea {
+            font-family: var(--font-family-primary);
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid var(--color-border-primary);
+            color: var(--color-text-primary);
+            padding: var(--spacing-base);
+            border-radius: var(--border-radius-base);
+            font-size: var(--font-size-base);
+            transition: all var(--transition-base);
+            backdrop-filter: blur(5px);
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--color-primary-pink);
+            box-shadow: 
+                0 0 15px rgba(255, 0, 128, 0.2),
+                inset 0 0 10px rgba(255, 0, 128, 0.1);
+            transform: scale(1.01);
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--color-text-muted);
+            opacity: 0.7;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .submit-button {
+            padding: var(--spacing-base) var(--spacing-xl);
+            background: linear-gradient(45deg, var(--color-primary-pink), var(--color-primary-cyan));
+            border: 2px solid var(--color-primary-pink);
+            color: var(--color-black);
+            font-family: var(--font-family-primary);
+            font-weight: var(--font-weight-bold);
+            font-size: var(--font-size-base);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            border-radius: var(--border-radius-base);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .submit-button:hover {
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 15px rgba(255, 0, 128, 0.4),
+                0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .submit-button:hover::before {
+            left: 100%;
+        }
+
+        .submit-button:active {
+            transform: scale(0.98);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            animation: none;
+        }
+
+        .status-message {
+            margin-top: var(--spacing-lg);
+            padding: var(--spacing-base);
+            border-radius: var(--border-radius-base);
+            font-family: var(--font-family-primary);
+            font-weight: var(--font-weight-bold);
+            text-align: left;
+            animation: statusSlideIn 0.5s ease-out;
+            position: relative;
+            z-index: 10;
+            white-space: pre-line;
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+
+        .status-success {
+            background: rgba(0, 40, 0, 0.8);
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-error {
+            background: rgba(40, 0, 0, 0.8);
+            border: 2px solid #ff0044;
+            color: #ff0044;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-loading {
+            background: rgba(40, 40, 0, 0.8);
+            border: 2px solid var(--color-accent-yellow);
+            color: var(--color-accent-yellow);
+            backdrop-filter: blur(10px);
+            animation: statusSlideIn 0.5s ease-out, loadingPulse 1s ease-in-out infinite;
+        }
+
+        .back-button {
+            position: fixed;
+            top: var(--spacing-xl);
+            left: var(--spacing-xl);
+            padding: var(--spacing-base) var(--spacing-lg);
+            background: var(--color-bg-glass);
+            border: 1px solid var(--color-border-primary);
+            color: var(--color-text-primary);
+            font-family: var(--font-family-primary);
+            font-weight: var(--font-weight-bold);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: var(--border-radius-base);
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-base);
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            background: var(--color-bg-glass-strong);
+            border-color: var(--color-border-accent);
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 15px rgba(255, 0, 128, 0.3),
+                0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        @keyframes formPulse {
+            0%, 100% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            50% { 
+                transform: scale(1.01);
+                filter: brightness(1.05);
+            }
+        }
+
+        @keyframes formFloat {
+            0%, 100% { 
+                transform: translateY(0px);
+            }
+            33% { 
+                transform: translateY(-3px);
+            }
+            66% { 
+                transform: translateY(3px);
+            }
+        }
+
+        @keyframes titleGlitchSubtle {
+            0%, 98%, 100% { 
+                transform: scale(1);
+                filter: hue-rotate(0deg);
+            }
+            99% { 
+                transform: scale(1.01) translate(-1px, 1px);
+                filter: hue-rotate(15deg);
+            }
+        }
+
+        @keyframes postGlitchColor1 {
+            0%, 95%, 100% { 
+                filter: hue-rotate(0deg);
+                text-shadow: -2px 0 var(--color-primary-pink);
+            }
+            96%, 98% {
+                filter: hue-rotate(45deg);
+                text-shadow: -3px 0 #ff1a8c;
+            }
+            97%, 99% {
+                filter: hue-rotate(-45deg);
+                text-shadow: -4px 0 var(--color-primary-pink);
+            }
+        }
+
+        @keyframes postGlitchColor2 {
+            0%, 95%, 100% { 
+                filter: hue-rotate(0deg);
+                text-shadow: 2px 0 var(--color-primary-cyan);
+            }
+            96%, 98% {
+                filter: hue-rotate(-60deg);
+                text-shadow: 3px 0 #00d4ff;
+            }
+            97%, 99% {
+                filter: hue-rotate(120deg);
+                text-shadow: 4px 0 var(--color-primary-cyan);
+            }
+        }
+
+        @keyframes cursorBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes statusSlideIn {
+            0% { 
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            100% { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% { 
+                opacity: 0.8;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 1;
+                transform: scale(1.02);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .post-container {
+                padding: var(--spacing-lg);
+            }
+            
+            .post-form-container {
+                padding: var(--spacing-lg);
+            }
+            
+            .post-title {
+                font-size: clamp(1.5rem, 5vw, 2.5rem);
+            }
+            
+            .back-button {
+                top: var(--spacing-base);
+                left: var(--spacing-base);
+                padding: var(--spacing-sm) var(--spacing-base);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .post-form-container,
+            .post-title,
+            .back-button,
+            .submit-button {
+                animation: none !important;
+            }
+            
+            .post-title::before,
+            .post-title::after {
+                animation: none !important;
+                opacity: 0 !important;
+            }
+        }
+
+        @media (prefers-contrast: high) {
+            .post-form-container,
+            .form-input,
+            .form-textarea,
+            .submit-button,
+            .back-button {
+                border-width: 3px;
+                border-color: var(--color-white);
+            }
+            
+            .post-form-container {
+                background: rgba(0, 0, 0, 0.9);
+            }
+            
+            .form-input,
+            .form-textarea {
+                background: rgba(0, 0, 0, 0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="post-container">
+        <!-- Back button -->
+        <a href="/#mandatory" class="back-button" data-text="← Back">
+            ← Back
+        </a>
+
+        <!-- Main form container -->
+        <div class="post-form-container">
+            <h1 class="post-title" data-text="Create File via POST">
+                Create File via POST
+            </h1>
+
+            <form class="post-form" id="postForm">
+                <div class="form-group">
+                    <label for="fileName" class="form-label">File Name</label>
+                    <input 
+                        type="text" 
+                        id="fileName" 
+                        name="fileName" 
+                        class="form-input" 
+                        placeholder="Enter filename (e.g., myfile.txt)"
+                        required
+                        pattern="[a-zA-Z0-9._-]+"
+                        title="Only alphanumeric characters, dots, underscores, and hyphens allowed"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="fileContent" class="form-label">File Content</label>
+                    <textarea 
+                        id="fileContent" 
+                        name="fileContent" 
+                        class="form-textarea" 
+                        placeholder="Enter the content for your file (optional)..."
+                    ></textarea>
+                </div>
+
+                <button type="submit" class="submit-button" id="submitButton">
+                    <span id="buttonText">Create File</span>
+                </button>
+
+                <div id="statusMessage" class="status-message" style="display: none;"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('postForm');
+            const submitButton = document.getElementById('submitButton');
+            const buttonText = document.getElementById('buttonText');
+            const statusMessage = document.getElementById('statusMessage');
+            const fileNameInput = document.getElementById('fileName');
+            const fileContentInput = document.getElementById('fileContent');
+            const backButton = document.querySelector('.back-button');
+            const postTitle = document.querySelector('.post-title');
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const fileName = fileNameInput.value.trim();
+                const fileContent = fileContentInput.value;
+
+                if (!fileName) {
+                    showStatus('Please enter a filename', 'error');
+                    return;
+                }
+
+                showStatus('Creating file...', 'loading');
+                submitButton.disabled = true;
+                buttonText.textContent = 'Creating...';
+                
+                submitButton.style.animation = 'loadingPulse 1s ease-in-out infinite';
+
+                try {
+                    const response = await fetch(`/post/${fileName}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        },
+                        body: fileContent
+                    });
+
+                    if (response.ok) {
+                        const successMessage = `✓ SUCCESS [${response.status} ${response.statusText}]\nFile "${fileName}" created successfully!`;
+                        showStatus(successMessage, 'success');
+                        
+                        const formContainer = document.querySelector('.post-form-container');
+                        formContainer.style.borderColor = '#00ff00';
+                        formContainer.style.boxShadow = '0 0 20px rgba(0, 255, 0, 0.3)';
+                        
+                        setTimeout(() => {
+                            formContainer.style.borderColor = '';
+                            formContainer.style.boxShadow = '';
+                        }, 1000);
+                        
+                        setTimeout(() => {
+                            fileNameInput.value = '';
+                            fileContentInput.value = '';
+                        }, 2000);
+                        
+                    } else {
+                        const statusName = getHttpStatusName(response.status);
+                        const errorMessage = `✗ ERROR [${response.status} ${statusName}]\nFailed to create file\n\nRequest: POST /post/${fileName}`;
+                        showStatus(errorMessage, 'error');
+                        
+                        const formContainer = document.querySelector('.post-form-container');
+                        formContainer.style.borderColor = '#ff0044';
+                        formContainer.style.boxShadow = '0 0 20px rgba(255, 0, 68, 0.3)';
+                        
+                        setTimeout(() => {
+                            formContainer.style.borderColor = '';
+                            formContainer.style.boxShadow = '';
+                        }, 1000);
+                    }
+                } catch (error) {
+                    console.error('Network error:', error);
+                    let errorMessage = '✗ NETWORK ERROR\n';
+                    
+                    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                        errorMessage += 'Unable to connect to server\nCheck if WebServ is running';
+                    } else if (error.name === 'AbortError') {
+                        errorMessage += 'Request timeout\nServer took too long to respond';
+                    } else {
+                        errorMessage += `${error.name}: ${error.message}`;
+                    }
+                    
+                    errorMessage += `\n\nRequest: POST /${fileName}`;
+                    showStatus(errorMessage, 'error');
+                    
+                    const formContainer = document.querySelector('.post-form-container');
+                    formContainer.style.borderColor = '#ff0044';
+                    formContainer.style.boxShadow = '0 0 20px rgba(255, 0, 68, 0.3)';
+                    
+                    setTimeout(() => {
+                        formContainer.style.borderColor = '';
+                        formContainer.style.boxShadow = '';
+                    }, 1000);
+                } finally {
+                    submitButton.disabled = false;
+                    buttonText.textContent = 'Create File';
+                    submitButton.style.animation = '';
+                }
+            });
+
+            function getHttpStatusName(statusCode) {
+                const statusNames = {
+                    200: 'OK',
+                    201: 'Created',
+                    202: 'Accepted',
+                    204: 'No Content',
+                    301: 'Moved Permanently',
+                    302: 'Found',
+                    304: 'Not Modified',
+                    400: 'Bad Request',
+                    401: 'Unauthorized',
+                    403: 'Forbidden',
+                    404: 'Not Found',
+                    405: 'Method Not Allowed',
+                    409: 'Conflict',
+                    413: 'Payload Too Large',
+                    415: 'Unsupported Media Type',
+                    422: 'Unprocessable Entity',
+                    500: 'Internal Server Error',
+                    501: 'Not Implemented',
+                    502: 'Bad Gateway',
+                    503: 'Service Unavailable',
+                    504: 'Gateway Timeout',
+                    507: 'Insufficient Storage'
+                };
+                return statusNames[statusCode] || 'Unknown Status';
+            }
+
+            function showStatus(message, type) {
+                statusMessage.innerHTML = message.replace(/\n/g, '<br>');
+                statusMessage.className = `status-message status-${type}`;
+                statusMessage.style.display = 'block';
+                
+            }
+
+            [fileNameInput, fileContentInput].forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.style.textShadow = `
+                        0.5px 0 var(--color-primary-pink),
+                        -0.5px 0 var(--color-primary-cyan)
+                    `;
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.style.textShadow = '';
+                });
+            });
+
+            backButton.addEventListener('mouseenter', function() {
+                this.style.textShadow = `
+                    1px 0 var(--color-primary-pink),
+                    -1px 0 var(--color-primary-cyan)
+                `;
+            });
+            
+            backButton.addEventListener('mouseleave', function() {
+                this.style.textShadow = '';
+            });
+
+            function randomTitleGlitch() {
+                if (Math.random() < 0.05) {
+                    postTitle.style.transform = `translate(${Math.random() * 2 - 1}px, ${Math.random() * 2 - 1}px)`;
+                    postTitle.style.filter = `hue-rotate(${Math.random() * 30 - 15}deg)`;
+                    
+                    setTimeout(() => {
+                        postTitle.style.transform = '';
+                        postTitle.style.filter = '';
+                    }, 100);
+                }
+            }
+            
+            setInterval(randomTitleGlitch, 5000 + Math.random() * 5000);
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    backButton.click();
+                } else if (e.ctrlKey && e.key === 'Enter') {
+                    if (!submitButton.disabled) {
+                        form.dispatchEvent(new Event('submit'));
+                    }
+                }
+            });
+
+            setTimeout(() => {
+                const formContainer = document.querySelector('.post-form-container');
+                formContainer.style.transform = 'scale(1.1) translateY(-10px)';
+                formContainer.style.filter = 'blur(2px) hue-rotate(180deg)';
+                
+                setTimeout(() => {
+                    formContainer.style.transform = '';
+                    formContainer.style.filter = '';
+                }, 600);
+            }, 300);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPLOAD Method - WebServ</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .upload-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-form-container {
+            background: var(--color-bg-glass);
+            border: 2px solid var(--color-border-primary);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-2xl);
+            backdrop-filter: blur(15px);
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            animation: 
+                formPulse 6s ease-in-out infinite,
+                formFloat 8s ease-in-out infinite;
+        }
+
+        .upload-form-container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: var(--gradient-primary);
+            border-radius: var(--border-radius-lg);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+
+        .upload-form-container:hover::before {
+            opacity: 0.3;
+        }
+
+        .upload-title {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: var(--font-weight-extra-bold);
+            text-align: center;
+            color: var(--color-text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--spacing-xl);
+            position: relative;
+            animation: titleGlitchSubtle 4s ease-in-out infinite;
+        }
+
+        .upload-title::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: var(--color-primary-pink);
+            z-index: -1;
+            animation: uploadGlitchColor1 4s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .upload-title::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: var(--color-primary-cyan);
+            z-index: -1;
+            animation: uploadGlitchColor2 4.5s ease-in-out infinite;
+            opacity: 0;
+        }
+
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .form-label {
+            color: var(--color-text-primary);
+            font-family: var(--font-family-primary);
+            font-weight: var(--font-weight-bold);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-base);
+            padding: var(--spacing-lg);
+            background: var(--color-bg-glass);
+            border: 2px dashed var(--color-border-primary);
+            border-radius: var(--border-radius-base);
+            color: var(--color-text-secondary);
+            font-family: var(--font-family-primary);
+            font-weight: var(--font-weight-bold);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            min-height: 120px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-label:hover {
+            border-color: var(--color-border-accent);
+            background: var(--color-bg-glass-strong);
+            color: var(--color-text-primary);
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 15px rgba(255, 0, 128, 0.3),
+                0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .file-input-label.drag-over {
+            border-color: var(--color-primary-cyan);
+            background: rgba(0, 255, 255, 0.1);
+            color: var(--color-primary-cyan);
+            animation: dragGlitch 0.3s ease-in-out;
+        }
+
+        .file-input-label.has-file {
+            border-color: var(--color-primary-pink);
+            background: rgba(255, 0, 128, 0.1);
+            color: var(--color-primary-pink);
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            opacity: 0.8;
+        }
+
+        .file-info {
+            display: none;
+            margin-top: var(--spacing-base);
+            padding: var(--spacing-base);
+            background: var(--color-bg-glass);
+            border: 1px solid var(--color-border-primary);
+            border-radius: var(--border-radius-base);
+            font-family: var(--font-family-primary);
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            backdrop-filter: blur(10px);
+        }
+
+        .file-info.show {
+            display: block;
+            animation: statusSlideIn 0.5s ease-out;
+        }
+
+        .submit-button {
+            padding: var(--spacing-base) var(--spacing-xl);
+            background: var(--color-bg-glass);
+            border: 2px solid var(--color-border-primary);
+            color: var(--color-text-primary);
+            font-family: var(--font-family-primary);
+            font-weight: var(--font-weight-bold);
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: var(--border-radius-base);
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+            margin-top: var(--spacing-lg);
+        }
+
+        .submit-button:hover {
+            background: var(--color-bg-glass-strong);
+            border-color: var(--color-border-accent);
+            transform: scale(1.05);
+            box-shadow: 
+                0 0 20px rgba(255, 0, 128, 0.4),
+                0 0 40px rgba(0, 255, 255, 0.3);
+        }
+
+        .submit-button:active {
+            transform: scale(0.98);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            animation: none;
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: var(--spacing-base);
+            background: var(--color-bg-glass);
+            border: 1px solid var(--color-border-primary);
+            border-radius: var(--border-radius-base);
+            padding: var(--spacing-sm);
+            backdrop-filter: blur(10px);
+        }
+
+        .progress-container.show {
+            display: block;
+            animation: statusSlideIn 0.5s ease-out;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: var(--border-radius-base);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary-pink), var(--color-primary-cyan));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: var(--border-radius-base);
+            position: relative;
+            animation: progressGlitch 1s ease-in-out infinite;
+        }
+
+        .progress-text {
+            color: var(--color-text-primary);
+            font-family: var(--font-family-primary);
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: var(--spacing-xs);
+        }
+
+        .status-message {
+            margin-top: var(--spacing-lg);
+            padding: var(--spacing-base);
+            border-radius: var(--border-radius-base);
+            font-family: var(--font-family-primary);
+            font-weight: var(--font-weight-bold);
+            text-align: left;
+            animation: statusSlideIn 0.5s ease-out;
+            position: relative;
+            z-index: 10;
+            white-space: pre-line;
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+
+        .status-success {
+            background: rgba(0, 40, 0, 0.8);
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-error {
+            background: rgba(40, 0, 0, 0.8);
+            border: 2px solid #ff0044;
+            color: #ff0044;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-loading {
+            background: rgba(40, 40, 0, 0.8);
+            border: 2px solid var(--color-accent-yellow);
+            color: var(--color-accent-yellow);
+            backdrop-filter: blur(10px);
+            animation: statusSlideIn 0.5s ease-out, loadingPulse 1s ease-in-out infinite;
+        }
+
+        .back-button {
+            position: fixed;
+            top: var(--spacing-xl);
+            left: var(--spacing-xl);
+            padding: var(--spacing-base) var(--spacing-lg);
+            background: var(--color-bg-glass);
+            border: 1px solid var(--color-border-primary);
+            color: var(--color-text-primary);
+            font-family: var(--font-family-primary);
+            font-weight: var(--font-weight-bold);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: var(--border-radius-base);
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-base);
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            background: var(--color-bg-glass-strong);
+            border-color: var(--color-border-accent);
+            transform: scale(1.02);
+            box-shadow: 
+                0 0 15px rgba(255, 0, 128, 0.3),
+                0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        @keyframes formPulse {
+            0%, 100% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            50% { 
+                transform: scale(1.01);
+                filter: brightness(1.05);
+            }
+        }
+
+        @keyframes formFloat {
+            0%, 100% { 
+                transform: translateY(0px);
+            }
+            33% { 
+                transform: translateY(-3px);
+            }
+            66% { 
+                transform: translateY(3px);
+            }
+        }
+
+        @keyframes titleGlitchSubtle {
+            0%, 98%, 100% { 
+                transform: scale(1);
+                filter: hue-rotate(0deg);
+            }
+            99% { 
+                transform: scale(1.01) translate(-1px, 1px);
+                filter: hue-rotate(15deg);
+            }
+        }
+
+        @keyframes uploadGlitchColor1 {
+            0%, 95%, 100% { 
+                filter: hue-rotate(0deg);
+                text-shadow: -2px 0 var(--color-primary-pink);
+                opacity: 0;
+            }
+            96%, 98% {
+                filter: hue-rotate(45deg);
+                text-shadow: -3px 0 #ff1a8c;
+                opacity: 0.8;
+            }
+            97%, 99% {
+                filter: hue-rotate(-45deg);
+                text-shadow: -4px 0 var(--color-primary-pink);
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes uploadGlitchColor2 {
+            0%, 95%, 100% { 
+                filter: hue-rotate(0deg);
+                text-shadow: 2px 0 var(--color-primary-cyan);
+                opacity: 0;
+            }
+            96%, 98% {
+                filter: hue-rotate(-60deg);
+                text-shadow: 3px 0 #00d4ff;
+                opacity: 0.8;
+            }
+            97%, 99% {
+                filter: hue-rotate(120deg);
+                text-shadow: 4px 0 var(--color-primary-cyan);
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes dragGlitch {
+            0%, 100% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            25% { 
+                transform: scale(1.02) translate(1px, -1px);
+                filter: brightness(1.2) hue-rotate(10deg);
+            }
+            50% { 
+                transform: scale(0.98) translate(-1px, 1px);
+                filter: brightness(0.8) hue-rotate(-10deg);
+            }
+            75% { 
+                transform: scale(1.01) translate(1px, 1px);
+                filter: brightness(1.1) hue-rotate(5deg);
+            }
+        }
+
+        @keyframes progressGlitch {
+            0%, 90%, 100% { 
+                filter: brightness(1);
+            }
+            95% {
+                filter: brightness(1.3) hue-rotate(30deg);
+            }
+        }
+
+        @keyframes statusSlideIn {
+            0% { 
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            100% { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.7;
+                transform: scale(1.02);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .upload-container {
+                padding: var(--spacing-base);
+            }
+
+            .upload-form-container {
+                padding: var(--spacing-xl);
+            }
+
+            .upload-title {
+                font-size: clamp(1.5rem, 6vw, 2.5rem);
+            }
+
+            .back-button {
+                top: var(--spacing-base);
+                left: var(--spacing-base);
+                padding: var(--spacing-sm) var(--spacing-base);
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .upload-form-container,
+            .upload-title,
+            .file-input-label,
+            .submit-button,
+            .progress-fill {
+                animation: none;
+            }
+
+            .upload-title::before,
+            .upload-title::after {
+                opacity: 0 !important;
+            }
+        }
+
+        @media (prefers-contrast: high) {
+            .upload-form-container,
+            .file-input-label,
+            .submit-button,
+            .back-button {
+                border-width: 3px;
+                border-color: var(--color-white);
+            }
+            
+            .upload-form-container {
+                background: rgba(0, 0, 0, 0.9);
+            }
+            
+            .file-input-label {
+                background: rgba(0, 0, 0, 0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <!-- Back button -->
+        <a href="/#mandatory" class="back-button" data-text="← Back">
+            ← Back
+        </a>
+
+        <!-- Main form container -->
+        <div class="upload-form-container">
+            <h1 class="upload-title" data-text="File Upload Portal">
+                File Upload Portal
+            </h1>
+
+            <form class="upload-form" id="uploadForm">
+                <div class="form-group">
+                    <label for="fileInput" class="form-label">Select File to Upload</label>
+                    <div class="file-input-wrapper">
+                        <input 
+                            type="file" 
+                            id="fileInput" 
+                            name="file" 
+                            class="file-input"
+                            accept="*/*"
+                        >
+                        <label for="fileInput" class="file-input-label" id="fileInputLabel">
+                            <div class="upload-content">
+                                <div class="upload-icon">📁</div>
+                                <div class="upload-text">
+                                    <strong>Click to choose file</strong><br>
+                                    or drag and drop here<br>
+                                    <small>Raw binary upload - All file types supported</small>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div id="fileInfo" class="file-info">
+                        <!-- File information will be displayed here -->
+                    </div>
+                </div>
+
+                <div id="progressContainer" class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <div id="progressText" class="progress-text">Uploading...</div>
+                </div>
+
+                <button type="submit" class="submit-button" id="submitButton" disabled>
+                    <span id="buttonText">Select a file first</span>
+                </button>
+
+                <div id="statusMessage" class="status-message" style="display: none;"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('uploadForm');
+            const fileInput = document.getElementById('fileInput');
+            const fileInputLabel = document.getElementById('fileInputLabel');
+            const fileInfo = document.getElementById('fileInfo');
+            const submitButton = document.getElementById('submitButton');
+            const buttonText = document.getElementById('buttonText');
+            const statusMessage = document.getElementById('statusMessage');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const backButton = document.querySelector('.back-button');
+            const uploadTitle = document.querySelector('.upload-title');
+
+            let selectedFile = null;
+
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                handleFileSelection(file);
+            });
+
+            fileInputLabel.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('drag-over');
+            });
+
+            fileInputLabel.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+            });
+
+            fileInputLabel.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    fileInput.files = files;
+                    handleFileSelection(file);
+                }
+            });
+
+            function handleFileSelection(file) {
+                if (file) {
+                    selectedFile = file;
+                    
+                    fileInputLabel.classList.add('has-file');
+                    fileInputLabel.innerHTML = `
+                        <div class="upload-content">
+                            <div class="upload-icon">✓</div>
+                            <div class="upload-text">
+                                <strong>File Selected</strong><br>
+                                ${file.name}<br>
+                                <small>Click to change file</small>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const fileSize = formatFileSize(file.size);
+                    const fileType = file.type || 'Unknown';
+                    const lastModified = new Date(file.lastModified).toLocaleString();
+                    
+                    fileInfo.innerHTML = `
+                        <strong>File Details:</strong><br>
+                        Name: ${file.name}<br>
+                        Size: ${fileSize}<br>
+                        Type: ${fileType}<br>
+                        Modified: ${lastModified}
+                    `;
+                    fileInfo.classList.add('show');
+                    
+                    submitButton.disabled = false;
+                    buttonText.textContent = 'Upload File';
+                    
+                    triggerFileSelectionGlitch();
+                } else {
+                    resetFileSelection();
+                }
+            }
+
+            function resetFileSelection() {
+                selectedFile = null;
+                fileInputLabel.classList.remove('has-file');
+                fileInputLabel.innerHTML = `
+                    <div class="upload-content">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">
+                            <strong>Click to choose file</strong><br>
+                            or drag and drop here<br>
+                            <small>Raw binary upload - All file types supported</small>
+                        </div>
+                    </div>
+                `;
+                fileInfo.classList.remove('show');
+                submitButton.disabled = true;
+                buttonText.textContent = 'Select a file first';
+            }
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!selectedFile) {
+                    showStatus('Please select a file to upload', 'error');
+                    return;
+                }
+
+                showStatus('Uploading file...', 'loading');
+                submitButton.disabled = true;
+                buttonText.textContent = 'Uploading...';
+                progressContainer.classList.add('show');
+                
+                submitButton.style.animation = 'loadingPulse 1s ease-in-out infinite';
+
+                const maxRetries = 3;
+                let retryCount = 0;
+                
+                const attemptUpload = async () => {
+                    let progress = 0;
+                    let progressInterval = null;
+                    
+                    try {
+                        const uploadPath = `/upload/${selectedFile.name}`;
+                        
+                        progressInterval = setInterval(() => {
+                            progress += Math.random() * 15;
+                            if (progress > 85) progress = 85;
+                            updateProgress(progress);
+                        }, 300);
+
+                        console.log(`Upload attempt ${retryCount + 1}/${maxRetries}:`, selectedFile.name, 'Size:', selectedFile.size, 'Type:', selectedFile.type);
+                        console.log('Upload path:', uploadPath);
+
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+                        const response = await fetch(uploadPath, {
+                            method: 'POST',
+                            body: selectedFile,
+                            headers: {
+                                'Content-Type': 'application/octet-stream',
+                                'Cache-Control': 'no-cache'
+                            },
+                            signal: controller.signal
+                        });
+
+                        clearTimeout(timeoutId);
+                        console.log('Response received:', response.status, response.statusText);
+
+                        if (progressInterval) {
+                            clearInterval(progressInterval);
+                            progressInterval = null;
+                        }
+                        updateProgress(100);
+
+                        if (response.ok) {
+                            const statusName = getHttpStatusName(response.status);
+                            const successMessage = `✓ SUCCESS [${response.status} ${statusName}]\nFile "${selectedFile.name}" uploaded successfully!${retryCount > 0 ? `\n(Succeeded after ${retryCount + 1} attempts)` : ''}`;
+                            showStatus(successMessage, 'success');
+                            
+                            const formContainer = document.querySelector('.upload-form-container');
+                            formContainer.style.borderColor = '#00ff00';
+                            formContainer.style.boxShadow = '0 0 20px rgba(0, 255, 0, 0.3)';
+                            
+                            setTimeout(() => {
+                                formContainer.style.borderColor = '';
+                                formContainer.style.boxShadow = '';
+                                progressContainer.classList.remove('show');
+                                resetFileSelection();
+                                fileInput.value = '';
+                            }, 3000);
+                            
+                        } else {
+                            const statusName = getHttpStatusName(response.status);
+                            const errorMessage = `✗ ERROR [${response.status} ${statusName}]\nFile: ${selectedFile.name}${retryCount > 0 ? `\n(Failed after ${retryCount + 1} attempts)` : ''}`;
+                            showStatus(errorMessage, 'error');
+                            
+                            const formContainer = document.querySelector('.upload-form-container');
+                            formContainer.style.borderColor = '#ff0044';
+                            formContainer.style.boxShadow = '0 0 20px rgba(255, 0, 68, 0.3)';
+                            
+                            setTimeout(() => {
+                                formContainer.style.borderColor = '';
+                                formContainer.style.boxShadow = '';
+                                progressContainer.classList.remove('show');
+                            }, 1000);
+                        }
+                        
+                    } catch (error) {
+                        if (progressInterval) {
+                            clearInterval(progressInterval);
+                            progressInterval = null;
+                        }
+                        
+                        console.error(`Network error on attempt ${retryCount + 1}:`, error);
+                        
+                        if (retryCount < maxRetries - 1 && shouldRetry(error)) {
+                            retryCount++;
+                            console.log(`Retrying upload... (${retryCount}/${maxRetries})`);
+                            showStatus(`Upload failed, retrying... (${retryCount}/${maxRetries})`, 'loading');
+                            
+                            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+                            
+                            return attemptUpload();
+                        }
+                        
+                        let errorMessage = '✗ NETWORK ERROR\n';
+                        
+                        if (error.name === 'AbortError') {
+                            errorMessage += 'Request timeout (30 seconds)\nServer took too long to respond';
+                        } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                            errorMessage += 'Unable to connect to server\nCheck if WebServ is running';
+                        } else if (error.message && error.message.includes('NS_ERROR_NET_RESET')) {
+                            errorMessage += 'Connection reset by server\nThe server closed the connection unexpectedly\nThis may indicate a server-side error or configuration issue';
+                        } else if (error.message && error.message.includes('NetworkError')) {
+                            errorMessage += 'Network connection failed\nCheck your internet connection and server status';
+                        } else if (error.message && error.message.includes('Failed to fetch')) {
+                            errorMessage += 'Request failed\nServer may be unreachable or rejecting the request';
+                        } else {
+                            errorMessage += `${error.name}: ${error.message}`;
+                        }
+                        
+                        errorMessage += `\n\nFile: ${selectedFile.name}\nSize: ${formatFileSize(selectedFile.size)}\nRequest: POST ${uploadPath}`;
+                        if (retryCount > 0) {
+                            errorMessage += `\n(Failed after ${retryCount + 1} attempts)`;
+                        }
+                        showStatus(errorMessage, 'error');
+                        
+                        const formContainer = document.querySelector('.upload-form-container');
+                        formContainer.style.borderColor = '#ff0044';
+                        formContainer.style.boxShadow = '0 0 20px rgba(255, 0, 68, 0.3)';
+                        
+                        setTimeout(() => {
+                            formContainer.style.borderColor = '';
+                            formContainer.style.boxShadow = '';
+                            progressContainer.classList.remove('show');
+                        }, 1000);
+                    } finally {
+                        submitButton.disabled = false;
+                        buttonText.textContent = selectedFile ? 'Upload File' : 'Select a file first';
+                        submitButton.style.animation = '';
+                    }
+                };
+
+                function shouldRetry(error) {
+                    if (error.name === 'AbortError') return false;
+                    if (error.message && error.message.includes('NS_ERROR_NET_RESET')) return true;
+                    if (error.message && error.message.includes('NetworkError')) return true;
+                    if (error.message && error.message.includes('Failed to fetch')) return true;
+                    if (error.name === 'TypeError' && error.message.includes('fetch')) return true;
+                    return false;
+                }
+
+                await attemptUpload();
+            });
+
+            function updateProgress(percent) {
+                progressFill.style.width = percent + '%';
+                progressText.textContent = `Uploading... ${Math.round(percent)}%`;
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            function getHttpStatusName(statusCode) {
+                const statusNames = {
+                    200: 'OK',
+                    201: 'Created',
+                    202: 'Accepted',
+                    204: 'No Content',
+                    301: 'Moved Permanently',
+                    302: 'Found',
+                    304: 'Not Modified',
+                    400: 'Bad Request',
+                    401: 'Unauthorized',
+                    403: 'Forbidden',
+                    404: 'Not Found',
+                    405: 'Method Not Allowed',
+                    409: 'Conflict',
+                    413: 'Payload Too Large',
+                    415: 'Unsupported Media Type',
+                    422: 'Unprocessable Entity',
+                    500: 'Internal Server Error',
+                    501: 'Not Implemented',
+                    502: 'Bad Gateway',
+                    503: 'Service Unavailable',
+                    504: 'Gateway Timeout',
+                    507: 'Insufficient Storage'
+                };
+                return statusNames[statusCode] || 'Unknown Status';
+            }
+
+            function showStatus(message, type) {
+                statusMessage.innerHTML = message.replace(/\n/g, '<br>');
+                statusMessage.className = `status-message status-${type}`;
+                statusMessage.style.display = 'block';
+                
+                if (type === 'success') {
+                    setTimeout(() => {
+                        statusMessage.style.opacity = '0';
+                        setTimeout(() => {
+                            statusMessage.style.display = 'none';
+                            statusMessage.style.opacity = '1';
+                        }, 300);
+                    }, 5000);
+                }
+            }
+
+            function triggerFileSelectionGlitch() {
+                const formContainer = document.querySelector('.upload-form-container');
+                formContainer.style.transform = 'scale(1.05) translateY(-5px)';
+                formContainer.style.filter = 'brightness(1.2) hue-rotate(45deg)';
+                formContainer.style.borderColor = '#ff0080';
+                
+                setTimeout(() => {
+                    formContainer.style.transform = '';
+                    formContainer.style.filter = '';
+                    formContainer.style.borderColor = '';
+                }, 300);
+            }
+
+            backButton.addEventListener('mouseenter', function() {
+                this.style.textShadow = `
+                    1px 0 var(--color-primary-pink),
+                    -1px 0 var(--color-primary-cyan)
+                `;
+            });
+            
+            backButton.addEventListener('mouseleave', function() {
+                this.style.textShadow = '';
+            });
+
+            function randomTitleGlitch() {
+                if (Math.random() < 0.05) {
+                    uploadTitle.style.transform = `translate(${Math.random() * 2 - 1}px, ${Math.random() * 2 - 1}px)`;
+                    uploadTitle.style.filter = `hue-rotate(${Math.random() * 30 - 15}deg)`;
+                    
+                    setTimeout(() => {
+                        uploadTitle.style.transform = '';
+                        uploadTitle.style.filter = '';
+                    }, 100);
+                }
+            }
+            
+            setInterval(randomTitleGlitch, 5000 + Math.random() * 5000);
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    backButton.click();
+                } else if (e.ctrlKey && e.key === 'Enter') {
+                    if (!submitButton.disabled) {
+                        form.dispatchEvent(new Event('submit'));
+                    }
+                }
+            });
+
+            setTimeout(() => {
+                const formContainer = document.querySelector('.upload-form-container');
+                formContainer.style.transform = 'scale(1.1) translateY(-10px)';
+                formContainer.style.filter = 'blur(2px) hue-rotate(180deg)';
+                
+                setTimeout(() => {
+                    formContainer.style.transform = '';
+                    formContainer.style.filter = '';
+                }, 600);
+            }, 300);
+        });
+    </script>
+</body>
+</html>
