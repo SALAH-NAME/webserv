@@ -57,7 +57,7 @@ void	ServerManager::incomingConnection(int event_fd) {
 					getClientsInfos(&clientinfos, _portsAndHosts[event_fd], clientAddr.sin_addr.s_addr, serverSockAddr.sin_port);
 					// std::cout << "  ======>>> accept : " << clientSocketFD << " <<====== \n";
 					addSocketToEpoll(_epfd, clientSocketFD, (EPOLLIN | EPOLLHUP | EPOLLERR)); // make the client socket Level-Triggered
-					std::pair<int, Client> entry(clientSocketFD, Client(sock, _serversConfig, _epfd, clientinfos));
+					std::pair<int, Client> entry(clientSocketFD, Client(this, sock, _serversConfig, _epfd, clientinfos));
 					_clients.insert(entry);
 				}
 				catch (const char *errorMssg) {

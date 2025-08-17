@@ -17,6 +17,8 @@ class Client {
 		const std::vector<ServerConfig>&	_allServersConfig;
 		ServerConfig*						_correctServerConfig;
 		ClientInfos							_clientInfos;
+		ServerManager*						_serverManagerPtr;
+
 		int									_CGI_OutPipeFD;
 		int									_CGI_InPipeFD;
 
@@ -65,7 +67,7 @@ class Client {
 		void								extractBodyFromPendingRequestHolder(void);
 
 		public:		
-		/**/								Client(Socket, const std::vector<ServerConfig>&, int, ClientInfos);
+		/**/								Client(ServerManager*, Socket, const std::vector<ServerConfig>&, int, ClientInfos);
 		/**/								Client(const Client& other);
 		/**/								~Client();
 
