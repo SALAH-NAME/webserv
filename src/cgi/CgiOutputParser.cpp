@@ -143,7 +143,7 @@ void	CgiHandler::ParseOutputBuffer(const std::string &cgi_output_buff)
 	// std::cout << "appending a buffer to the parser" << std::endl;
 	unsigned int i = 0;
 
-	std::cout << std::endl;
+	// std::cout << std::endl;
 	for (i = 0; i < cgi_output_buff.size();i++)
 	{
 		if (parsed_bytes_count >= HEADER_SIZE_LIMIT)

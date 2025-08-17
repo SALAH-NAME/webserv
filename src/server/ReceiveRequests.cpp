@@ -5,17 +5,13 @@ void	isolateAndRecordBody(Client& client) {
 	std::string& headerPart = client.getHeaderPart();
 
 	if (!headerPart.size()) {
-		// no body-data received after header ==> no need to save
 		client.setRequestDataPreloadedFlag(OFF);
 		return ;
 	}
 	
-	// some body-data received after header-data ==> it needs to be saved and removed from header part
-	
-	client.setPendingRequestData(headerPart); // here we save the data ('next request' or 'current request body')
+	client.setPendingRequestData(headerPart);
 	client.getHeaderPart().clear();
 	client.setRequestDataPreloadedFlag(ON);
-	// std::cout << "ISOLATED\n";
 }
 
 void    ServerManager::collectRequestData(Client& client) {
@@ -47,14 +43,12 @@ void    ServerManager::collectRequestData(Client& client) {
 				closeConnection(client);
 			return ;
 		}
-		
-		// std::cout << "read bytes ==> " << readbytes << " ||  from : " << client.getSocket().getFd() << "\n";
+
 		client.resetLastConnectionTime();
 		client.appendToHeaderPart(std::string(_buffer, readbytes));
 	
 		if (std::string(_buffer, readbytes) == "\r\n")
 		{
-			// in case of receive empty line (Press Enter) !!
 			client.setInputState(INPUT_NONE);
 			client.setGenerateResponseInProcess(ON);
 		}
@@ -63,7 +57,6 @@ void    ServerManager::collectRequestData(Client& client) {
 		req.appendAndValidate(client.getHeaderPart());
 	
 		if (req.getState() == HttpRequest::STATE_BODY) {
-			// std::cout << "   ====>> request is completed <<=====\n";
 			isolateAndRecordBody(client);
 			client.setInputState(INPUT_NONE);
 			client.setGenerateResponseInProcess(ON);

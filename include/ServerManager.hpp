@@ -86,7 +86,6 @@ class ServerManager {
 		int									_epfd;
 		int									_nfds;
 		const std::vector<ServerConfig>&	_serversConfig;
-		struct epoll_event					_event;
 		struct epoll_event					_events[MAX_EVENTS];
 		char								_buffer[BUFFERSIZE];
 		std::vector<Socket>					_listenSockets;
@@ -94,7 +93,6 @@ class ServerManager {
 		std::map<int, Client>				_clients;
 		std::vector<int>					_markedForEraseSockets;
 		int									_domain;
-		int									_type;
 		int									_timeOut;
 		sockaddr_in							_Address;
 		bool								_cleanupPerformed;

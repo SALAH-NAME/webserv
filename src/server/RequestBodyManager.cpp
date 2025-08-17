@@ -19,7 +19,7 @@ void	Client::receiveFromSocket(void) {
 	ssize_t	readBytes;
 	try
 	{
-		readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT); // Enable NON_Blocking for recv()
+		readBytes = _socket.recv(buffer, BYTES_TO_READ, MSG_DONTWAIT);
 	}
 	catch(const std::runtime_error& e)
 	{
@@ -32,7 +32,6 @@ void	Client::receiveFromSocket(void) {
 			_state = CloseConnection;
 		return ;
 	}
-	// std::cout << "received bytes: " << readBytes << "\n";
 
 	resetLastConnectionTime();
 	buffer[readBytes] = 0;
@@ -73,7 +72,7 @@ void	Client::validateChunkBodySize(void) {
 			}
 		}
 		else
-			return ; // *keep the same state "ReceivingData" *need to find "CRLF"
+			return ;
 	}
 	_state = ExtractingBody;
 }
@@ -87,10 +86,10 @@ void	Client::extractBodyFromPendingData(void) {
 	size_t BytesToExtract;
 
 	if (_isChunked) {
-		if (_pendingRequestDataHolder.size() >= (static_cast<size_t>(_chunkBodySize + 2))) // check if the data it enough including "\r\n"
+		if (_pendingRequestDataHolder.size() >= (static_cast<size_t>(_chunkBodySize + 2)))
 			BytesToExtract = _chunkBodySize + 2;
 		else {
-			_state = ReceivingData; // data is not enough need to receive more data
+			_state = ReceivingData;
 			return ;
 		}
 	}
@@ -107,14 +106,14 @@ void	Client::extractBodyFromPendingData(void) {
 
 	if (_isChunked) {
 		if (_chunkBodySize == 0) {
-			if (_requestBodyPart != _CRLF) // when the chunkBodySize is 0 it's requires to receive "CRLF" in the last chunked
+			if (_requestBodyPart != _CRLF)
 				_state = InvalidBody;
 			else
 				_state = Completed;
 			return ;
 		}
 		if (_requestBodyPart.substr(BytesToExtract-2) != _CRLF) {
-			_state = InvalidBody; // missed "CRFL" after chunked body "it's required after any chunked data"
+			_state = InvalidBody;
 			return ;
 		}
 		else {
@@ -171,7 +170,7 @@ void	Client::writeBodyToTargetFile(void) {
 
 void	Client::pipeBodyToCGI(void) {
 	
-	if (!_isCgiInputAvailable) // the pipe isn't available yet to write in	
+	if (!_isCgiInputAvailable)
 			return ;
 
 	size_t bytesToWrite;
@@ -182,7 +181,7 @@ void	Client::pipeBodyToCGI(void) {
  
 	ssize_t pipedBytes = write(_CGI_InPipeFD, _requestBodyPart.c_str(), bytesToWrite);
 	if (pipedBytes <= 0)
-		return ; // An error occured // we keep the same state, Retry again until write success or timeout
+		return ;
 	
 	_chunkBodySize = -1;
 	_uploadedBytes += bytesToWrite;
@@ -213,7 +212,6 @@ void	Client::finalizeBodyProccess(void) {
 	_state = DefaultState;
 
 	if (_isBodyTooLarge) {
-		// should remove the the connection
 		_responseHandler->LoadErrorPage(_httpRequest.getVersion() + " 413 Payload Too Large", 413);
 		CgiExceptionHandler();
 		return ;
@@ -234,7 +232,7 @@ void	Client::finalizeBodyProccess(void) {
 			_CGI_InPipeFD = -1;
 		}
 		else
-		_fullResponseFlag = ON;
+			_fullResponseFlag = ON;
 	}
 }
 
