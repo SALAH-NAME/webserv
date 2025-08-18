@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 {
 	signal(SIGINT, signalHandler);
 
-	SET_LOG_LEVEL(LEVEL_DEBUG);
+	SET_LOG_LEVEL(LEVEL_INFO);
 	LOG_INFO("WebServer starting up...");
 
 	std::string config_file = "conf/default.conf";
