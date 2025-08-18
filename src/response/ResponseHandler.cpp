@@ -1,4 +1,5 @@
 #include "ResponseHandler.hpp"
+#include "SimpleLogger.hpp"
 
 ResponseHandler::ResponseHandler(ServerManager *ptr)
 {
@@ -57,8 +58,8 @@ void ResponseHandler::RefreshData()
     require_cgi = false;
     is_post = false;
     req = NULL;
-    client_info.clientAddr = "";
-    client_info.port = "0";
+    // client_info.clientAddr = "";
+    // client_info.port = "0";
     cgi_buffer_size = 0;
     child_status = -1;
     cgi_tmpfile_id = -1;
@@ -78,27 +79,39 @@ void ResponseHandler::RefreshData()
 
 void ResponseHandler::Run(HttpRequest &request)
 {
-//     std::cout << "RESSPONSE RUN \n";//logger
-//     std::cout << "=========> passed request to run <========\n" << "method: "//logger
-//         << request.getMethod() << std::endl << "path: " << request.getPath() << std::endl;//logger
+    LOG_DEBUG_F2("Processing request: {} {}", request.getMethod(), request.getPath());
+
     RefreshData();
     if (conf == NULL)
+    {
+        LOG_HTTP_ERROR(client_info.clientAddr, std::atoi(client_info.port.c_str()), 
+                      request.getMethod(), request.getUri(), request.getVersion(), 
+                      500, "Internal Server Error");
         LoadErrorPage(req->getVersion() + " 500 Internal Server Error", 500);
+    }
     keep_alive = false;
     req = &request;
     try {
         ProccessRequest();
     }
     catch (ResponseHandlerError &my_exception){
+        LOG_HTTP_ERROR(client_info.clientAddr, std::atoi(client_info.port.c_str()), 
+                      request.getMethod(), request.getUri(), request.getVersion(), 
+                      my_exception.getStatusCode(), my_exception.what());
         LoadErrorPage(my_exception.what(), my_exception.getStatusCode());
     }
     catch (std::bad_alloc &insuficcent_mem){
+        LOG_HTTP_ERROR(client_info.clientAddr, std::atoi(client_info.port.c_str()), 
+                      request.getMethod(), request.getUri(), request.getVersion(), 
+                      503, "Out of memory");
         LoadErrorPage(req->getVersion() + " 503 Service Unavailable", 503);
     }
     catch (std::exception &ex){
+        LOG_HTTP_ERROR(client_info.clientAddr, std::atoi(client_info.port.c_str()), 
+                      request.getMethod(), request.getUri(), request.getVersion(), 
+                      500, ex.what());
         LoadErrorPage(req->getVersion() + " 500 Internal Server Error", 500);
     }
-    
 }
 
 void ResponseHandler::SetKeepAlive()
@@ -122,6 +135,7 @@ void ResponseHandler::ProccessRequest()
     }
     catch (const HttpRequestException &e)
     {
+        keep_alive = false;
         throw (ResponseHandlerError(req->getVersion() + " " + NumtoString(e.statusCode()) + " " + e.what(), e.statusCode()));
     }
 //     std::cout << "content length validated" << std::endl;//logger
@@ -164,9 +178,12 @@ void    ResponseHandler::HandleDirRequest()
 
 void ResponseHandler::ProccessHttpGET()
 {
-//     std::cout << "inside GET req processor" << std::endl;//logger
-    if (require_cgi)
-        return (CgiObj.RunCgi(*req, *conf, *loc_config, resource_path, client_info, srv_mem_ptr));    
+    LOG_DEBUG_F("Processing GET request for resource: {}", resource_path);
+    
+    if (require_cgi) {
+        LOG_CGI_CLIENT("Starting CGI processing for GET request", client_info.clientAddr, std::atoi(client_info.port.c_str()));
+        return (CgiObj.RunCgi(*req, *conf, *loc_config, resource_path, client_info, srv_mem_ptr));
+    }
     if (access(resource_path.c_str(), R_OK) != 0 || (IsDir(resource_path.c_str())
         && loc_config->getIndex().empty() && !loc_config->getAutoindex()))
             throw (ResponseHandlerError(req->getVersion() + " 403 Forbidden", 403));
@@ -177,9 +194,12 @@ void ResponseHandler::ProccessHttpGET()
 
 void ResponseHandler::ProccessHttpPOST()
 {
-//     std::cout << "inside post req processor" << std::endl;//logger
-    if (require_cgi)
+    LOG_DEBUG_F("Processing POST request for resource: {}", resource_path);
+    
+    if (require_cgi) {
+        LOG_CGI_CLIENT("Starting CGI processing for POST request", client_info.clientAddr, std::atoi(client_info.port.c_str()));
         return (CgiObj.RunCgi(*req, *conf, *loc_config, resource_path, client_info, srv_mem_ptr));
+    }
     if (access(resource_path.c_str(), F_OK) == 0){
         keep_alive = false;
         throw (ResponseHandlerError(req->getVersion() + " 409 Conflict", 409));
@@ -188,6 +208,8 @@ void ResponseHandler::ProccessHttpPOST()
             req->getPath()[req->getPath().size() - 1] == '/'){
         keep_alive = false;
         throw (ResponseHandlerError(req->getVersion() + " 403 Forbidden", 403));}
+    
+    LOG_DEBUG_F("Creating new file via POST: {}", resource_path);
     SetResponseHeader(req->getVersion() + " 201 Created", -1, false);
     target_file = new std::fstream(resource_path.c_str(), std::ios::out);
     if (!target_file || !target_file->is_open()){

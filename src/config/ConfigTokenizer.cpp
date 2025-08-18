@@ -1,4 +1,5 @@
 #include "ConfigTokenizer.hpp"
+#include "SimpleLogger.hpp"
 #include <cctype>
 #include <cstddef>
 #include <fstream>
@@ -40,7 +41,7 @@ bool ConfigTokenizer::loadFromFile(const std::string& fileName)
 	std::ifstream file(fileName.c_str());
 	if (!file.is_open())
 	{
-		std::cerr << "Failed to open file: " << fileName << std::endl;
+		LOG_ERROR_F("Failed to open configuration file: {}", fileName);
 		return false;
 	}
 

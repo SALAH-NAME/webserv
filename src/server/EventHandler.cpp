@@ -1,5 +1,6 @@
 
 #include "ServerManager.hpp"
+#include "SimpleLogger.hpp"
 #include <cerrno>
 
 static void extractPort(std::string& port, uint16_t netPort) {
@@ -53,17 +54,21 @@ void	ServerManager::incomingConnection(int event_fd) {
 					clientSocketFD = sock.getFd();
 					getsockname(clientSocketFD, (struct sockaddr*)&serverSockAddr, &serverSockAddrLen);
 					getClientsInfos(&clientinfos, _portsAndHosts[event_fd], clientAddr.sin_addr.s_addr, serverSockAddr.sin_port);
+					
+					LOG_INFO_CLIENT("New connection established", clientinfos.clientAddr, std::atoi(clientinfos.port.c_str()));
+					
 					addSocketToEpoll(_epfd, clientSocketFD, (EPOLLIN | EPOLLHUP | EPOLLERR));
 					std::pair<int, Client> entry(clientSocketFD, Client(this, sock, _serversConfig, _epfd, clientinfos));
 					_clients.insert(entry);
 				}
 				catch (const char *errorMssg) {
+					LOG_DEBUG("No more pending connections");
 					break ; // no more pending connections
 				}
 			}
 		}
 		catch (const std::runtime_error& e) {
-			perror(e.what());
+			LOG_ERROR_F("Error accepting connections: {}", e.what());
 			break ; // some sys calls failed
 		}
 	
@@ -127,17 +132,17 @@ bool	ServerManager::processEvent(int i) {
 
 void    ServerManager::waitingForEvents(void) {
 
-	std::cout << "    ##### BYTES TO SEND : " << BYTES_TO_SEND << "  |||  ";
-	std::cout << "BYTES TO READ: " << BYTES_TO_READ << "   ##### \n";
+	LOG_DEBUG_F2("Server ready - Buffer sizes: SEND={} bytes, READ={} bytes", BYTES_TO_SEND, BYTES_TO_READ);
 
 	while (!g_shutdown) {
 		std::memset(_events, 0, sizeof(_events));
 		_nfds = epoll_wait(_epfd, _events, MAX_EVENTS, EPOLLTIMEOUT);
 		if (_nfds < 0) {
 			if (errno == EINTR) {
+				LOG_DEBUG("epoll_wait interrupted by signal");
 				continue;
 			}
-			std::cerr << "epoll_wait failed: " << strerror(errno) << std::endl;
+			LOG_ERROR_F("epoll_wait failed: {}", strerror(errno));
 		}
 			
 		checkTimeOut();

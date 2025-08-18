@@ -1,4 +1,5 @@
 #include "HttpRequest.hpp"
+#include "SimpleLogger.hpp"
 #include <climits>
 
 HttpRequest::HttpRequest() : state(STATE_START_LINE), valid(false), status_code(0),

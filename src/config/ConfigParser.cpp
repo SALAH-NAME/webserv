@@ -5,6 +5,7 @@
 #include "GlobalConfig.hpp"
 #include "LocationConfig.hpp"
 #include "ServerConfig.hpp"
+#include "SimpleLogger.hpp"
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
@@ -34,12 +35,12 @@ bool ConfigParser::parse()
 	}
 	catch (const ParseError& e)
 	{
-		std::cerr << e.what() << std::endl;
+		LOG_ERROR_F("Configuration parse error: {}", e.what());
 		return false;
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "Error: " << e.what() << std::endl;
+		LOG_ERROR_F("Configuration error: {}", e.what());
 		return false;
 	}
 }

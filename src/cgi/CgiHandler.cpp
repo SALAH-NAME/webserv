@@ -1,4 +1,5 @@
 #include "CgiHandler.hpp"
+#include "SimpleLogger.hpp"
 
 #ifndef MAX_FDS
 #define MAX_FDS 1024
@@ -134,7 +135,9 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 				const LocationConfig &cgi_conf, std::string &script_path,
 					ClientInfos &client_info, ServerManager *srv_mem)
 {
-	// std::cout << "called run cgi" << std::endl;//logger
+	LOG_CGI_CLIENT("Starting CGI execution", client_info.clientAddr, std::atoi(client_info.port.c_str()));
+	LOG_DEBUG_F2("CGI script: {} for method: {}", script_path, current_req.getMethod());
+	
 	int 	id;
 	char	**argv = new char*[3];
 
@@ -146,7 +149,7 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 	if (this->is_POST)
 		input_pipe.create();
 	SetCgiEnvironment(current_req, conf, client_info);
-// 	std::cout << "child args, env vars and pipes are created" << std::endl;//logger
+	LOG_DEBUG("CGI environment and pipes created");
 	id = fork();
 	if (id == -1)
 		throw (std::runtime_error("failed to spawn child"));
@@ -167,7 +170,7 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 		execve(cgi_conf.getCgiPass().c_str(), argv, raw_env);
 		delete_strings(argv);
 		delete_strings(raw_env);
-		std::cout << "execve failed" << std::endl;//logger
+		LOG_ERROR("CGI execve failed - this should not be reached");
 		std::exit(1);
 	}
 	this->exec_t0 = std::time(NULL);
@@ -176,7 +179,10 @@ void CgiHandler::RunCgi(HttpRequest &current_req, const ServerConfig &conf,
 	input_pipe.closeRead();
 	delete_strings(argv);
 	env.clear();
-	// std::cout << "a CGI child is running in the back ground" << std::endl;//logger
+	LOG_CGI_CLIENT("CGI child process started", client_info.clientAddr, std::atoi(client_info.port.c_str()));
+	LOG_DEBUG_F("CGI child PID: {}", id);
+	LOG_CGI_CLIENT("CGI child process started", client_info.clientAddr, std::atoi(client_info.port.c_str()));
+	LOG_DEBUG_F("CGI child PID: {}", id);
 }
 
 CgiHandler::~CgiHandler()

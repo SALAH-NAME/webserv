@@ -1,5 +1,6 @@
 
 #include "ServerManager.hpp"
+#include "SimpleLogger.hpp"
 
 void	isolateAndRecordBody(Client& client) {
 	std::string& headerPart = client.getHeaderPart();
@@ -34,7 +35,10 @@ void    ServerManager::collectRequestData(Client& client) {
 			}
 			catch(const std::runtime_error& e)
 			{
-				std::cerr << e.what() << std::endl;
+				std::string clientIP = client.getClientInfos().clientAddr;
+				int clientPort = std::atoi(client.getClientInfos().port.c_str());
+				LOG_ERROR_CLIENT("Socket receive error", clientIP, clientPort);
+				LOG_ERROR_F("Socket error details: {}", e.what());
 				return ;
 			}
 		}
@@ -57,6 +61,10 @@ void    ServerManager::collectRequestData(Client& client) {
 		req.appendAndValidate(client.getHeaderPart());
 	
 		if (req.getState() == HttpRequest::STATE_BODY) {
+			std::string clientIP = client.getClientInfos().clientAddr;
+			int clientPort = std::atoi(client.getClientInfos().port.c_str());
+			LOG_REQUEST(clientIP, clientPort, req.getMethod(), req.getUri());
+
 			isolateAndRecordBody(client);
 			client.setInputState(INPUT_NONE);
 			client.setGenerateResponseInProcess(ON);
@@ -70,16 +78,19 @@ void    ServerManager::collectRequestData(Client& client) {
 		}
 	}
 	catch (const HttpRequestException &e) {
-		std::string error_msg = "HTTP Request Error: ";
-		error_msg += e.what();
-		std::cerr << error_msg << std::endl;
+		std::string clientIP = client.getClientInfos().clientAddr;
+		int clientPort = std::atoi(client.getClientInfos().port.c_str());
+		LOG_ERROR_CLIENT("HTTP request parsing error", clientIP, clientPort);
+		LOG_ERROR_F("HTTP request error details: {}", e.what());
+
 		client.setInputState(INPUT_NONE);
 		client.setGenerateResponseInProcess(ON);
 	}
 	catch (const std::exception &e) {
-		std::string error_msg = "Parsing error: ";
-		error_msg += e.what();
-		std::cerr << error_msg << std::endl;
+		std::string clientIP = client.getClientInfos().clientAddr;
+		int clientPort = std::atoi(client.getClientInfos().port.c_str());
+		LOG_ERROR_CLIENT("Request parsing error", clientIP, clientPort);
+		LOG_ERROR_F("Parsing error details: {}", e.what());
 		client.setInputState(INPUT_NONE);
 		client.setGenerateResponseInProcess(ON);
 	}

@@ -1,5 +1,6 @@
 
 #include "ServerManager.hpp"
+#include "SimpleLogger.hpp"
 
 void addSocketToEpoll(int epfd, int fd, uint32_t events) {
     struct epoll_event ev;
@@ -38,12 +39,12 @@ void	ServerManager::generatResponses(int i) {
 		it->second.buildResponse();
 	} catch(std::runtime_error& e) {
 		closeConnection(client);
-		perror(e.what());
+		LOG_ERROR_F("Runtime error during response generation: {}", e.what());
 		return ;
 	}
 	catch(const char* msg)
 	{
-		std::cerr << msg << std::endl;
+		LOG_ERROR_F("Error during response generation: {}", msg);
 		return ;
 	}
 	client.setGenerateResponseInProcess(OFF);
@@ -52,6 +53,12 @@ void	ServerManager::generatResponses(int i) {
 
 void	ServerManager::closeConnection(Client& client) {
 	int clientFD = client.getSocket().getFd();
+
+	// client info for logging
+	std::string clientIP = client.getClientInfos().clientAddr;
+	int clientPort = std::atoi(client.getClientInfos().port.c_str());
+
+	LOG_INFO_CLIENT("Connection closed", clientIP, clientPort);
 
 	if (client.getIsCgiRequired() && client.getResponseHandler()->GetCgiChildPid())
 		kill(client.getResponseHandler()->GetCgiChildPid(), SIGKILL);
@@ -81,7 +88,9 @@ void ServerManager::checkTimeOut()
 		Client& client = it->second;
 		if (std::time(NULL) - client.getLastConnectionTime() > _timeOut)
 		{
-			std::cout << "\n    ==>> * Connection Time out: " << _timeOut << "  * <<==\n\n";
+			std::string clientIP = client.getClientInfos().clientAddr;
+			int clientPort = std::atoi(client.getClientInfos().port.c_str());
+			LOG_WARN_CLIENT("Connection timeout", clientIP, clientPort);
 			closeConnection(client);
 		}
 
@@ -89,8 +98,10 @@ void ServerManager::checkTimeOut()
 			try {
 				client.getResponseHandler()->CheckCgiChildState();
 			} catch (ResponseHandler::ResponseHandlerError& e) {
-				std::cout << "\n    ==>>  * CGI Time Out *  <<==\n\n";
-				std::cout << e.what() << std::endl;
+				std::string clientIP = client.getClientInfos().clientAddr;
+				int clientPort = std::atoi(client.getClientInfos().port.c_str());
+				LOG_ERROR_CLIENT("CGI timeout", clientIP, clientPort);
+				LOG_ERROR_F("CGI error details: {}", e.what());
 				client.getResponseHandler()->LoadErrorPage(e.what(), e.getStatusCode());
 				client.CgiExceptionHandler();
 			}
@@ -160,12 +171,11 @@ void	ServerManager::createListenignSockets(int configIndex) {
 			hp.port = ports[i];
 			_portsAndHosts.insert(std::make_pair(socket.getFd(), hp));
 			
-			std::cout << "Server(" << (configIndex + 1) << ") {socket: " << socket << "} is listening on => ";
-			std::cout << _serversConfig[configIndex].getHost() << ":" << ports[i] << "\n";
+			LOG_INFO_F3("Server({}) listening on {}:{}", (configIndex + 1), _serversConfig[configIndex].getHost(), ports[i]);
 
 		} catch (std::runtime_error& e) {
 			_listenSockets.pop_back();
-			perror(e.what());
+			LOG_ERROR_F("Failed to create server socket: {}", e.what());
 		}
 	}
 }

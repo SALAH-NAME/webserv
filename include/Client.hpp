@@ -90,6 +90,7 @@ class Client {
 		bool								getResponseSent(void);
 		bool								getIsOutputAvailable(void);
 		bool								getPipeBodyToCgi(void);
+		ClientInfos							getClientInfos(void) const;
 
 		void								setInputState(ClientInputState);
 		void								appendToHeaderPart(const std::string& requestData);

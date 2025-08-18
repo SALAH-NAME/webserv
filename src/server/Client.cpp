@@ -120,6 +120,10 @@ std::string&	Client::getPendingRequestData(void) {
 	return _pendingRequestDataHolder;
 }
 
+ClientInfos Client::getClientInfos(void) const {
+	return _clientInfos;
+}
+
 int Client::getBytesToSendNow(void)
 {
 	if (_responseHolder.size() >= BYTES_TO_SEND)
